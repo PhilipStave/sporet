@@ -193,10 +193,17 @@ export default function OversiktPage() {
       {/* Stat cards */}
       <div className="grid-stats" style={{ marginBottom: 26 }}>
         {cards.map((c) => (
-          <button
+          <div
             key={c.kicker}
-            type="button"
+            role="button"
+            tabIndex={0}
             onClick={c.onClick}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                c.onClick();
+              }
+            }}
             className="stat-card"
             style={{
               textAlign: "left",
@@ -281,7 +288,7 @@ export default function OversiktPage() {
                 ))}
               </div>
             )}
-          </button>
+          </div>
         ))}
       </div>
 

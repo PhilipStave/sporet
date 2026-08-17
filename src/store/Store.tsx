@@ -243,7 +243,16 @@ export function StoreProvider({
         .insert(insert)
         .select(DEAL_SELECT)
         .single();
-      if (error || !data) return null;
+      if (error || !data) {
+        console.error("createDeal failed:", error);
+        if (typeof window !== "undefined")
+          window.alert(
+            "Kunne ikke opprette kunde:\n" +
+              (error?.message || "ukjent feil") +
+              (error?.code ? ` (kode ${error.code})` : "")
+          );
+        return null;
+      }
       const deal = sortActivities(data as unknown as Deal);
       setDeals((arr) => [deal, ...arr]);
       return deal.id;

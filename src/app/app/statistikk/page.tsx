@@ -77,9 +77,9 @@ export default function StatistikkPage() {
   const [selDepts, setSelDepts] = useState<string[]>(
     departments.map((d) => d.id)
   );
+  // "Alle (total)" shows the combined total — independent of which departments are selected.
+  const [showTotal, setShowTotal] = useState(true);
   const [drill, setDrill] = useState<string | null>(null); // dept id or "alle"
-
-  const showAll = selDepts.length === departments.length;
 
   const won = useMemo(
     () => scopedDeals.filter((d) => d.stage === "vunnet"),
@@ -189,8 +189,8 @@ export default function StatistikkPage() {
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
           <button
             className="chip"
-            data-active={showAll}
-            onClick={() => setSelDepts(departments.map((d) => d.id))}
+            data-active={showTotal}
+            onClick={() => setShowTotal((v) => !v)}
           >
             Alle (total)
           </button>
@@ -235,6 +235,7 @@ export default function StatistikkPage() {
           series={series}
           departments={departments.filter((d) => selDepts.includes(d.id))}
           maxVal={maxVal}
+          showTotal={showTotal}
         />
       </div>
 
@@ -247,15 +248,17 @@ export default function StatistikkPage() {
           marginTop: 16,
         }}
       >
-        <button
-          type="button"
-          className="stat-card"
-          onClick={() => setDrill("alle")}
-          style={cardStyle}
-        >
-          <div style={kickerStyle}>Alle</div>
-          <div style={valueStyle}>{fmtKr(allTotal)}</div>
-        </button>
+        {showTotal && (
+          <button
+            type="button"
+            className="stat-card"
+            onClick={() => setDrill("alle")}
+            style={cardStyle}
+          >
+            <div style={kickerStyle}>Alle</div>
+            <div style={valueStyle}>{fmtKr(allTotal)}</div>
+          </button>
+        )}
         {deptCards.map((c) => (
           <button
             key={c.id}
@@ -306,6 +309,7 @@ function Chart({
   series,
   departments,
   maxVal,
+  showTotal,
 }: {
   chartType: ChartType;
   buckets: { label: string }[];
@@ -313,6 +317,7 @@ function Chart({
   series: Record<string, number[]>;
   departments: { id: string; name: string }[];
   maxVal: number;
+  showTotal: boolean;
 }) {
   const PLOT = 260;
   const yTicks = 4;
@@ -402,6 +407,24 @@ function Chart({
                     />
                   );
                 })}
+                {showTotal && totals.length > 0 && (
+                  <polyline
+                    points={totals
+                      .map((v, i) => {
+                        const x =
+                          totals.length === 1 ? 50 : (i / (totals.length - 1)) * 100;
+                        return `${x},${100 - (v / maxVal) * 100}`;
+                      })
+                      .join(" ")}
+                    fill="none"
+                    stroke="#1b1a18"
+                    strokeWidth={2}
+                    strokeDasharray="3 3"
+                    vectorEffect="non-scaling-stroke"
+                    strokeLinejoin="round"
+                    strokeLinecap="round"
+                  />
+                )}
               </svg>
             ) : (
               <div
@@ -427,7 +450,7 @@ function Chart({
                       height: "100%",
                     }}
                   >
-                    {totals[i] > 0 && (
+                    {showTotal && totals[i] > 0 && (
                       <span
                         style={{
                           fontFamily: "var(--font-heading)",
@@ -440,17 +463,35 @@ function Chart({
                         {fmtShort(totals[i])}
                       </span>
                     )}
+                    {/* Stacked bar — one segment per selected department */}
                     <div
                       title={`${b.label}: ${fmtKr(totals[i])}`}
                       style={{
                         width: "72%",
                         height: `${(totals[i] / maxVal) * 100}%`,
                         minHeight: totals[i] > 0 ? 3 : 0,
-                        background: "var(--primary)",
                         borderRadius: "6px 6px 0 0",
+                        overflow: "hidden",
+                        display: "flex",
+                        flexDirection: "column",
                         transition: "height .3s ease",
                       }}
-                    />
+                    >
+                      {departments.map((dep, di) => {
+                        const v = series[dep.id]?.[i] || 0;
+                        if (v <= 0 || totals[i] <= 0) return null;
+                        return (
+                          <div
+                            key={dep.id}
+                            title={`${dep.name}: ${fmtKr(v)}`}
+                            style={{
+                              height: `${(v / totals[i]) * 100}%`,
+                              background: LINE_COLORS[di % LINE_COLORS.length],
+                            }}
+                          />
+                        );
+                      })}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -487,27 +528,39 @@ function Chart({
         </div>
       </div>
 
-      {/* Legend for line mode */}
-      {chartType === "line" && (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 14, marginTop: 14 }}>
-          {departments.map((dep, di) => (
+      {/* Legend — department colours (both modes) + total marker */}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 14, marginTop: 14 }}>
+        {departments.map((dep, di) => (
+          <span
+            key={dep.id}
+            style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12 }}
+          >
             <span
-              key={dep.id}
-              style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12 }}
-            >
-              <span
-                style={{
-                  width: 14,
-                  height: 3,
-                  borderRadius: 999,
-                  background: LINE_COLORS[di % LINE_COLORS.length],
-                }}
-              />
-              {dep.name}
-            </span>
-          ))}
-        </div>
-      )}
+              style={{
+                width: 14,
+                height: chartType === "line" ? 3 : 10,
+                borderRadius: chartType === "line" ? 999 : 3,
+                background: LINE_COLORS[di % LINE_COLORS.length],
+              }}
+            />
+            {dep.name}
+          </span>
+        ))}
+        {showTotal && (
+          <span
+            style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12 }}
+          >
+            <span
+              style={{
+                width: 14,
+                height: 0,
+                borderTop: "2px dashed #1b1a18",
+              }}
+            />
+            Alle (total)
+          </span>
+        )}
+      </div>
     </div>
   );
 }

@@ -66,7 +66,7 @@ function Column({ stage, deals }: { stage: Stage; deals: Deal[] }) {
           display: "flex",
           flexDirection: "column",
           gap: 10,
-          minHeight: 80,
+          minHeight: "calc(100dvh - 300px)",
           padding: 4,
           borderRadius: 10,
           background: isOver ? "var(--primary-050)" : "transparent",

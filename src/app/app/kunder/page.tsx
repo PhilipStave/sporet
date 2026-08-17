@@ -5,7 +5,8 @@ import { useStore } from "@/store/Store";
 import { Icon } from "@/components/Icon";
 import { Autocomplete } from "@/components/Autocomplete";
 import { STAGE_COLORS, STAGE_LABELS, pillStyle } from "@/lib/constants";
-import { fmtKr } from "@/lib/format";
+import { fmtKr, type Period } from "@/lib/format";
+import { withinDays } from "@/lib/metrics";
 import { exportCustomersCsv } from "@/lib/csv";
 
 const GRID = "1.5fr 1.4fr 1.2fr 1fr .9fr .8fr";
@@ -15,14 +16,23 @@ export default function KunderPage() {
     useStore();
 
   const [query, setQuery] = useState("");
-  const [deptFilter, setDeptFilter] = useState<string>("alle");
+  // Empty = all departments. Otherwise the set of selected department ids.
+  const [deptFilter, setDeptFilter] = useState<string[]>([]);
   const [seller, setSeller] = useState("");
+  const [period, setPeriod] = useState<Period>("alle");
+
+  const toggleDept = (id: string) =>
+    setDeptFilter((cur) =>
+      cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]
+    );
 
   const filtered = useMemo(() => {
     const q = query.toLowerCase().trim();
     return scopedDeals
       .filter((d) => {
-        if (deptFilter !== "alle" && d.department_id !== deptFilter) return false;
+        if (deptFilter.length && !deptFilter.includes(d.department_id ?? ""))
+          return false;
+        if (!withinDays(d, period)) return false;
         if (seller.trim() && d.owner_name !== seller.trim()) return false;
         if (
           q &&
@@ -35,7 +45,7 @@ export default function KunderPage() {
         return true;
       })
       .sort((a, b) => a.company.localeCompare(b.company, "nb"));
-  }, [scopedDeals, query, deptFilter, seller]);
+  }, [scopedDeals, query, deptFilter, seller, period]);
 
   return (
     <div className="animate-fade">
@@ -98,17 +108,35 @@ export default function KunderPage() {
             onSelect={setSeller}
           />
         </div>
+        <div className="pillgroup">
+          {(
+            [
+              ["alle", "Alt"],
+              ["uke", "Uke"],
+              ["mnd", "Måned"],
+              ["ar", "År"],
+            ] as const
+          ).map(([id, label]) => (
+            <button
+              key={id}
+              data-active={period === id}
+              onClick={() => setPeriod(id as Period)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
         <span style={{ fontSize: 13, color: "var(--muted)", marginLeft: "auto" }}>
           {filtered.length} kunder
         </span>
       </div>
 
-      {/* Department chips */}
+      {/* Department chips — multi-select (choose one or more) */}
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 16 }}>
         <button
           className="chip"
-          data-active={deptFilter === "alle"}
-          onClick={() => setDeptFilter("alle")}
+          data-active={deptFilter.length === 0}
+          onClick={() => setDeptFilter([])}
         >
           Alle avdelinger
         </button>
@@ -116,8 +144,8 @@ export default function KunderPage() {
           <button
             key={d.id}
             className="chip"
-            data-active={deptFilter === d.id}
-            onClick={() => setDeptFilter(d.id)}
+            data-active={deptFilter.includes(d.id)}
+            onClick={() => toggleDept(d.id)}
           >
             {d.name}
           </button>

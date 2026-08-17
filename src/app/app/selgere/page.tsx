@@ -97,7 +97,7 @@ export default function SelgerePage() {
           <button
             key={s.name}
             type="button"
-            onClick={() => s.count > 0 && setOpenSeller(s.name)}
+            onClick={() => setOpenSeller(s.name)}
             className="stat-card"
             style={{
               textAlign: "left",
@@ -106,8 +106,8 @@ export default function SelgerePage() {
               borderRadius: 12,
               boxShadow: "var(--shadow)",
               padding: 18,
-              cursor: s.count > 0 ? "pointer" : "default",
-              opacity: s.count > 0 ? 1 : 0.7,
+              cursor: "pointer",
+              opacity: s.count > 0 ? 1 : 0.75,
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
