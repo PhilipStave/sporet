@@ -1,0 +1,319 @@
+@import "tailwindcss";
+
+/* ============================================================
+   Sporet — design tokens (from design handoff README)
+   ============================================================ */
+:root {
+  /* App (Sporet CRM) */
+  --bg: #f5f6f8;
+  --surface: #ffffff;
+  --text: #111420;
+  --muted: #626b7d;
+  --border: #e6e8ef;
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
+  --primary-050: #eef0fe;
+  --danger: #c0392b;
+  --row-hover: #fafbfc;
+
+  /* Stage colors */
+  --stage-ny: #64748b;
+  --stage-kontaktet: #0ea5e9;
+  --stage-dialog: #6366f1;
+  --stage-tilbud: #8b5cf6;
+  --stage-forhandling: #f59e0b;
+  --stage-vunnet: #059669;
+  --stage-tapt: #dc2626;
+  --stage-ikkesvart: #94a3b8;
+
+  /* Radius */
+  --r-sm: 8px;
+  --r-md: 10px;
+  --r-lg: 12px;
+  --r-xl: 16px;
+  --r-pill: 999px;
+
+  /* Shadow */
+  --shadow: 0 1px 2px rgba(17, 20, 32, 0.05), 0 4px 14px rgba(17, 20, 32, 0.05);
+  --shadow-dialog: 0 20px 50px rgba(17, 20, 32, 0.28);
+  --shadow-drawer: -8px 0 30px rgba(17, 20, 32, 0.14);
+
+  --sp: 28px;
+
+  --font-heading: var(--font-space-grotesk), "Inter", sans-serif;
+  --font-body: var(--font-inter), system-ui, sans-serif;
+  --font-display: var(--font-instrument-serif), Georgia, serif;
+  --font-karla: var(--font-karla), system-ui, sans-serif;
+}
+
+/* Landing page palette, scoped */
+.landing {
+  --bg: #faf7f2;
+  --surface: #ffffff;
+  --text: #1b1a18;
+  --muted: #6f6a62;
+  --divider: #e6dfd4;
+  --accent: #a8402a;
+  --accent-hover: #8b3222;
+  --accent-soft: #f4e7e2;
+  --ink: #2f4739;
+  --r-lg-land: 20px;
+  --r-md-land: 14px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+input,
+textarea,
+select,
+button {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Utility field styles reused across app */
+.field-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+
+.field-input {
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 10px 12px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 15px;
+  width: 100%;
+  transition: border-color 0.12s ease;
+}
+.field-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-050);
+}
+.field-input::placeholder {
+  color: #9aa1b1;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  padding: 9px 14px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+.btn:hover {
+  border-color: #d4d7e2;
+  background: var(--row-hover);
+}
+.btn-primary {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+.btn-primary:hover {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+.btn-primary:disabled {
+  background: #eef0f4;
+  border-color: #eef0f4;
+  color: #9aa1b1;
+  cursor: not-allowed;
+}
+
+/* Cards / panels */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow);
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: var(--r-pill);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Chip toggles */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  border-radius: var(--r-pill);
+  padding: 7px 13px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.12s ease;
+}
+.chip:hover {
+  border-color: #d4d7e2;
+}
+.chip[data-active="true"] {
+  background: var(--primary-050);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* Period pills group */
+.pillgroup {
+  display: inline-flex;
+  gap: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-pill);
+  padding: 4px;
+}
+.pillgroup button {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  border-radius: var(--r-pill);
+  padding: 6px 13px;
+  font-size: 13px;
+  font-weight: 500;
+}
+.pillgroup button[data-active="true"] {
+  background: var(--primary);
+  color: #fff;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #d4d7e2;
+  border-radius: 999px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes slideIn {
+  from {
+    transform: translateX(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+.animate-fade {
+  animation: fadeIn 0.15s ease;
+}
+.animate-slide {
+  animation: slideIn 0.18s ease;
+}
+
+/* Responsive helpers */
+@media (max-width: 720px) {
+  .hide-sm {
+    display: none !important;
+  }
+  :root {
+    --sp: 16px;
+  }
+}
+.table-row:hover {
+  background: var(--row-hover);
+}
+.stat-card {
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+.stat-card:hover {
+  border-color: var(--primary) !important;
+}
+@media (max-width: 860px) {
+  .oversikt-panels {
+    grid-template-columns: 1fr !important;
+  }
+}
+.grid-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+@media (max-width: 960px) {
+  .grid-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 620px) {
+  .grid-stats {
+    grid-template-columns: 1fr;
+  }
+}
