@@ -49,12 +49,9 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Logged in and on an auth page -> send to the app.
-  if (user && (path === "/login" || path === "/setup")) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/app/oversikt";
-    return NextResponse.redirect(url);
-  }
+  // Note: we deliberately do NOT bounce logged-in users away from /login.
+  // Doing so caused a redirect loop right after logout (stale cookie in the
+  // same request). The login page itself is harmless to view while logged in.
 
   return response;
 }

@@ -1,11 +1,6 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Metadata } from "next";
-import {
-  DashboardMock,
-  LineChartMock,
-  PipelineMock,
-  CustomersMock,
-} from "@/components/landing/Mockups";
 
 export const metadata: Metadata = {
   title: "Sporet — salgsoppfølging for team",
@@ -198,7 +193,15 @@ export default function LandingPage() {
             boxShadow: "var(--shadow)",
           }}
         >
-          <DashboardMock />
+          <Image
+            src="/screenshots/02-app-oversikt.png"
+            alt="Oversikt med pipeline-verdi, solgt for, margin og vinnrate"
+            width={2560}
+            height={1600}
+            priority
+            sizes="(max-width: 940px) 100vw, 940px"
+            style={{ display: "block", width: "100%", height: "auto" }}
+          />
         </div>
 
         <div
@@ -211,17 +214,20 @@ export default function LandingPage() {
         >
           {[
             {
-              mock: <PipelineMock />,
+              img: "/screenshots/01-app.png",
+              alt: "Pipeline som tavle med steg fra potensiell kunde til vunnet",
               title: "Pipeline.",
               text: "Dra kundene mellom stegene, filtrer på selger og periode.",
             },
             {
-              mock: <LineChartMock />,
+              img: "/screenshots/02-app.png",
+              alt: "Statistikk med linjediagram over salg per avdeling",
               title: "Statistikk.",
               text: "Sammenlign avdelinger og selgere på omsetning og margin.",
             },
             {
-              mock: <CustomersMock />,
+              img: "/screenshots/03-app.png",
+              alt: "Kunderegister med kontaktinfo, produkt og selger",
               title: "Kunder.",
               text: "Kontaktinfo, hva de har kjøpt og hvem som solgte.",
             },
@@ -236,7 +242,14 @@ export default function LandingPage() {
                   boxShadow: "var(--shadow)",
                 }}
               >
-                {f.mock}
+                <Image
+                  src={f.img}
+                  alt={f.alt}
+                  width={2560}
+                  height={1600}
+                  sizes="(max-width: 700px) 100vw, 33vw"
+                  style={{ display: "block", width: "100%", height: "auto" }}
+                />
               </span>
               <figcaption style={{ fontSize: 15, color: "var(--muted)" }}>
                 <span style={{ fontFamily: "var(--font-display)", fontSize: 18, color: "var(--text)" }}>

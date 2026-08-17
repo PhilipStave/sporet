@@ -96,6 +96,40 @@ export async function updateMember(
   }
 }
 
+/** Admin sets a new password for a member (passwords are never readable —
+ *  they are stored hashed — so "reset" is the only possible operation). */
+export async function setMemberPassword(
+  profileId: string,
+  password: string
+): Promise<ProfileResult> {
+  try {
+    const me = await requireAdmin();
+    if (password.length < 4) return { error: "Passordet må ha minst 4 tegn." };
+    const admin = createAdminClient();
+    if (!(await sameOrg(admin, me.org_id, profileId)))
+      return { error: "Ikke i din bedrift." };
+    const { error } = await admin.auth.admin.updateUserById(profileId, { password });
+    if (error) return { error: error.message };
+    return { ok: true };
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+}
+
+/** A user changes their own password. */
+export async function changeMyPassword(password: string): Promise<ProfileResult> {
+  try {
+    const me = await currentProfile();
+    if (password.length < 4) return { error: "Passordet må ha minst 4 tegn." };
+    const admin = createAdminClient();
+    const { error } = await admin.auth.admin.updateUserById(me.id, { password });
+    if (error) return { error: error.message };
+    return { ok: true };
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+}
+
 /** A user edits their own name / email / phone. */
 export async function updateMyProfile(fields: {
   full_name: string;

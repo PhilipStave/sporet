@@ -392,6 +392,6 @@ export async function joinAction(
 // ------------------------------------------------------------
 export async function logout() {
   const supabase = await createClient();
-  await supabase.auth.signOut();
+  await supabase.auth.signOut({ scope: "global" });
   redirect("/login");
 }

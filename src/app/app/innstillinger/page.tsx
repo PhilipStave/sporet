@@ -17,6 +17,8 @@ import {
   removeMember,
   updateMember,
   updateMyProfile,
+  setMemberPassword,
+  changeMyPassword,
 } from "../actions";
 
 export default function InnstillingerPage() {
@@ -39,6 +41,15 @@ export default function InnstillingerPage() {
   const [myName, setMyName] = useState(profile.full_name);
   const [myEmail, setMyEmail] = useState(profile.email);
   const [myPhone, setMyPhone] = useState(profile.phone);
+  const [myNewPw, setMyNewPw] = useState("");
+
+  const saveMyPassword = async () => {
+    setBusy(true);
+    const res = await changeMyPassword(myNewPw);
+    setBusy(false);
+    flash(res.error ? res.error : "Passordet er endret.");
+    if (!res.error) setMyNewPw("");
+  };
 
   const flash = (m: string) => {
     setMsg(m);
@@ -220,6 +231,26 @@ export default function InnstillingerPage() {
             E-posten er også innloggingen din. Endrer du den, logger du inn med den
             nye neste gang.
           </p>
+
+          <div style={{ height: 1, background: "var(--border)", margin: "6px 0" }} />
+          <span className="field-label">Bytt passord</span>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <input
+              className="field-input"
+              type="password"
+              value={myNewPw}
+              placeholder="Nytt passord (minst 4 tegn)"
+              onChange={(e) => setMyNewPw(e.target.value)}
+              style={{ flex: 1 }}
+            />
+            <button
+              className="btn"
+              onClick={saveMyPassword}
+              disabled={busy || myNewPw.length < 4}
+            >
+              Sett passord
+            </button>
+          </div>
         </div>
       </Section>
 
@@ -519,6 +550,23 @@ function MemberRow({
     member.role === "admin" ? "admin" : "seller"
   );
   const [busy, setBusy] = useState(false);
+  const [newPw, setNewPw] = useState("");
+  const [showPw, setShowPw] = useState(false);
+
+  const savePassword = async () => {
+    setBusy(true);
+    const res = await setMemberPassword(member.id, newPw);
+    setBusy(false);
+    onSaved(
+      res.error
+        ? res.error
+        : `Nytt passord satt for ${name || member.email}. Gi det til vedkommende.`
+    );
+    if (!res.error) {
+      setNewPw("");
+      setShowPw(false);
+    }
+  };
 
   const dirty =
     name !== member.full_name ||
@@ -596,7 +644,7 @@ function MemberRow({
           style={{ flex: "1 1 120px" }}
         />
       </div>
-      <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+      <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
         <button
           className="btn btn-primary"
           onClick={save}
@@ -605,12 +653,50 @@ function MemberRow({
         >
           Lagre
         </button>
+        <button
+          className="btn"
+          onClick={() => setShowPw((v) => !v)}
+          style={{ padding: "7px 14px" }}
+        >
+          {showPw ? "Avbryt" : "Sett nytt passord"}
+        </button>
         {!isSelf && (
           <button className="btn" onClick={onRemove} style={{ padding: "7px 14px" }}>
             Fjern
           </button>
         )}
       </div>
+      {showPw && (
+        <div
+          style={{
+            display: "flex",
+            gap: 8,
+            marginTop: 10,
+            alignItems: "center",
+            padding: "10px 12px",
+            background: "var(--bg)",
+            border: "1px solid var(--border)",
+            borderRadius: 10,
+          }}
+        >
+          <input
+            className="field-input"
+            type="text"
+            value={newPw}
+            placeholder="Nytt passord (minst 4 tegn)"
+            onChange={(e) => setNewPw(e.target.value)}
+            style={{ flex: 1 }}
+          />
+          <button
+            className="btn btn-primary"
+            onClick={savePassword}
+            disabled={busy || newPw.length < 4}
+            style={{ padding: "7px 14px" }}
+          >
+            Lagre passord
+          </button>
+        </div>
+      )}
     </div>
   );
 }

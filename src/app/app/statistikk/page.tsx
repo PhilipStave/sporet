@@ -400,7 +400,7 @@ function Chart({
                       points={pts}
                       fill="none"
                       stroke={LINE_COLORS[di % LINE_COLORS.length]}
-                      strokeWidth={2}
+                      strokeWidth={2.5}
                       vectorEffect="non-scaling-stroke"
                       strokeLinejoin="round"
                       strokeLinecap="round"
