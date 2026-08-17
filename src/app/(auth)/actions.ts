@@ -234,6 +234,160 @@ export async function acceptInvite(
 }
 
 // ------------------------------------------------------------
+// Join with company code (self-service seller signup)
+// ------------------------------------------------------------
+export interface JoinState {
+  stage: "search" | "code" | "register";
+  error?: string;
+  orgId?: string;
+  orgName?: string;
+  code?: string;
+  departments?: { id: string; name: string }[];
+}
+
+/** Search organisations by name (for the join flow). Returns id + name only. */
+export async function searchCompanies(
+  query: string
+): Promise<{ id: string; name: string }[]> {
+  if (missingEnv()) return [];
+  const q = query.trim();
+  if (!q) return [];
+  const admin = createAdminClient();
+  const { data } = await admin
+    .from("organizations")
+    .select("id, name")
+    .ilike("name", `%${q}%`)
+    .order("name")
+    .limit(10);
+  return data || [];
+}
+
+export async function joinAction(
+  _prev: JoinState,
+  formData: FormData
+): Promise<JoinState> {
+  if (missingEnv())
+    return { stage: "code", error: "Supabase er ikke konfigurert." };
+
+  const stage = String(formData.get("stage") || "code");
+  const code = String(formData.get("code") || "")
+    .trim()
+    .toLowerCase();
+  const admin = createAdminClient();
+
+  // Step 2 — company already chosen; validate the code for that company.
+  if (stage === "code") {
+    const orgId = String(formData.get("orgId") || "");
+    if (!orgId) return { stage: "code", error: "Velg en bedrift først." };
+    const { data: org } = await admin
+      .from("organizations")
+      .select("id, name, join_code")
+      .eq("id", orgId)
+      .maybeSingle();
+    if (!org) return { stage: "code", error: "Fant ikke bedriften." };
+    if (!code || code !== org.join_code)
+      return { stage: "code", error: "Feil bedriftskode.", orgId, orgName: org.name };
+    const { data: depts } = await admin
+      .from("departments")
+      .select("id, name")
+      .eq("org_id", org.id)
+      .order("created_at");
+    return {
+      stage: "register",
+      orgId: org.id,
+      orgName: org.name,
+      code,
+      departments: depts || [],
+    };
+  }
+
+  // Step 2 — create the user's account in that organisation.
+  const orgId = String(formData.get("orgId") || "");
+  const name = String(formData.get("name") || "").trim();
+  const email = String(formData.get("email") || "")
+    .trim()
+    .toLowerCase();
+  const phone = String(formData.get("phone") || "").trim();
+  const password = String(formData.get("password") || "");
+  const deptIds = (formData.getAll("deptIds") as string[]).filter(Boolean);
+
+  const reload = async (error: string): Promise<JoinState> => {
+    const { data: org } = await admin
+      .from("organizations")
+      .select("id, name")
+      .eq("id", orgId)
+      .maybeSingle();
+    const { data: depts } = await admin
+      .from("departments")
+      .select("id, name")
+      .eq("org_id", orgId)
+      .order("created_at");
+    return {
+      stage: "register",
+      orgId,
+      orgName: org?.name,
+      code,
+      departments: depts || [],
+      error,
+    };
+  };
+
+  // Re-validate the code still maps to this org.
+  const { data: org } = await admin
+    .from("organizations")
+    .select("id")
+    .eq("id", orgId)
+    .eq("join_code", code)
+    .maybeSingle();
+  if (!org) return { stage: "code", error: "Ugyldig bedriftskode." };
+
+  if (!name) return reload("Skriv inn fullt navn.");
+  if (!email) return reload("Skriv inn e-post.");
+  if (password.length < 4) return reload("Passordet må ha minst 4 tegn.");
+
+  const { data: created, error: userErr } = await admin.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+    user_metadata: { full_name: name },
+  });
+  if (userErr || !created.user) {
+    if (String(userErr?.message || "").toLowerCase().includes("already"))
+      return reload("En bruker med denne e-posten finnes allerede.");
+    return reload(userErr?.message || "Kunne ikke opprette bruker.");
+  }
+  const userId = created.user.id;
+
+  const { error: profErr } = await admin.from("profiles").insert({
+    id: userId,
+    org_id: orgId,
+    full_name: name,
+    email,
+    phone,
+    role: "seller",
+    status: "pending", // must be approved by an admin
+  });
+  if (profErr) {
+    await admin.auth.admin.deleteUser(userId).catch(() => {});
+    return reload(profErr.message);
+  }
+
+  if (deptIds.length)
+    await admin
+      .from("profile_departments")
+      .insert(deptIds.map((id) => ({ profile_id: userId, department_id: id })));
+
+  const supabase = await createClient();
+  const { error: signErr } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+  if (signErr) return reload(signErr.message);
+
+  redirect("/app/oversikt");
+}
+
+// ------------------------------------------------------------
 // Logout
 // ------------------------------------------------------------
 export async function logout() {

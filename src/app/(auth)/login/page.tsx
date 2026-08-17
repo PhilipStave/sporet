@@ -75,6 +75,12 @@ export default function LoginPage() {
       </form>
 
       <p style={{ margin: "16px 0 0", fontSize: 13, color: "var(--muted)" }}>
+        Ny ansatt med en bedriftskode?{" "}
+        <Link href="/bli-med" style={{ color: "var(--primary)", fontWeight: 500 }}>
+          Bli med i bedriften
+        </Link>
+      </p>
+      <p style={{ margin: "6px 0 0", fontSize: 13, color: "var(--muted)" }}>
         Ny bedrift?{" "}
         <Link href="/setup" style={{ color: "var(--primary)", fontWeight: 500 }}>
           Sett opp bedriften

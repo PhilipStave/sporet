@@ -3,21 +3,26 @@ import { getSessionContext } from "@/lib/queries";
 import { StoreProvider } from "@/store/Store";
 import { TopNav } from "@/components/TopNav";
 import { CustomerDrawer } from "@/components/drawer/CustomerDrawer";
+import { PendingScreen } from "@/components/PendingScreen";
 
 export default async function AppLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const ctx = await getSessionContext();
-  if (!ctx) redirect("/login");
+  const session = await getSessionContext();
+
+  if (session.kind === "none") redirect("/login");
+  if (session.kind === "pending") {
+    return <PendingScreen fullName={session.fullName} />;
+  }
 
   return (
     <StoreProvider
-      org={ctx.org}
-      profile={ctx.profile}
-      departments={ctx.departments}
-      members={ctx.members}
+      org={session.org}
+      profile={session.profile}
+      departments={session.departments}
+      members={session.members}
     >
       <div style={{ minHeight: "100dvh", display: "flex", flexDirection: "column" }}>
         <TopNav />

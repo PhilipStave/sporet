@@ -9,6 +9,7 @@ export type OrganizationRow = {
   id: string;
   name: string;
   features: Features;
+  join_code: string;
   created_at: string;
 }
 
@@ -26,6 +27,7 @@ export type ProfileRow = {
   email: string;
   phone: string;
   role: Role;
+  status: "pending" | "active";
   created_at: string;
 }
 

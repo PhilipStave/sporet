@@ -131,7 +131,9 @@ export function StoreProvider({
 
   const sellerNames = useMemo(() => {
     const set = new Set<string>();
-    members.forEach((m) => m.full_name && set.add(m.full_name));
+    members
+      .filter((m) => m.status !== "pending")
+      .forEach((m) => m.full_name && set.add(m.full_name));
     deals.forEach((d) => d.owner_name && set.add(d.owner_name));
     return [...set].sort((a, b) => a.localeCompare(b, "nb"));
   }, [members, deals]);

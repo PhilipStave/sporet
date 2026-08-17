@@ -220,15 +220,13 @@ export function TopNav() {
                   </div>
                 </div>
                 <div style={{ height: 1, background: "var(--border)", margin: "2px 0 6px" }} />
-                {profile.role === "admin" && (
-                  <Link
-                    href="/app/innstillinger"
-                    style={menuItemStyle}
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    <Icon name="settings" size={16} /> Innstillinger
-                  </Link>
-                )}
+                <Link
+                  href="/app/innstillinger"
+                  style={menuItemStyle}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  <Icon name="settings" size={16} /> Innstillinger
+                </Link>
                 <form action={logout}>
                   <button type="submit" style={{ ...menuItemStyle, width: "100%", border: "none", background: "transparent" }}>
                     <Icon name="logout" size={16} /> Logg ut
