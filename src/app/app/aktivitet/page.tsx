@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import { useStore } from "@/store/Store";
 import { Icon } from "@/components/Icon";
-import { Dropdown } from "@/components/Dropdown";
 import { Autocomplete } from "@/components/Autocomplete";
 import { relativeLabel, withinPeriod, type Period } from "@/lib/format";
 import type { ActivityRow, Deal } from "@/types";
@@ -14,11 +13,9 @@ interface FeedRow {
 }
 
 export default function AktivitetPage() {
-  const { scopedDeals, departments, sellerNames, setSelectedDealId, deptName } =
-    useStore();
+  const { scopedDeals, sellerNames, setSelectedDealId, deptName } = useStore();
 
   const [query, setQuery] = useState("");
-  const [deptFilter, setDeptFilter] = useState("alle");
   const [seller, setSeller] = useState("");
   const [period, setPeriod] = useState<Period>("alle");
 
@@ -34,8 +31,8 @@ export default function AktivitetPage() {
 
   const filtered = useMemo(() => {
     const q = query.toLowerCase().trim();
+    // Department scope is handled globally in the top-right selector.
     return rows.filter(({ activity, deal }) => {
-      if (deptFilter !== "alle" && deal.department_id !== deptFilter) return false;
       if (seller.trim() && deal.owner_name !== seller.trim()) return false;
       if (!withinPeriod(activity.created_at, period)) return false;
       if (
@@ -47,7 +44,7 @@ export default function AktivitetPage() {
         return false;
       return true;
     });
-  }, [rows, query, deptFilter, seller, period]);
+  }, [rows, query, seller, period]);
 
   return (
     <div className="animate-fade">
@@ -83,15 +80,6 @@ export default function AktivitetPage() {
             style={{ paddingLeft: 32, borderRadius: 10 }}
           />
         </div>
-        <Dropdown
-          value={deptFilter}
-          onChange={setDeptFilter}
-          minWidth={150}
-          options={[
-            { value: "alle", label: "Alle avdelinger" },
-            ...departments.map((d) => ({ value: d.id, label: d.name })),
-          ]}
-        />
         <div style={{ flex: "0 1 200px" }}>
           <Autocomplete
             value={seller}

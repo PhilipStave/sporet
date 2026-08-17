@@ -13,23 +13,21 @@ import { fmtKr, withinPeriod, type Period } from "@/lib/format";
 type FilterKind = "alle" | "apne" | "vunnet" | "tapt";
 
 export default function PipelinePage() {
-  const { scopedDeals, departments, sellerNames, createDeal, setSelectedDealId } =
-    useStore();
+  const { scopedDeals, sellerNames, createDeal, setSelectedDealId } = useStore();
 
   const [mode, setMode] = useState<"tavle" | "tabell">("tavle");
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<FilterKind>("alle");
-  const [deptFilter, setDeptFilter] = useState("alle");
   const [period, setPeriod] = useState<Period | "alt">("alt");
   const [seller, setSeller] = useState("");
 
+  // Department scope is handled globally in the top-right selector.
   const filtered = useMemo(() => {
     const q = query.toLowerCase().trim();
     return scopedDeals.filter((d) => {
       if (filter === "apne" && !ACTIVE_STAGES.includes(d.stage)) return false;
       if (filter === "vunnet" && d.stage !== "vunnet") return false;
       if (filter === "tapt" && d.stage !== "tapt") return false;
-      if (deptFilter !== "alle" && d.department_id !== deptFilter) return false;
       if (period !== "alt" && !withinPeriod(d.updated_at, period as Period))
         return false;
       if (seller.trim() && d.owner_name !== seller.trim()) return false;
@@ -42,7 +40,7 @@ export default function PipelinePage() {
         return false;
       return true;
     });
-  }, [scopedDeals, query, filter, deptFilter, period, seller]);
+  }, [scopedDeals, query, filter, period, seller]);
 
   const openDeals = filtered.filter((d) => ACTIVE_STAGES.includes(d.stage));
   const openValue = openDeals.reduce((a, d) => a + (d.value || 0), 0);
@@ -137,16 +135,6 @@ export default function PipelinePage() {
             { value: "apne", label: "Kun åpne" },
             { value: "vunnet", label: "Vunnet" },
             { value: "tapt", label: "Tapt" },
-          ]}
-        />
-
-        <Dropdown
-          value={deptFilter}
-          onChange={setDeptFilter}
-          minWidth={150}
-          options={[
-            { value: "alle", label: "Alle avdelinger" },
-            ...departments.map((d) => ({ value: d.id, label: d.name })),
           ]}
         />
 

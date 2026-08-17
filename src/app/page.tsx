@@ -1,5 +1,11 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import {
+  DashboardMock,
+  LineChartMock,
+  PipelineMock,
+  CustomersMock,
+} from "@/components/landing/Mockups";
 
 export const metadata: Metadata = {
   title: "Sporet — salgsoppfølging for team",
@@ -105,14 +111,22 @@ export default function LandingPage() {
             <span style={{ width: 16, height: 16, borderRadius: 999, background: "var(--accent)" }} />
             Sporet
           </span>
-          <nav style={{ display: "flex", alignItems: "center", gap: 22, marginLeft: "auto" }}>
-            <a href="#produkt" style={{ fontSize: 15, fontWeight: 600, color: "var(--text)" }}>
+          <nav
+            style={{ display: "flex", alignItems: "center", gap: 20, marginLeft: "auto" }}
+          >
+            <a href="#produkt" className="land-navlink">
               Produkt
             </a>
-            <a href="#priser" style={{ fontSize: 15, fontWeight: 600, color: "var(--text)" }}>
+            <a href="#slik" className="land-navlink">
+              Slik funker det
+            </a>
+            <a href="#priser" className="land-navlink">
               Priser
             </a>
-            <Link href="/login" style={{ fontSize: 15, fontWeight: 600, color: "var(--text)" }}>
+            <Link href="/bli-med" className="land-navlink">
+              Bli med
+            </Link>
+            <Link href="/login" className="land-navlink">
               Logg inn
             </Link>
             <Link href="/setup" style={inkBtn}>
@@ -170,10 +184,13 @@ export default function LandingPage() {
       </section>
 
       {/* Product screenshots */}
-      <section id="produkt" style={{ ...wrap, padding: "0 24px 48px" }}>
+      <section
+        id="produkt"
+        style={{ ...wrap, padding: "0 24px 48px", scrollMarginTop: 80 }}
+      >
         <div
           style={{
-            maxWidth: 914,
+            maxWidth: 940,
             margin: "0 auto",
             borderRadius: "var(--r-lg-land)",
             overflow: "hidden",
@@ -181,12 +198,7 @@ export default function LandingPage() {
             boxShadow: "var(--shadow)",
           }}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/screenshots/02-app-oversikt.png"
-            alt="Oversikt med pipeline-verdi, solgt for, margin og vinnrate"
-            style={{ display: "block", width: "100%", maxWidth: 914, height: "auto" }}
-          />
+          <DashboardMock />
         </div>
 
         <div
@@ -199,25 +211,22 @@ export default function LandingPage() {
         >
           {[
             {
-              img: "/screenshots/01-app.png",
+              mock: <PipelineMock />,
               title: "Pipeline.",
-              text: "Dra kundene mellom stegene, filtrer på avdeling, selger og periode.",
-              alt: "Pipeline som tavle med steg fra potensiell kunde til vunnet",
+              text: "Dra kundene mellom stegene, filtrer på selger og periode.",
             },
             {
-              img: "/screenshots/02-app.png",
+              mock: <LineChartMock />,
               title: "Statistikk.",
               text: "Sammenlign avdelinger og selgere på omsetning og margin.",
-              alt: "Statistikk med søylediagram over salg per avdeling",
             },
             {
-              img: "/screenshots/03-app.png",
+              mock: <CustomersMock />,
               title: "Kunder.",
               text: "Kontaktinfo, hva de har kjøpt og hvem som solgte.",
-              alt: "Kunderegister med kontaktinfo, produkt og selger",
             },
           ].map((f) => (
-            <figure key={f.img} style={{ margin: 0, display: "flex", flexDirection: "column", gap: 12 }}>
+            <figure key={f.title} style={{ margin: 0, display: "flex", flexDirection: "column", gap: 12 }}>
               <span
                 style={{
                   display: "block",
@@ -227,8 +236,7 @@ export default function LandingPage() {
                   boxShadow: "var(--shadow)",
                 }}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={f.img} alt={f.alt} style={{ display: "block", width: "100%", height: "auto" }} />
+                {f.mock}
               </span>
               <figcaption style={{ fontSize: 15, color: "var(--muted)" }}>
                 <span style={{ fontFamily: "var(--font-display)", fontSize: 18, color: "var(--text)" }}>
@@ -287,8 +295,114 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* How it works */}
+      <section
+        id="slik"
+        style={{ ...wrap, padding: "0 24px 56px", scrollMarginTop: 80 }}
+      >
+        <div style={{ maxWidth: 620, marginBottom: 28 }}>
+          <h2
+            style={{
+              fontFamily: "var(--font-display)",
+              fontWeight: 400,
+              fontSize: "clamp(32px, 4.2vw, 48px)",
+              marginBottom: 8,
+            }}
+          >
+            Slik kommer dere i gang
+          </h2>
+          <p style={{ margin: 0, fontSize: 17, color: "var(--muted)" }}>
+            Fra tom konto til første salg i pipelinen på under ti minutter.
+          </p>
+        </div>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+            gap: 20,
+          }}
+        >
+          {[
+            {
+              n: "1",
+              title: "Sett opp bedriften",
+              text: "Administrator oppretter bedriften, avdelingene og velger hvilke funksjoner teamet skal ha.",
+              href: "/setup",
+              cta: "Sett opp nå",
+            },
+            {
+              n: "2",
+              title: "Slipp inn teamet",
+              text: "Del bedriftskoden. Ansatte søker opp bedriften, taster koden og lager sin egen bruker — du godkjenner.",
+              href: "/bli-med",
+              cta: "Bli med i en bedrift",
+            },
+            {
+              n: "3",
+              title: "Legg inn kundene",
+              text: "Opprett kunder, logg hver kontakt og dra dem gjennom pipelinen fra potensiell til vunnet.",
+              href: "/login",
+              cta: "Logg inn",
+            },
+            {
+              n: "4",
+              title: "Følg tallene",
+              text: "Se omsetning, margin og vinnrate per selger og avdeling — per uke, måned eller år.",
+              href: "#produkt",
+              cta: "Se produktet",
+            },
+          ].map((s) => (
+            <div
+              key={s.n}
+              style={{
+                background: "var(--surface)",
+                border: "1px solid var(--divider)",
+                borderRadius: "var(--r-lg-land)",
+                padding: 24,
+                display: "flex",
+                flexDirection: "column",
+                gap: 10,
+              }}
+            >
+              <span
+                style={{
+                  width: 34,
+                  height: 34,
+                  borderRadius: 999,
+                  background: "var(--accent-soft)",
+                  color: "var(--accent-hover)",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontWeight: 700,
+                  fontSize: 15,
+                }}
+              >
+                {s.n}
+              </span>
+              <h4 style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 22 }}>
+                {s.title}
+              </h4>
+              <p style={{ margin: 0, fontSize: 15, color: "var(--muted)", flex: 1 }}>{s.text}</p>
+              {s.href.startsWith("#") ? (
+                <a href={s.href} style={{ fontSize: 14, fontWeight: 700, color: "var(--accent)" }}>
+                  {s.cta} →
+                </a>
+              ) : (
+                <Link href={s.href} style={{ fontSize: 14, fontWeight: 700, color: "var(--accent)" }}>
+                  {s.cta} →
+                </Link>
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* Pricing */}
-      <section id="priser" style={{ ...wrap, padding: "0 24px 56px" }}>
+      <section
+        id="priser"
+        style={{ ...wrap, padding: "0 24px 56px", scrollMarginTop: 80 }}
+      >
         <div style={{ maxWidth: 620, marginBottom: 28 }}>
           <h2
             style={{
@@ -416,6 +530,73 @@ export default function LandingPage() {
         </p>
       </section>
 
+      {/* FAQ */}
+      <section
+        id="faq"
+        style={{ ...wrap, padding: "0 24px 56px", scrollMarginTop: 80 }}
+      >
+        <div style={{ maxWidth: 620, marginBottom: 24 }}>
+          <h2
+            style={{
+              fontFamily: "var(--font-display)",
+              fontWeight: 400,
+              fontSize: "clamp(32px, 4.2vw, 48px)",
+              marginBottom: 8,
+            }}
+          >
+            Vanlige spørsmål
+          </h2>
+        </div>
+        <div style={{ display: "grid", gap: 12, maxWidth: 820 }}>
+          {[
+            {
+              q: "Hvordan blir de ansatte med?",
+              a: "Administrator deler bedriftskoden (finnes under Innstillinger). Ansatte går til «Bli med», søker opp bedriften, taster koden og lager sin egen bruker med e-post og passord. Administrator godkjenner deretter brukeren.",
+            },
+            {
+              q: "Ser alle i bedriften de samme kundene?",
+              a: "Ja — hele teamet jobber i én felles database. Du kan filtrere på avdeling, selger og periode, eller velge «Bare meg» for kun dine egne kunder.",
+            },
+            {
+              q: "Kan jeg få ut dataene mine?",
+              a: "Ja. Under Kunder eksporterer du hele kundelisten til CSV (semikolonseparert, klar for Excel).",
+            },
+            {
+              q: "Fungerer det på mobil?",
+              a: "Ja. Sporet er responsivt og fungerer i nettleseren på telefon og nettbrett, uten installasjon.",
+            },
+            {
+              q: "Hva koster det?",
+              a: "Prisen avhenger av antall brukere — fra 500 kr/mnd for opptil 10 brukere. Alle pakker inneholder hele systemet. Se prisene over.",
+            },
+          ].map((f) => (
+            <details
+              key={f.q}
+              style={{
+                background: "var(--surface)",
+                border: "1px solid var(--divider)",
+                borderRadius: "var(--r-md-land)",
+                padding: "16px 20px",
+              }}
+            >
+              <summary
+                style={{
+                  cursor: "pointer",
+                  fontWeight: 700,
+                  fontSize: 16,
+                  listStyle: "none",
+                }}
+              >
+                {f.q}
+              </summary>
+              <p style={{ margin: "10px 0 0", fontSize: 15, color: "var(--muted)" }}>
+                {f.a}
+              </p>
+            </details>
+          ))}
+        </div>
+      </section>
+
       {/* CTA band */}
       <section style={{ ...wrap, padding: "0 24px 56px" }}>
         <div
@@ -490,6 +671,14 @@ export default function LandingPage() {
             <span style={{ width: 13, height: 13, borderRadius: 999, background: "var(--accent)" }} />
             Sporet
           </span>
+          <nav style={{ display: "flex", flexWrap: "wrap", gap: 18, fontSize: 14 }}>
+            <a href="#produkt" style={{ color: "var(--muted)" }}>Produkt</a>
+            <a href="#slik" style={{ color: "var(--muted)" }}>Slik funker det</a>
+            <a href="#priser" style={{ color: "var(--muted)" }}>Priser</a>
+            <a href="#faq" style={{ color: "var(--muted)" }}>Spørsmål</a>
+            <Link href="/bli-med" style={{ color: "var(--muted)" }}>Bli med</Link>
+            <Link href="/login" style={{ color: "var(--muted)" }}>Logg inn</Link>
+          </nav>
           <span style={{ fontSize: 14, color: "var(--muted)" }}>
             Salgsoppfølging for team som selger til bedrifter og det offentlige.
           </span>

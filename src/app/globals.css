@@ -279,7 +279,23 @@ button {
   animation: slideIn 0.18s ease;
 }
 
+/* Landing nav links */
+.land-navlink {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  transition: color 0.12s ease;
+}
+.land-navlink:hover {
+  color: var(--accent);
+}
+
 /* Responsive helpers */
+@media (max-width: 820px) {
+  .land-navlink {
+    display: none;
+  }
+}
 @media (max-width: 720px) {
   .hide-sm {
     display: none !important;
