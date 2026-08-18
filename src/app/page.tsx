@@ -4,9 +4,9 @@ import type { Metadata } from "next";
 import { SITE_NAME, SITE_URL, SITE_DESCRIPTION, PRICING, FAQ } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Sporet — CRM for salgsoppfølging | Norsk salgsverktøy for B2B",
+  title: "Altiv — CRM for salgsoppfølging | Norsk salgsverktøy for B2B",
   description:
-    "Sporet samler kundene, dialogen og salgstallene ett sted. Pipeline på tvers av avdelinger, logg hver kontakt, planlegg neste steg og følg omsetning og margin per selger. Fra 500 kr/mnd — ingen installasjon.",
+    "Altiv samler kundene, dialogen og salgstallene ett sted. Pipeline på tvers av avdelinger, logg hver kontakt, planlegg neste steg og følg omsetning og margin per selger. Fra 500 kr/mnd — ingen installasjon.",
   alternates: { canonical: "/" },
 };
 
@@ -179,7 +179,7 @@ export default function LandingPage() {
             }}
           >
             <span style={{ width: 16, height: 16, borderRadius: 999, background: "var(--accent)" }} />
-            Sporet
+            Altiv
           </span>
           <nav
             style={{ display: "flex", alignItems: "center", gap: 20, marginLeft: "auto" }}
@@ -236,7 +236,7 @@ export default function LandingPage() {
           </h1>
           <p style={{ margin: 0, fontSize: 19, color: "var(--muted)", maxWidth: "58ch" }}>
             <strong style={{ color: "var(--text)", fontWeight: 600 }}>
-              Sporet er et norsk CRM for salgsoppfølging i B2B.
+              Altiv er et norsk CRM for salgsoppfølging i B2B.
             </strong>{" "}
             Samle kundene, dialogen og salgstallene ett sted. Se pipeline på
             tvers av avdelinger, logg hver kontakt, planlegg neste steg og følg
@@ -704,7 +704,7 @@ export default function LandingPage() {
                 marginBottom: 8,
               }}
             >
-              Kom i gang med Sporet
+              Kom i gang med Altiv
             </h3>
             <p style={{ margin: 0, fontSize: 16, color: "#c3ccc4" }}>
               Sett opp bedriften på et par minutter: legg inn kunder, flytt dem
@@ -752,7 +752,7 @@ export default function LandingPage() {
             }}
           >
             <span style={{ width: 13, height: 13, borderRadius: 999, background: "var(--accent)" }} />
-            Sporet
+            Altiv
           </span>
           <nav style={{ display: "flex", flexWrap: "wrap", gap: 18, fontSize: 14 }}>
             <a href="#produkt" style={{ color: "var(--muted)" }}>Produkt</a>

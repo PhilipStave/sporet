@@ -1,7 +1,7 @@
 // Central site identity used for SEO metadata, sitemap, robots and JSON-LD.
 // The public URL comes from NEXT_PUBLIC_SITE_URL so it follows the deployment.
 
-export const SITE_NAME = "Sporet";
+export const SITE_NAME = "Altiv";
 export const SITE_TAGLINE = "CRM for salgsoppfølging";
 
 export const SITE_URL = (
@@ -9,7 +9,7 @@ export const SITE_URL = (
 ).replace(/\/$/, "");
 
 export const SITE_DESCRIPTION =
-  "Sporet er et norsk CRM for salgsoppfølging i B2B. Se pipeline på tvers av avdelinger, logg hver kontakt, planlegg neste steg og følg omsetning og margin per selger. Fra 500 kr/mnd.";
+  "Altiv er et norsk CRM for salgsoppfølging i B2B. Se pipeline på tvers av avdelinger, logg hver kontakt, planlegg neste steg og følg omsetning og margin per selger. Fra 500 kr/mnd.";
 
 export const SITE_KEYWORDS = [
   "CRM",
@@ -48,7 +48,7 @@ export const FAQ = [
   },
   {
     q: "Fungerer det på mobil?",
-    a: "Ja. Sporet er responsivt og fungerer i nettleseren på telefon og nettbrett, uten installasjon.",
+    a: "Ja. Altiv er responsivt og fungerer i nettleseren på telefon og nettbrett, uten installasjon.",
   },
   {
     q: "Hva koster det?",

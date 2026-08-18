@@ -46,7 +46,7 @@ export function Logo({
             color: "var(--text)",
           }}
         >
-          Sporet
+          Altiv
         </span>
       )}
     </span>

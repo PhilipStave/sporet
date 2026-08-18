@@ -1,4 +1,4 @@
-// Domain constants for Sporet CRM — mirrors the design handoff spec.
+// Domain constants for Altiv CRM — mirrors the design handoff spec.
 
 export type Stage =
   | "ny"

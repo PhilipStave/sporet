@@ -4,7 +4,7 @@ import { getSessionContext } from "@/lib/queries";
 
 // The logged-in app is private — keep it out of search engines.
 export const metadata: Metadata = {
-  title: "Sporet",
+  title: "Altiv",
   robots: { index: false, follow: false },
 };
 import { StoreProvider } from "@/store/Store";

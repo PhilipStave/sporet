@@ -6,7 +6,7 @@ function esc(v: unknown): string {
   return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
-/** Semicolon-separated CSV with a UTF-8 BOM, downloaded as sporet-kunder.csv. */
+/** Semicolon-separated CSV with a UTF-8 BOM, downloaded as altiv-kunder.csv. */
 export function exportCustomersCsv(
   deals: Deal[],
   deptName: (id: string | null) => string
@@ -53,7 +53,7 @@ export function exportCustomersCsv(
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = "sporet-kunder.csv";
+  a.download = "altiv-kunder.csv";
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1500);
 }

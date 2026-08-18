@@ -1,6 +1,6 @@
-# Sporet — CRM for salgsoppfølging
+# Altiv — CRM for salgsoppfølging
 
-Sporet er et norsk B2B-CRM for salgsoppfølging: hold styr på hvem som er
+Altiv er et norsk B2B-CRM for salgsoppfølging: hold styr på hvem som er
 kontaktet, hvordan, og hvor langt salget har kommet — pluss omsetning og margin
 per selger og avdeling. Prosjektet inneholder både **appen** og en **landingsside
 med priser**.
@@ -119,7 +119,7 @@ avdelinger og invitasjoner samt slette andres deals.
 ```bash
 git init
 git add .
-git commit -m "Sporet CRM – første versjon"
+git commit -m "Altiv CRM – første versjon"
 git branch -M main
 git remote add origin https://github.com/<brukernavn>/<repo>.git
 git push -u origin main
@@ -132,7 +132,7 @@ git push -u origin main
 1. Gå til [vercel.com/new](https://vercel.com/new) og importer GitHub-repoet.
 2. Under **Environment Variables**, legg inn de samme fire variablene som i
    `.env.local` (sett `NEXT_PUBLIC_SITE_URL` til Vercel-URL-en din, f.eks.
-   `https://sporet.vercel.app`).
+   `https://altiv.no`).
 3. Deploy. Vercel bygger `next build` automatisk.
 4. I Supabase under **Authentication → URL Configuration**, legg til
    Vercel-domenet som tillatt Site URL / redirect.
@@ -153,7 +153,7 @@ git push -u origin main
 ## Merknader
 
 - CSV-eksport (`Kunder → Eksporter CSV`) lages i nettleseren fra data du allerede
-  har lastet: semikolonseparert, UTF-8 med BOM, filnavn `sporet-kunder.csv`.
+  har lastet: semikolonseparert, UTF-8 med BOM, filnavn `altiv-kunder.csv`.
 - «Oppdatert»-tidspunkt og periodefiltre bruker ekte tidsstempler
   (`updated_at`, `won_at`, `lost_at`).
 - Type-typene i `src/types/database.ts` er håndskrevne; du kan regenerere dem med

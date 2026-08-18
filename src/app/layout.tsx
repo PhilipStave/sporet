@@ -65,7 +65,7 @@ export const metadata: Metadata = {
         url: "/screenshots/02-app-oversikt.png",
         width: 2560,
         height: 1600,
-        alt: "Sporet – oversikt med pipeline-verdi, salg, margin og vinnrate",
+        alt: "Altiv – oversikt med pipeline-verdi, salg, margin og vinnrate",
       },
     ],
   },
