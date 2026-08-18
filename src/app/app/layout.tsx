@@ -12,6 +12,8 @@ import { TopNav } from "@/components/TopNav";
 import { CustomerDrawer } from "@/components/drawer/CustomerDrawer";
 import { PendingScreen } from "@/components/PendingScreen";
 import { BillingBanner } from "@/components/BillingBanner";
+import { ReacceptTerms } from "@/components/ReacceptTerms";
+import { LEGAL_VERSION } from "@/lib/legal";
 
 export default async function AppLayout({
   children,
@@ -23,6 +25,11 @@ export default async function AppLayout({
   if (session.kind === "none") redirect("/login");
   if (session.kind === "pending") {
     return <PendingScreen fullName={session.fullName} />;
+  }
+
+  // Terms changed (or never recorded) since this user last accepted → must re-accept.
+  if (session.profile.terms_accepted_version !== LEGAL_VERSION) {
+    return <ReacceptTerms fullName={session.profile.full_name} />;
   }
 
   return (

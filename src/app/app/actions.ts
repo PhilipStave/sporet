@@ -177,6 +177,26 @@ export async function deleteOrganization(confirmName: string): Promise<ProfileRe
   }
 }
 
+/** Record acceptance of the current terms version for the logged-in user. */
+export async function acceptCurrentTerms(): Promise<ProfileResult> {
+  try {
+    const me = await currentProfile();
+    const { LEGAL_VERSION } = await import("@/lib/legal");
+    const admin = createAdminClient();
+    const { error } = await admin
+      .from("profiles")
+      .update({
+        terms_accepted_version: LEGAL_VERSION,
+        terms_accepted_at: new Date().toISOString(),
+      })
+      .eq("id", me.id);
+    if (error) return { error: error.message };
+    return { ok: true };
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+}
+
 /** A user edits their own name / email / phone. */
 export async function updateMyProfile(fields: {
   full_name: string;

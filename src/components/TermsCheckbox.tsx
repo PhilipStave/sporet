@@ -42,9 +42,14 @@ export function TermsCheckbox({
         <Link href="/personvern" target="_blank" style={{ color: "var(--primary)", fontWeight: 600 }}>
           personvernerklæringen
         </Link>
-        , herunder ansvarsbegrensningen (Altiv er ikke ansvarlig for indirekte tap,
-        tapte data eller sikkerhetshendelser utenfor vår kontroll, så langt loven
-        tillater), og at jeg selv er ansvarlig for sikkerhetskopi av egne data.
+
+        . Jeg bekrefter at jeg har fullmakt til å binde bedriften, og er kjent
+        med at ansvaret er begrenset (ingen ansvar for indirekte tap, tapte data
+        eller sikkerhetshendelser utenfor Altivs kontroll, så langt loven
+        tillater — beløpsbegrenset til betalt vederlag), at bedriften selv er
+        ansvarlig for sikkerhetskopi og for lovlig behandling av egne kundedata,
+        og at abonnementet starter automatisk etter prøveperioden hvis kort er
+        registrert.
       </span>
     </label>
   );
