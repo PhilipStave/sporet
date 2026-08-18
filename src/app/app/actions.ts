@@ -130,6 +130,53 @@ export async function changeMyPassword(password: string): Promise<ProfileResult>
   }
 }
 
+/**
+ * Permanently delete the whole organisation: all deals, activities, departments,
+ * invites, members and their login accounts, and cancel any Stripe subscription.
+ * Admin only. Requires the exact company name as confirmation.
+ */
+export async function deleteOrganization(confirmName: string): Promise<ProfileResult> {
+  try {
+    const me = await requireAdmin();
+    if (!me.org_id) return { error: "Fant ikke bedrift." };
+    const admin = createAdminClient();
+    const { data: org } = await admin
+      .from("organizations")
+      .select("id, name, stripe_subscription_id")
+      .eq("id", me.org_id)
+      .single();
+    if (!org) return { error: "Fant ikke bedrift." };
+    if (confirmName.trim() !== org.name.trim())
+      return { error: "Bedriftsnavnet stemmer ikke. Skriv det nøyaktig slik det står." };
+
+    // Cancel Stripe subscription immediately (best effort).
+    if (org.stripe_subscription_id && process.env.STRIPE_SECRET_KEY) {
+      try {
+        const { stripe } = await import("@/lib/stripe");
+        await stripe().subscriptions.cancel(org.stripe_subscription_id);
+      } catch (e) {
+        console.error("stripe cancel failed:", (e as Error).message);
+      }
+    }
+
+    // Collect member ids, then delete the org (cascades deals/activities/departments/invites/profiles).
+    const { data: members } = await admin
+      .from("profiles")
+      .select("id")
+      .eq("org_id", org.id);
+    const { error } = await admin.from("organizations").delete().eq("id", org.id);
+    if (error) return { error: error.message };
+
+    // Delete the login accounts (auth users). Own account last.
+    const ids = (members || []).map((m) => m.id).filter((id) => id !== me.id);
+    for (const id of ids) await admin.auth.admin.deleteUser(id).catch(() => {});
+    await admin.auth.admin.deleteUser(me.id).catch(() => {});
+    return { ok: true };
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+}
+
 /** A user edits their own name / email / phone. */
 export async function updateMyProfile(fields: {
   full_name: string;

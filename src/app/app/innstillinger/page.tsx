@@ -20,6 +20,7 @@ import {
   updateMyProfile,
   setMemberPassword,
   changeMyPassword,
+  deleteOrganization,
 } from "../actions";
 
 export default function InnstillingerPage() {
@@ -43,6 +44,27 @@ export default function InnstillingerPage() {
   const [myEmail, setMyEmail] = useState(profile.email);
   const [myPhone, setMyPhone] = useState(profile.phone);
   const [myNewPw, setMyNewPw] = useState("");
+  const [delConfirm, setDelConfirm] = useState("");
+  const [deleting, setDeleting] = useState(false);
+
+  const deleteCompany = async () => {
+    if (
+      !confirm(
+        `Er du HELT sikker? Dette sletter «${org.name}» med alle kunder, aktiviteter, avdelinger og brukere for godt. Det kan ikke angres.`
+      )
+    )
+      return;
+    setDeleting(true);
+    const res = await deleteOrganization(delConfirm);
+    if (res.error) {
+      setDeleting(false);
+      flash(res.error);
+      return;
+    }
+    // Everything is gone, including our own login — go to the front page.
+    router.replace("/");
+    router.refresh();
+  };
 
   const saveMyPassword = async () => {
     setBusy(true);
@@ -532,6 +554,54 @@ export default function InnstillingerPage() {
               </div>
             )}
           </Section>
+
+          {/* Danger zone */}
+          <div
+            className="card"
+            style={{
+              padding: 20,
+              marginBottom: 16,
+              borderColor: "#f0d0cc",
+              background: "#fffaf9",
+            }}
+          >
+            <h4 style={{ fontSize: 16, marginBottom: 6, color: "var(--danger)" }}>
+              Slett bedriften
+            </h4>
+            <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 12px" }}>
+              Sletter <strong>{org.name}</strong> permanent — alle kunder, aktiviteter,
+              avdelinger og brukere, og avslutter abonnementet. Dette kan ikke angres.
+              Ta gjerne en CSV-eksport av kundene først (under Kunder).
+            </p>
+            <label className="field-label">
+              Skriv bedriftsnavnet for å bekrefte: <strong>{org.name}</strong>
+            </label>
+            <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+              <input
+                className="field-input"
+                value={delConfirm}
+                placeholder={org.name}
+                onChange={(e) => setDelConfirm(e.target.value)}
+                style={{ flex: "1 1 240px" }}
+              />
+              <button
+                onClick={deleteCompany}
+                disabled={deleting || delConfirm.trim() !== org.name.trim()}
+                style={{
+                  border: "1px solid #e0a8a0",
+                  background: delConfirm.trim() === org.name.trim() ? "var(--danger)" : "#f5e5e2",
+                  color: delConfirm.trim() === org.name.trim() ? "#fff" : "#b08a85",
+                  borderRadius: 10,
+                  padding: "9px 14px",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  cursor: delConfirm.trim() === org.name.trim() ? "pointer" : "not-allowed",
+                }}
+              >
+                {deleting ? "Sletter …" : "Slett bedriften permanent"}
+              </button>
+            </div>
+          </div>
         </>
       )}
     </div>

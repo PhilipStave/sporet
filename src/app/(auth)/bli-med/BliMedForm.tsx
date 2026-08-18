@@ -5,6 +5,7 @@ import Link from "next/link";
 import { joinAction, searchCompanies, type JoinState } from "../actions";
 import { Logo } from "@/components/Logo";
 import { Icon } from "@/components/Icon";
+import { TermsCheckbox } from "@/components/TermsCheckbox";
 
 const cardStyle: React.CSSProperties = {
   background: "var(--surface)",
@@ -32,6 +33,7 @@ export function BliMedForm({ initial }: { initial: JoinState }) {
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [deptIds, setDeptIds] = useState<string[]>([]);
+  const [accepted, setAccepted] = useState(false);
   const toggle = (id: string) =>
     setDeptIds((a) => (a.includes(id) ? a.filter((x) => x !== id) : [...a, id]));
 
@@ -45,7 +47,7 @@ export function BliMedForm({ initial }: { initial: JoinState }) {
 
   // ---- Step 3: register ------------------------------------------
   if (state.stage === "register") {
-    const canSubmit = !!name.trim() && password.length >= 4;
+    const canSubmit = !!name.trim() && password.length >= 4 && accepted;
     return (
       <div style={cardStyle} className="animate-fade">
         <div style={{ marginBottom: 18 }}>
@@ -128,6 +130,8 @@ export function BliMedForm({ initial }: { initial: JoinState }) {
               ))}
             </div>
           )}
+
+          <TermsCheckbox checked={accepted} onChange={setAccepted} />
 
           {state.error && (
             <p style={{ margin: "14px 0 0", fontSize: 13, color: "var(--danger)" }}>

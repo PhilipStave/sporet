@@ -58,6 +58,12 @@ export async function startCheckout(planId: string): Promise<{ error?: string }>
         .eq("id", org.id);
     }
 
+    // Remaining free days: card is collected now, first charge happens when the
+    // trial ends (automatic). If the trial has already ended, charge immediately.
+    const trialEnd = new Date(org.trial_ends_at).getTime();
+    const daysLeft = Math.ceil((trialEnd - Date.now()) / 86_400_000);
+    const trialDays = org.subscription_status === "trialing" && daysLeft > 0 ? daysLeft : 0;
+
     const session = await s.checkout.sessions.create({
       mode: "subscription",
       customer: customerId,
@@ -68,7 +74,19 @@ export async function startCheckout(planId: string): Promise<{ error?: string }>
       customer_update: { address: "auto", name: "auto" },
       tax_id_collection: { enabled: true },
       billing_address_collection: "required",
-      subscription_data: { metadata: { org_id: org.id, plan: plan.id } },
+      // Card is required up front so billing starts automatically after the trial.
+      payment_method_collection: "always",
+      subscription_data: {
+        metadata: { org_id: org.id, plan: plan.id },
+        ...(trialDays > 0
+          ? {
+              trial_period_days: trialDays,
+              trial_settings: {
+                end_behavior: { missing_payment_method: "cancel" },
+              },
+            }
+          : {}),
+      },
       metadata: { org_id: org.id, plan: plan.id },
       success_url: `${SITE_URL}/app/innstillinger?betaling=ok`,
       cancel_url: `${SITE_URL}/app/innstillinger?betaling=avbrutt`,

@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { acceptInvite, type AuthState } from "../../actions";
+import { TermsCheckbox } from "@/components/TermsCheckbox";
 
 export function InviteForm({
   token,
@@ -20,8 +21,9 @@ export function InviteForm({
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [deptIds, setDeptIds] = useState<string[]>([]);
+  const [accepted, setAccepted] = useState(false);
 
-  const canSubmit = !!name.trim() && password.length >= 4;
+  const canSubmit = !!name.trim() && password.length >= 4 && accepted;
 
   const toggle = (id: string) =>
     setDeptIds((a) => (a.includes(id) ? a.filter((x) => x !== id) : [...a, id]));
@@ -99,6 +101,8 @@ export function InviteForm({
           ))}
         </div>
       )}
+
+      <TermsCheckbox checked={accepted} onChange={setAccepted} />
 
       {state.error && (
         <p style={{ margin: "14px 0 0", fontSize: 13, color: "var(--danger)" }}>

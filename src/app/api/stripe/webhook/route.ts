@@ -10,8 +10,10 @@ export const runtime = "nodejs";
 function mapStatus(s: Stripe.Subscription.Status): SubscriptionStatus {
   switch (s) {
     case "active":
-    case "trialing": // paid plan with a Stripe-side trial counts as active for us
       return "active";
+    case "trialing":
+      // Card on file, first charge comes automatically when the trial ends.
+      return "trialing";
     case "past_due":
     case "unpaid":
       return "past_due";
@@ -52,6 +54,10 @@ async function syncSubscription(sub: Stripe.Subscription) {
     subscription_status: status,
     current_period_end: periodEnd,
     ...(plan ? { plan } : {}),
+    // Keep the app's trial date in sync with Stripe's (card is on file now).
+    ...(sub.trial_end
+      ? { trial_ends_at: new Date(sub.trial_end * 1000).toISOString() }
+      : {}),
   };
 
   const q = admin.from("organizations").update(patch);

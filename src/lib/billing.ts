@@ -38,6 +38,8 @@ export interface Access {
   state: "trial" | "active" | "past_due" | "expired" | "canceled";
   daysLeft: number | null; // for trial / until period end
   message: string;
+  /** Trial with a card on file — billing starts automatically, no action needed. */
+  cardOnFile?: boolean;
 }
 
 /** Mirrors org_can_write() in SQL so the UI matches what RLS enforces. */
@@ -60,11 +62,15 @@ export function computeAccess(org: Organization): Access {
   if (org.subscription_status === "trialing") {
     if (trialEnd > now) {
       const d = days(trialEnd);
+      const cardOnFile = !!org.stripe_subscription_id;
       return {
         canWrite: true,
         state: "trial",
         daysLeft: d,
-        message: `Gratis prøveperiode — ${d} ${d === 1 ? "dag" : "dager"} igjen.`,
+        cardOnFile,
+        message: cardOnFile
+          ? `Gratis prøveperiode — ${d} ${d === 1 ? "dag" : "dager"} igjen. Abonnementet starter automatisk etterpå.`
+          : `Gratis prøveperiode — ${d} ${d === 1 ? "dag" : "dager"} igjen. Velg pakke og legg inn kort for å fortsette uten avbrudd.`,
       };
     }
     return {

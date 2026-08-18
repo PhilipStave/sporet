@@ -5,6 +5,7 @@ import Link from "next/link";
 import { setupCompany, type AuthState } from "../actions";
 import { Logo } from "@/components/Logo";
 import { Icon } from "@/components/Icon";
+import { TermsCheckbox } from "@/components/TermsCheckbox";
 import { FEATURE_ORDER, FEATURE_LABELS, type FeatureKey } from "@/lib/constants";
 
 const cardStyle: React.CSSProperties = {
@@ -33,6 +34,7 @@ export default function SetupPage() {
   const [password, setPassword] = useState("");
   const [password2, setPassword2] = useState("");
   const [adminDepts, setAdminDepts] = useState<string[]>([]);
+  const [accepted, setAccepted] = useState(false);
 
   const cleanDepts = useMemo(
     () => depts.map((d) => d.trim()).filter(Boolean),
@@ -47,7 +49,8 @@ export default function SetupPage() {
       : "";
 
   const pwValid = password.length >= 4 && password === password2;
-  const canSubmit = !!company.trim() && cleanDepts.length >= 1 && pwValid;
+  const canSubmit =
+    !!company.trim() && cleanDepts.length >= 1 && pwValid && accepted;
 
   const toggleFeature = (k: FeatureKey) =>
     setFeatures((f) => ({ ...f, [k]: !f[k] }));
@@ -244,6 +247,8 @@ export default function SetupPage() {
             <input key={name} type="hidden" name="adminDepts" value={name} />
           ))}
         </div>
+
+        <TermsCheckbox checked={accepted} onChange={setAccepted} />
 
         {state.error && (
           <p

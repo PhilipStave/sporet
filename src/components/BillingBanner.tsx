@@ -10,8 +10,11 @@ export function BillingBanner() {
   const { org, profile } = useStore();
   const a = computeAccess(org);
 
-  // Quiet during a healthy paid subscription; also quiet early in the trial.
+  // Quiet during a healthy paid subscription, and during a trial with a card on
+  // file (billing starts automatically — nothing for the user to do).
   if (a.state === "active") return null;
+  if (a.state === "trial" && a.cardOnFile) return null;
+  // Trial without card: gentle nudge only in the last 7 days.
   if (a.state === "trial" && (a.daysLeft ?? 99) > 7) return null;
 
   const danger = !a.canWrite;

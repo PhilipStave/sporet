@@ -99,8 +99,10 @@ export function BillingSection() {
 
       {/* Plans */}
       <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 10px" }}>
-        {a.state === "active"
+        {a.state === "active" || a.cardOnFile
           ? "Bytt pakke via «Administrer abonnement», eller velg en annen pakke under."
+          : a.state === "trial"
+          ? `Velg pakke og legg inn kort nå — du betaler ingenting før prøveperioden er over (${a.daysLeft} dager). Da starter abonnementet automatisk. Avbestill når som helst før det, helt gratis. Priser eks. mva.`
           : "Velg pakken som passer antall brukere. Alle pakker inneholder hele systemet. Priser eks. mva."}
       </p>
       <div

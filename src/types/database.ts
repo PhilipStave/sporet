@@ -42,6 +42,8 @@ export type ProfileRow = {
   phone: string;
   role: Role;
   status: "pending" | "active";
+  terms_accepted_version: string | null;
+  terms_accepted_at: string | null;
   created_at: string;
 }
 

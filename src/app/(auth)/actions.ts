@@ -3,10 +3,21 @@
 import { redirect } from "next/navigation";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { DEFAULT_FEATURES, type FeatureKey } from "@/lib/constants";
+import { LEGAL_VERSION } from "@/lib/legal";
 
 export interface AuthState {
   error?: string;
 }
+
+/** Terms/privacy must be explicitly accepted on every signup path. */
+function termsAccepted(formData: FormData): boolean {
+  return formData.get("acceptTerms") === "on" || formData.get("acceptTerms") === "true";
+}
+const TERMS_ERROR = "Du må godta vilkårene og personvernerklæringen for å fortsette.";
+const termsFields = () => ({
+  terms_accepted_version: LEGAL_VERSION,
+  terms_accepted_at: new Date().toISOString(),
+});
 
 function missingEnv(): boolean {
   return (
@@ -50,6 +61,7 @@ export async function setupCompany(
   if (password.length < 4) return { error: "Passordet må ha minst 4 tegn." };
   if (!adminName || !adminEmail)
     return { error: "Fyll inn navn og e-post for administrator." };
+  if (!termsAccepted(formData)) return { error: TERMS_ERROR };
 
   const features: Record<FeatureKey, boolean> = { ...DEFAULT_FEATURES };
   (Object.keys(features) as FeatureKey[]).forEach((k) => {
@@ -105,6 +117,7 @@ export async function setupCompany(
     email: adminEmail,
     phone: adminPhone,
     role: "admin",
+    ...termsFields(),
   });
   if (profErr) {
     await cleanup();
@@ -179,6 +192,7 @@ export async function acceptInvite(
 
   if (!name) return { error: "Skriv inn fullt navn." };
   if (password.length < 4) return { error: "Passordet må ha minst 4 tegn." };
+  if (!termsAccepted(formData)) return { error: TERMS_ERROR };
 
   const admin = createAdminClient();
   const { data: invite } = await admin
@@ -210,6 +224,7 @@ export async function acceptInvite(
     email: invite.email,
     phone,
     role: invite.role,
+    ...termsFields(),
   });
   if (profErr) {
     await admin.auth.admin.deleteUser(userId).catch(() => {});
@@ -344,6 +359,7 @@ export async function joinAction(
   if (!name) return reload("Skriv inn fullt navn.");
   if (!email) return reload("Skriv inn e-post.");
   if (password.length < 4) return reload("Passordet må ha minst 4 tegn.");
+  if (!termsAccepted(formData)) return reload(TERMS_ERROR);
 
   const { data: created, error: userErr } = await admin.auth.admin.createUser({
     email,
@@ -366,6 +382,7 @@ export async function joinAction(
     phone,
     role: "seller",
     status: "pending", // must be approved by an admin
+    ...termsFields(),
   });
   if (profErr) {
     await admin.auth.admin.deleteUser(userId).catch(() => {});

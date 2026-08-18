@@ -58,6 +58,15 @@ export default function LoginPage() {
           />
         </label>
 
+        <div style={{ textAlign: "right", marginTop: 8 }}>
+          <Link
+            href="/glemt-passord"
+            style={{ fontSize: 13, color: "var(--primary)", fontWeight: 500 }}
+          >
+            Glemt passord?
+          </Link>
+        </div>
+
         {state.error && (
           <p style={{ margin: "14px 0 0", fontSize: 13, color: "var(--danger)" }}>
             {state.error}
@@ -68,7 +77,7 @@ export default function LoginPage() {
           type="submit"
           className="btn btn-primary"
           disabled={!canSubmit || pending}
-          style={{ width: "100%", marginTop: 18, padding: "12px 14px" }}
+          style={{ width: "100%", marginTop: 14, padding: "12px 14px" }}
         >
           {pending ? "Logger inn …" : "Logg inn"}
         </button>
