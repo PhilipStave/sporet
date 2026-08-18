@@ -5,11 +5,25 @@ import type { Stage, Channel, Role, FeatureKey } from "@/lib/constants";
 
 export type Features = Record<FeatureKey, boolean>;
 
+export type Plan = "trial" | "10" | "20" | "50" | "100";
+export type SubscriptionStatus =
+  | "trialing"
+  | "active"
+  | "past_due"
+  | "canceled"
+  | "expired";
+
 export type OrganizationRow = {
   id: string;
   name: string;
   features: Features;
   join_code: string;
+  plan: Plan;
+  subscription_status: SubscriptionStatus;
+  trial_ends_at: string;
+  current_period_end: string | null;
+  stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
   created_at: string;
 }
 

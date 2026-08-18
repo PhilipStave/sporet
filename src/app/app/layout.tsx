@@ -11,6 +11,7 @@ import { StoreProvider } from "@/store/Store";
 import { TopNav } from "@/components/TopNav";
 import { CustomerDrawer } from "@/components/drawer/CustomerDrawer";
 import { PendingScreen } from "@/components/PendingScreen";
+import { BillingBanner } from "@/components/BillingBanner";
 
 export default async function AppLayout({
   children,
@@ -33,6 +34,7 @@ export default async function AppLayout({
     >
       <div style={{ minHeight: "100dvh", display: "flex", flexDirection: "column" }}>
         <TopNav />
+        <BillingBanner />
         <main
           style={{
             flex: 1,

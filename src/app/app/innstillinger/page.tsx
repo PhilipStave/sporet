@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { BillingSection } from "@/components/BillingSection";
 import { useStore } from "@/store/Store";
 import { createClient } from "@/lib/supabase/client";
 import { Icon } from "@/components/Icon";
@@ -256,6 +257,11 @@ export default function InnstillingerPage() {
 
       {isAdmin && (
         <>
+          {/* Subscription / billing */}
+          <Suspense fallback={null}>
+            <BillingSection />
+          </Suspense>
+
           {/* Pending approvals */}
           {pending.length > 0 && (
             <Section title={`Til godkjenning (${pending.length})`}>

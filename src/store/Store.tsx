@@ -9,6 +9,7 @@ import {
   useState,
 } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { computeAccess } from "@/lib/billing";
 import {
   CHANNELS,
   type Channel,
@@ -35,6 +36,8 @@ interface StoreValue {
   members: Member[];
   deals: Deal[];
   loading: boolean;
+  /** False when the org's trial/subscription has lapsed (read-only mode). */
+  canWrite: boolean;
 
   scope: Scope;
   setScope: (s: Scope) => void;
@@ -332,6 +335,8 @@ export function StoreProvider({
     [supabase]
   );
 
+  const canWrite = computeAccess(org).canWrite;
+
   const value: StoreValue = {
     org,
     profile,
@@ -339,6 +344,7 @@ export function StoreProvider({
     members,
     deals,
     loading,
+    canWrite,
     scope,
     setScope,
     query,

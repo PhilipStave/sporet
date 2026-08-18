@@ -14,7 +14,7 @@ import { fmtKr, withinPeriod, type Period } from "@/lib/format";
 type FilterKind = "alle" | "apne" | "vunnet" | "tapt";
 
 export default function PipelinePage() {
-  const { scopedDeals, departments, sellerNames } = useStore();
+  const { scopedDeals, departments, sellerNames, canWrite } = useStore();
 
   const [mode, setMode] = useState<"tavle" | "tabell">("tavle");
   const [query, setQuery] = useState("");
@@ -95,7 +95,12 @@ export default function PipelinePage() {
               </span>
             </button>
           </div>
-          <button className="btn btn-primary" onClick={() => setNewOpen(true)}>
+          <button
+            className="btn btn-primary"
+            onClick={() => setNewOpen(true)}
+            disabled={!canWrite}
+            title={canWrite ? undefined : "Abonnementet må være aktivt for å legge til kunder"}
+          >
             <Icon name="plus" size={16} /> Ny kunde
           </button>
         </div>
