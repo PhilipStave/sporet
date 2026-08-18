@@ -36,10 +36,22 @@ function buildBuckets(period: StatPeriod): Bucket[] {
   const now = new Date();
   now.setHours(0, 0, 0, 0);
 
-  if (period === "ar" || period === "alle") {
+  if (period === "alle") {
+    // Rolling last 12 months (e.g. sep … aug), oldest first.
+    return Array.from({ length: 12 }, (_, i) => {
+      const dt = new Date(now.getFullYear(), now.getMonth() - (11 - i), 1);
+      const y = dt.getFullYear();
+      const m = dt.getMonth();
+      return {
+        label: MONTHS[m],
+        match: (d: Date) => d.getFullYear() === y && d.getMonth() === m,
+      };
+    });
+  }
+  if (period === "ar") {
+    // Calendar year to date.
     const year = now.getFullYear();
-    const upto = period === "alle" ? 11 : now.getMonth();
-    return Array.from({ length: upto + 1 }, (_, m) => ({
+    return Array.from({ length: now.getMonth() + 1 }, (_, m) => ({
       label: MONTHS[m],
       match: (d: Date) => d.getFullYear() === year && d.getMonth() === m,
     }));
@@ -110,7 +122,29 @@ export default function StatistikkPage() {
     () => buckets.map((_, i) => Object.values(series).reduce((a, s) => a + s[i], 0)),
     [series, buckets]
   );
-  const maxVal = Math.max(1, ...totals, ...Object.values(series).flat());
+
+  // Line mode shows a running (cumulative) total — smooth, rising curves.
+  // Bar mode shows the per-period amounts.
+  const cumulate = (arr: number[]) => {
+    let acc = 0;
+    return arr.map((v) => (acc += v));
+  };
+  const chartSeries = useMemo(() => {
+    if (chartType !== "line") return series;
+    const out: Record<string, number[]> = {};
+    Object.entries(series).forEach(([k, v]) => (out[k] = cumulate(v)));
+    return out;
+  }, [series, chartType]);
+  const chartTotals = useMemo(
+    () => (chartType === "line" ? cumulate(totals) : totals),
+    [totals, chartType]
+  );
+  // Scale the axis to what is actually drawn: include the total only when shown.
+  const maxVal = Math.max(
+    1,
+    ...(showTotal ? chartTotals : []),
+    ...Object.values(chartSeries).flat()
+  );
 
   const toggleDept = (id: string) =>
     setSelDepts((cur) =>
@@ -231,8 +265,8 @@ export default function StatistikkPage() {
         <Chart
           chartType={chartType}
           buckets={buckets}
-          totals={totals}
-          series={series}
+          totals={chartTotals}
+          series={chartSeries}
           departments={departments.filter((d) => selDepts.includes(d.id))}
           maxVal={maxVal}
           showTotal={showTotal}
@@ -259,16 +293,27 @@ export default function StatistikkPage() {
             <div style={valueStyle}>{fmtKr(allTotal)}</div>
           </button>
         )}
-        {deptCards.map((c) => (
+        {deptCards.map((c, i) => (
           <button
             key={c.id}
             type="button"
             className="stat-card"
             onClick={() => setDrill(c.id)}
-            style={cardStyle}
+            style={{ ...cardStyle, display: "flex", alignItems: "center", gap: 14 }}
           >
-            <div style={kickerStyle}>{c.name}</div>
-            <div style={valueStyle}>{fmtKr(c.total)}</div>
+            <span
+              style={{
+                width: 12,
+                height: 12,
+                borderRadius: 999,
+                background: LINE_COLORS[i % LINE_COLORS.length],
+                flexShrink: 0,
+              }}
+            />
+            <span>
+              <div style={kickerStyle}>{c.name}</div>
+              <div style={valueStyle}>{fmtKr(c.total)}</div>
+            </span>
           </button>
         ))}
       </div>

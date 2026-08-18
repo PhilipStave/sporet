@@ -53,6 +53,18 @@ async function seed() {
     ["Bergen Bane", "Siv Aas", "Innkjøpsleder", 670000, 20, "vunnet", "epost", d("Bane"), sellers[0], -95, null, null, "Kontaktledning"],
     ["Østfold Bygg", "Rune Hoel", "PL", 420000, 22, "vunnet", "telefon", d("Bygg og betong"), sellers[1], -140, null, null, "Prefab"],
   ];
+  // Extra won deals spread over the last 12 months so cumulative lines climb smoothly.
+  const wonNames = ["Nordfjord AS", "Sunnmøre Bygg", "Telemark Bane", "Agder Vei", "Innlandet Maskin", "Møre Industri", "Troms Anlegg", "Finnmark Bygg", "Vestfold Bane", "Buskerud Vei", "Oppland Industri", "Salten Maskin"];
+  const deptCycle = ["Bane", "Bygg og betong", "Industri", "Vei og miljø"];
+  const baseValues = { "Bane": 640000, "Bygg og betong": 780000, "Industri": 830000, "Vei og miljø": 780000 };
+  for (let m = 0; m < 12; m++) {
+    deptCycle.forEach((dept, di) => {
+      const jitter = ((m * 7 + di * 13) % 9) / 10; // deterministic 0..0.8
+      const value = Math.round(baseValues[dept] * (0.6 + jitter) / 10000) * 10000;
+      const off = -(m * 30 + 15) + di * 3;
+      rows.push([`${wonNames[m]} ${di + 1}`, "Kontakt", "Innkjøp", value, 16 + ((m + di) % 9), "vunnet", "epost", d(dept), sellers[(m + di) % 4], off, null, null, "Leveranse"]);
+    });
+  }
   const now = Date.now();
   const inserts = rows.map(([company, contact, role, value, margin, stage, channel, dept, seller, off, nsText, nsDate, product]) => {
     const ts = new Date(now + off * 86400000).toISOString();
@@ -109,11 +121,10 @@ async function shoot() {
   await shot("/app/oversikt", "02-app-oversikt.png");
   await shot("/app/pipeline", "01-app.png");
   await shot("/app/statistikk", "02-app.png", async () => {
-    // Line chart, year period, and only two departments + total for a clean look.
+    // Line chart (cumulative), last 12 months, all departments, total off.
     await page.getByRole("button", { name: "Linje" }).click().catch(() => {});
-    await page.getByRole("button", { name: "År", exact: true }).click().catch(() => {});
-    await page.getByRole("button", { name: "Bygg og betong", exact: true }).click().catch(() => {});
-    await page.getByRole("button", { name: "Vei og miljø", exact: true }).click().catch(() => {});
+    await page.getByRole("button", { name: "Alt", exact: true }).click().catch(() => {});
+    await page.getByRole("button", { name: "Alle (total)", exact: true }).click().catch(() => {});
     await page.waitForTimeout(700);
   });
   await shot("/app/kunder", "03-app.png");
