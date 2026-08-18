@@ -18,6 +18,7 @@ export default function AktivitetPage() {
   const [query, setQuery] = useState("");
   const [seller, setSeller] = useState("");
   const [period, setPeriod] = useState<Period>("alle");
+  const [sortDir, setSortDir] = useState<"desc" | "asc">("desc"); // desc = nyeste først
 
   const rows: FeedRow[] = useMemo(() => {
     const out: FeedRow[] = [];
@@ -25,9 +26,11 @@ export default function AktivitetPage() {
       (d.activities || []).forEach((a) => out.push({ activity: a, deal: d }));
     });
     return out.sort((a, b) =>
-      b.activity.created_at.localeCompare(a.activity.created_at)
+      sortDir === "desc"
+        ? b.activity.created_at.localeCompare(a.activity.created_at)
+        : a.activity.created_at.localeCompare(b.activity.created_at)
     );
-  }, [scopedDeals]);
+  }, [scopedDeals, sortDir]);
 
   const filtered = useMemo(() => {
     const q = query.toLowerCase().trim();
@@ -107,6 +110,15 @@ export default function AktivitetPage() {
             </button>
           ))}
         </div>
+        <button
+          className="btn"
+          onClick={() => setSortDir((d) => (d === "desc" ? "asc" : "desc"))}
+          title="Bytt sortering"
+        >
+          <Icon name={sortDir === "desc" ? "chevron" : "chevronr"} size={14}
+            style={{ transform: sortDir === "asc" ? "rotate(-90deg)" : undefined }} />
+          {sortDir === "desc" ? "Nyeste først" : "Eldste først"}
+        </button>
         <span style={{ fontSize: 13, color: "var(--muted)", marginLeft: "auto" }}>
           {filtered.length} hendelser
         </span>

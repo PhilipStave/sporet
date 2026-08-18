@@ -5,11 +5,11 @@ import { useStore } from "@/store/Store";
 import { Icon } from "@/components/Icon";
 import { Autocomplete } from "@/components/Autocomplete";
 import { STAGE_COLORS, STAGE_LABELS, pillStyle } from "@/lib/constants";
-import { fmtKr, type Period } from "@/lib/format";
+import { fmtKr, fmtDateShort, type Period } from "@/lib/format";
 import { withinDays } from "@/lib/metrics";
 import { exportCustomersCsv } from "@/lib/csv";
 
-const GRID = "1.5fr 1.4fr 1.2fr 1fr .9fr .8fr";
+const GRID = "1.5fr 1.4fr 1.2fr 1fr .9fr .8fr .8fr";
 
 export default function KunderPage() {
   const { scopedDeals, departments, sellerNames, setSelectedDealId, deptName } =
@@ -20,6 +20,7 @@ export default function KunderPage() {
   const [deptFilter, setDeptFilter] = useState<string[]>([]);
   const [seller, setSeller] = useState("");
   const [period, setPeriod] = useState<Period>("alle");
+  const [sortDir, setSortDir] = useState<"desc" | "asc">("desc"); // desc = nyeste først
 
   const toggleDept = (id: string) =>
     setDeptFilter((cur) =>
@@ -44,8 +45,12 @@ export default function KunderPage() {
           return false;
         return true;
       })
-      .sort((a, b) => a.company.localeCompare(b.company, "nb"));
-  }, [scopedDeals, query, deptFilter, seller, period]);
+      .sort((a, b) =>
+        sortDir === "desc"
+          ? b.updated_at.localeCompare(a.updated_at)
+          : a.updated_at.localeCompare(b.updated_at)
+      );
+  }, [scopedDeals, query, deptFilter, seller, period, sortDir]);
 
   return (
     <div className="animate-fade">
@@ -126,6 +131,15 @@ export default function KunderPage() {
             </button>
           ))}
         </div>
+        <button
+          className="btn"
+          onClick={() => setSortDir((d) => (d === "desc" ? "asc" : "desc"))}
+          title="Bytt sortering"
+        >
+          <Icon name={sortDir === "desc" ? "chevron" : "chevronr"} size={14}
+            style={{ transform: sortDir === "asc" ? "rotate(-90deg)" : undefined }} />
+          {sortDir === "desc" ? "Nyeste først" : "Eldste først"}
+        </button>
         <span style={{ fontSize: 13, color: "var(--muted)", marginLeft: "auto" }}>
           {filtered.length} kunder
         </span>
@@ -175,6 +189,7 @@ export default function KunderPage() {
             <span>Selger</span>
             <span>Steg</span>
             <span>Verdi</span>
+            <span>Oppdatert</span>
           </div>
           {filtered.map((d) => (
             <div
@@ -217,6 +232,9 @@ export default function KunderPage() {
               </span>
               <span style={{ fontWeight: 500 }}>
                 {d.value ? fmtKr(d.value) : "—"}
+              </span>
+              <span style={{ fontSize: 13, color: "var(--muted)" }}>
+                {fmtDateShort(d.updated_at)}
               </span>
             </div>
           ))}
