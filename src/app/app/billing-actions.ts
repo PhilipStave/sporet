@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
-import { stripe, stripeConfigured } from "@/lib/stripe";
+import { stripe, stripeConfigured, stripeKeyInfo } from "@/lib/stripe";
 import { priceIdFor, planById } from "@/lib/billing";
 import { SITE_URL } from "@/lib/site";
 
@@ -75,7 +75,7 @@ export async function startCheckout(planId: string): Promise<{ error?: string }>
     });
     url = session.url;
   } catch (e) {
-    return { error: (e as Error).message };
+    return { error: `${(e as Error).message} (Stripe-nøkkel: ${stripeKeyInfo()})` };
   }
   if (!url) return { error: "Kunne ikke starte betaling." };
   redirect(url);
@@ -97,7 +97,7 @@ export async function openPortal(): Promise<{ error?: string }> {
     });
     url = session.url;
   } catch (e) {
-    return { error: (e as Error).message };
+    return { error: `${(e as Error).message} (Stripe-nøkkel: ${stripeKeyInfo()})` };
   }
   redirect(url);
 }
