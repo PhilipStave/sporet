@@ -7,27 +7,37 @@ import { Dropdown } from "@/components/Dropdown";
 import { Autocomplete } from "@/components/Autocomplete";
 import { Board } from "@/components/pipeline/Board";
 import { Table } from "@/components/pipeline/Table";
+import { NewCustomerDialog } from "@/components/pipeline/NewCustomerDialog";
 import { ACTIVE_STAGES } from "@/lib/constants";
 import { fmtKr, withinPeriod, type Period } from "@/lib/format";
 
 type FilterKind = "alle" | "apne" | "vunnet" | "tapt";
 
 export default function PipelinePage() {
-  const { scopedDeals, sellerNames, createDeal, setSelectedDealId } = useStore();
+  const { scopedDeals, departments, sellerNames } = useStore();
 
   const [mode, setMode] = useState<"tavle" | "tabell">("tavle");
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<FilterKind>("alle");
   const [period, setPeriod] = useState<Period | "alt">("alt");
   const [seller, setSeller] = useState("");
+  // Empty = all departments; otherwise selected department ids (multi-select).
+  const [deptFilter, setDeptFilter] = useState<string[]>([]);
+  const [newOpen, setNewOpen] = useState(false);
 
-  // Department scope is handled globally in the top-right selector.
+  const toggleDept = (id: string) =>
+    setDeptFilter((cur) =>
+      cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]
+    );
+
   const filtered = useMemo(() => {
     const q = query.toLowerCase().trim();
     return scopedDeals.filter((d) => {
       if (filter === "apne" && !ACTIVE_STAGES.includes(d.stage)) return false;
       if (filter === "vunnet" && d.stage !== "vunnet") return false;
       if (filter === "tapt" && d.stage !== "tapt") return false;
+      if (deptFilter.length && !deptFilter.includes(d.department_id ?? ""))
+        return false;
       if (period !== "alt" && !withinPeriod(d.updated_at, period as Period))
         return false;
       if (seller.trim() && d.owner_name !== seller.trim()) return false;
@@ -40,15 +50,10 @@ export default function PipelinePage() {
         return false;
       return true;
     });
-  }, [scopedDeals, query, filter, period, seller]);
+  }, [scopedDeals, query, filter, deptFilter, period, seller]);
 
   const openDeals = filtered.filter((d) => ACTIVE_STAGES.includes(d.stage));
   const openValue = openDeals.reduce((a, d) => a + (d.value || 0), 0);
-
-  const newCustomer = async () => {
-    const id = await createDeal();
-    if (id) setSelectedDealId(id);
-  };
 
   return (
     <div className="animate-fade">
@@ -88,7 +93,7 @@ export default function PipelinePage() {
               </span>
             </button>
           </div>
-          <button className="btn btn-primary" onClick={newCustomer}>
+          <button className="btn btn-primary" onClick={() => setNewOpen(true)}>
             <Icon name="plus" size={16} /> Ny kunde
           </button>
         </div>
@@ -189,7 +194,36 @@ export default function PipelinePage() {
         </span>
       </div>
 
+      {/* Department chips — choose one or more departments to show */}
+      {departments.length > 1 && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 18 }}>
+          <button
+            className="chip"
+            data-active={deptFilter.length === 0}
+            onClick={() => setDeptFilter([])}
+          >
+            Alle avdelinger
+          </button>
+          {departments.map((d) => (
+            <button
+              key={d.id}
+              className="chip"
+              data-active={deptFilter.includes(d.id)}
+              onClick={() => toggleDept(d.id)}
+            >
+              {d.name}
+            </button>
+          ))}
+        </div>
+      )}
+
       {mode === "tavle" ? <Board deals={filtered} /> : <Table deals={filtered} />}
+
+      <NewCustomerDialog
+        open={newOpen}
+        onClose={() => setNewOpen(false)}
+        defaultDeptId={deptFilter.length === 1 ? deptFilter[0] : null}
+      />
     </div>
   );
 }

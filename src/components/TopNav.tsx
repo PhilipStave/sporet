@@ -263,9 +263,10 @@ export function TopNav() {
                   disabled={loggingOut}
                   onClick={async () => {
                     setLoggingOut(true);
-                    // Sign out client-side (clears cookies), then hard-navigate.
+                    // Sign out client-side (clears the session cookies), then go to login.
                     await supabase.auth.signOut({ scope: "global" });
-                    window.location.assign("/login");
+                    router.replace("/login");
+                    router.refresh();
                   }}
                   style={{
                     ...menuItemStyle,
