@@ -36,13 +36,16 @@ export default function AktivitetPage() {
     const q = query.toLowerCase().trim();
     // Department scope is handled globally in the top-right selector.
     return rows.filter(({ activity, deal }) => {
-      if (seller.trim() && deal.owner_name !== seller.trim()) return false;
+      const s = seller.toLowerCase().trim();
+      if (s && !(deal.owner_name || "").toLowerCase().includes(s)) return false;
       if (!withinPeriod(activity.created_at, period)) return false;
       if (
         q &&
         !deal.company.toLowerCase().includes(q) &&
         !(activity.note || "").toLowerCase().includes(q) &&
-        !(activity.label || "").toLowerCase().includes(q)
+        !(activity.label || "").toLowerCase().includes(q) &&
+        !(deal.owner_name || "").toLowerCase().includes(q) &&
+        !(activity.actor_name || "").toLowerCase().includes(q)
       )
         return false;
       return true;

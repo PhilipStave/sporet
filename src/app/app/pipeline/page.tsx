@@ -40,12 +40,14 @@ export default function PipelinePage() {
         return false;
       if (period !== "alt" && !withinPeriod(d.updated_at, period as Period))
         return false;
-      if (seller.trim() && d.owner_name !== seller.trim()) return false;
+      const s = seller.toLowerCase().trim();
+      if (s && !(d.owner_name || "").toLowerCase().includes(s)) return false;
       if (
         q &&
         !d.company.toLowerCase().includes(q) &&
         !d.contact.toLowerCase().includes(q) &&
-        !(d.product || "").toLowerCase().includes(q)
+        !(d.product || "").toLowerCase().includes(q) &&
+        !(d.owner_name || "").toLowerCase().includes(q)
       )
         return false;
       return true;
