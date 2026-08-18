@@ -30,6 +30,7 @@ export function DealCard({
   return (
     <div
       ref={setNodeRef}
+      className="deal-card"
       style={{
         transform: CSS.Translate.toString(transform),
         opacity: isDragging ? 0.4 : 1,

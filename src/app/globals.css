@@ -279,6 +279,76 @@ button {
   animation: slideIn 0.18s ease;
 }
 
+/* ============================================================
+   Hover / interaction feedback — applied app-wide
+   ============================================================ */
+button,
+[role="button"],
+a {
+  transition: background 0.14s ease, border-color 0.14s ease,
+    color 0.14s ease, box-shadow 0.14s ease, transform 0.14s ease,
+    opacity 0.14s ease;
+}
+
+/* Primary buttons lift slightly */
+.btn-primary:hover:not(:disabled) {
+  box-shadow: 0 6px 16px rgba(79, 70, 229, 0.28);
+  transform: translateY(-1px);
+}
+.btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* Chips */
+.chip:hover:not([data-active="true"]) {
+  background: var(--row-hover);
+  border-color: #cfd3de;
+  color: var(--text);
+}
+.chip[data-active="true"]:hover {
+  background: #e4e7fd;
+}
+
+/* Period pill groups */
+.pillgroup button:hover:not([data-active="true"]) {
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Cards that are clickable */
+.stat-card:hover {
+  box-shadow: 0 8px 22px rgba(17, 20, 32, 0.1) !important;
+  transform: translateY(-2px);
+}
+
+/* Profile / dropdown menu items */
+.menu-item:hover {
+  background: var(--primary-050) !important;
+  color: var(--primary) !important;
+}
+
+/* Top-nav tabs */
+.nav-tab:hover {
+  background: var(--bg) !important;
+  color: var(--text) !important;
+}
+.nav-tab[data-active="true"]:hover {
+  background: #e4e7fd !important;
+  color: var(--primary) !important;
+}
+
+/* Kanban cards */
+.deal-card:hover {
+  border-color: #cfd3de !important;
+  box-shadow: 0 6px 18px rgba(17, 20, 32, 0.1) !important;
+  transform: translateY(-1px);
+}
+
+/* Inputs */
+.field-input:hover:not(:focus) {
+  border-color: #cfd3de;
+}
+
 /* Landing nav links */
 .land-navlink {
   font-size: 15px;

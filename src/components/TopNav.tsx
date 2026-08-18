@@ -7,7 +7,7 @@ import { Logo } from "./Logo";
 import { Icon } from "./Icon";
 import { Dropdown } from "./Dropdown";
 import { useStore } from "@/store/Store";
-import { logout } from "@/app/(auth)/actions";
+import { createClient } from "@/lib/supabase/client";
 import { initials } from "@/lib/format";
 import { type FeatureKey } from "@/lib/constants";
 
@@ -42,7 +42,9 @@ export function TopNav() {
   const pathname = usePathname();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const supabase = useMemo(() => createClient(), []);
 
   const tabs = TABS.filter(
     (t) => !t.feature || org.features[t.feature]
@@ -114,6 +116,8 @@ export function TopNav() {
               <Link
                 key={t.id}
                 href={`/app/${t.id}`}
+                className="nav-tab"
+                data-active={active}
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
@@ -191,7 +195,8 @@ export function TopNav() {
                   position: "absolute",
                   top: "calc(100% + 8px)",
                   right: 0,
-                  width: 220,
+                  width: 280,
+                  maxWidth: "calc(100vw - 24px)",
                   background: "var(--surface)",
                   border: "1px solid var(--border)",
                   borderRadius: 12,
@@ -200,19 +205,43 @@ export function TopNav() {
                   zIndex: 60,
                 }}
               >
-                <div style={{ padding: "8px 10px 10px" }}>
-                  <div style={{ fontWeight: 600, fontSize: 14 }}>
+                <div style={{ padding: "8px 10px 10px", minWidth: 0 }}>
+                  <div
+                    style={{
+                      fontWeight: 600,
+                      fontSize: 14,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
                     {profile.full_name}
                   </div>
-                  <div style={{ fontSize: 12, color: "var(--muted)" }}>
+                  <div
+                    style={{
+                      fontSize: 12,
+                      color: "var(--muted)",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
                     {profile.email}
                   </div>
                   <div
-                    className="pill"
                     style={{
-                      marginTop: 6,
+                      marginTop: 8,
+                      display: "inline-block",
+                      maxWidth: "100%",
+                      padding: "4px 10px",
+                      borderRadius: 999,
+                      fontSize: 11,
+                      fontWeight: 600,
+                      lineHeight: 1.4,
                       background: "var(--primary-050)",
                       color: "var(--primary)",
+                      whiteSpace: "normal",
+                      wordBreak: "break-word",
                     }}
                   >
                     {profile.role === "admin" ? "Administrator" : "Selger"} ·{" "}
@@ -222,16 +251,33 @@ export function TopNav() {
                 <div style={{ height: 1, background: "var(--border)", margin: "2px 0 6px" }} />
                 <Link
                   href="/app/innstillinger"
+                  className="menu-item"
                   style={menuItemStyle}
                   onClick={() => setMenuOpen(false)}
                 >
                   <Icon name="settings" size={16} /> Innstillinger
                 </Link>
-                <form action={logout}>
-                  <button type="submit" style={{ ...menuItemStyle, width: "100%", border: "none", background: "transparent" }}>
-                    <Icon name="logout" size={16} /> Logg ut
-                  </button>
-                </form>
+                <button
+                  type="button"
+                  className="menu-item"
+                  disabled={loggingOut}
+                  onClick={async () => {
+                    setLoggingOut(true);
+                    // Sign out client-side (clears cookies), then hard-navigate.
+                    await supabase.auth.signOut({ scope: "global" });
+                    window.location.assign("/login");
+                  }}
+                  style={{
+                    ...menuItemStyle,
+                    width: "100%",
+                    border: "none",
+                    background: "transparent",
+                    opacity: loggingOut ? 0.6 : 1,
+                  }}
+                >
+                  <Icon name="logout" size={16} />{" "}
+                  {loggingOut ? "Logger ut …" : "Logg ut"}
+                </button>
               </div>
             )}
           </div>

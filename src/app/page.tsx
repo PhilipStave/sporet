@@ -32,7 +32,7 @@ const BASE_FEATURES = [
 
 const PLAN_DEFS = [
   { users: "0–10 brukere", price: "500", popular: false, extra: "Kalender og oppfølging" },
-  { users: "0–20 brukere", price: "850", popular: true, extra: "Avdelinger og selgeroversikt" },
+  { users: "0–20 brukere", price: "900", popular: true, extra: "Avdelinger og selgeroversikt" },
   { users: "0–50 brukere", price: "2 000", popular: false, extra: "Eksport og aktivitetslogg" },
   { users: "0–100 brukere", price: "3 000", popular: false, extra: "Prioritert support" },
 ];

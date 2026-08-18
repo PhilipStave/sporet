@@ -109,10 +109,12 @@ async function shoot() {
   await shot("/app/oversikt", "02-app-oversikt.png");
   await shot("/app/pipeline", "01-app.png");
   await shot("/app/statistikk", "02-app.png", async () => {
-    // switch to line chart + year period for a nicer image
+    // Line chart, year period, and only two departments + total for a clean look.
     await page.getByRole("button", { name: "Linje" }).click().catch(() => {});
     await page.getByRole("button", { name: "År", exact: true }).click().catch(() => {});
-    await page.waitForTimeout(600);
+    await page.getByRole("button", { name: "Bygg og betong", exact: true }).click().catch(() => {});
+    await page.getByRole("button", { name: "Vei og miljø", exact: true }).click().catch(() => {});
+    await page.waitForTimeout(700);
   });
   await shot("/app/kunder", "03-app.png");
 
