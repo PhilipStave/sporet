@@ -2,7 +2,7 @@
 // have a lawyer with IT/privacy expertise review before large-scale sales.
 // Update LEGAL_VERSION when the terms change materially — users re-accept on next login.
 
-export const LEGAL_VERSION = "2026-08-18b";
+export const LEGAL_VERSION = "2026-08-18c";
 
 // TODO: fill in when the company is registered (AS recommended).
 export const COMPANY_LEGAL_NAME = "Altiv"; // e.g. "Altiv AS"
@@ -33,7 +33,8 @@ export const TERMS: LegalSection[] = [
     title: "2. Tjenesten",
     paragraphs: [
       "Tjenesten er et CRM-system for salgsoppfølging: kunderegister, pipeline, aktivitetslogg, kalender, statistikk og brukeradministrasjon, som beskrevet på altiv.no. Leverandøren kan endre, forbedre eller fjerne funksjoner. Ved endringer som vesentlig reduserer Tjenestens funksjonalitet skal Kunden varsles med minst 30 dagers frist, og kan i så fall si opp med virkning fra endringstidspunktet.",
-      "Leverandøren tilstreber høy tilgjengelighet, men garanterer ikke uavbrutt eller feilfri drift. Planlagt vedlikehold varsles der det er praktisk mulig. Tjenesten leveres «som den er». Prøveperioden gir Kunden anledning til å vurdere om Tjenesten dekker Kundens behov før betaling.",
+      "Leverandøren tilstreber høy tilgjengelighet, men gir ingen garanti for oppetid, svartid eller feilfri drift, og Avtalen inneholder ingen tjenestenivåavtale (SLA). Nedetid gir ikke rett til prisavslag eller erstatning utover det som følger av ufravikelig lov. Planlagt vedlikehold varsles der det er praktisk mulig. Tjenesten leveres «som den er» og «som tilgjengelig», uten uttrykkelige eller underforståtte garantier om egnethet for et bestemt formål. Prøveperioden gir Kunden anledning til å vurdere om Tjenesten dekker Kundens behov før betaling.",
+      "Support ytes per e-post i normal arbeidstid, uten garantert responstid.",
     ],
   },
   {
@@ -43,6 +44,7 @@ export const TERMS: LegalSection[] = [
       "Abonnementet løper månedlig, fornyes automatisk og faktureres forskuddsvis. Priser er oppgitt i norske kroner eksklusive merverdiavgift, og fremgår av altiv.no/#priser. Leverandøren kan endre priser med minst 30 dagers varsel; endringen gjelder fra neste fornyelse etter varselet.",
       "Betaling håndteres av Stripe. Leverandøren lagrer aldri kortopplysninger. Kunden er ansvarlig for at registrert betalingsmiddel er gyldig. Ved mislykket belastning kan Tjenesten settes i lesemodus, og etter 30 dager stenges. Betalt vederlag refunderes ikke, heller ikke ved oppsigelse midt i en periode.",
       "Kunden velger pakke etter antall brukere. Overstiges brukergrensen, kan Leverandøren kreve oppgradering til riktig pakke fra neste fornyelse.",
+      "Velger Kunden ingen pakke innen prøveperiodens utløp, settes Tjenesten i lesemodus: Kunden kan se og eksportere sine data, men ikke opprette eller endre. Kunden kan når som helst velge en pakke for å gjenoppta full tilgang. Kontoer som har stått i lesemodus i mer enn 12 måneder kan slettes etter varsel.",
     ],
   },
   {
@@ -75,7 +77,8 @@ export const TERMS: LegalSection[] = [
   {
     title: "7. Personvern og databehandleravtale",
     paragraphs: [
-      "Leverandøren behandler Kundedata kun etter Kundens dokumenterte instruks, som utgjøres av denne Avtalen og Kundens bruk av Tjenesten. Leverandøren skal (a) sikre at personer med tilgang er underlagt taushetsplikt, (b) iverksette egnede tekniske og organisatoriske sikkerhetstiltak, (c) bistå Kunden med å ivareta de registrertes rettigheter i den grad det er rimelig, (d) varsle Kunden uten ugrunnet opphold ved brudd på personopplysningssikkerheten, (e) slette eller tilbakelevere Kundedata ved avtalens opphør, og (f) gjøre tilgjengelig informasjon som er nødvendig for å påvise etterlevelse.",
+      "Leverandøren behandler Kundedata kun etter Kundens dokumenterte instruks, som utgjøres av denne Avtalen og Kundens bruk av Tjenesten. Leverandøren skal (a) sikre at personer med tilgang er underlagt taushetsplikt, (b) iverksette egnede tekniske og organisatoriske sikkerhetstiltak, (c) bistå Kunden med å ivareta de registrertes rettigheter i den grad det er rimelig, (d) varsle Kunden uten ugrunnet opphold, og senest 48 timer etter at Leverandøren ble kjent med et brudd på personopplysningssikkerheten som berører Kundedata, med den informasjon Leverandøren har på varslingstidspunktet, slik at Kunden kan overholde sin egen 72-timersfrist overfor Datatilsynet, (e) slette eller tilbakelevere Kundedata ved avtalens opphør, og (f) gjøre tilgjengelig informasjon som er nødvendig for å påvise etterlevelse.",
+      "Varsler sendes til e-postadressen registrert på Kundens administrator. Kunden er ansvarlig for at denne er oppdatert. Kunden er selv ansvarlig for eventuell melding til Datatilsynet og de registrerte, med mindre annet er avtalt skriftlig.",
       "Kunden godkjenner at Leverandøren bruker følgende underdatabehandlere: Supabase (database og autentisering), Vercel (hosting) og Stripe (betaling). Leverandøren skal varsle Kunden om planlagte endringer av underdatabehandlere med rimelig frist, og Kunden kan protestere på saklig grunnlag. Overføring utenfor EØS skjer kun med gyldig overføringsgrunnlag.",
       "Behandlingens art, formål, varighet og kategorier av opplysninger er beskrevet i Personvernerklæringen (altiv.no/personvern), som utgjør en del av Avtalen. Dette punktet og Personvernerklæringen utgjør sammen databehandleravtalen etter personvernforordningen artikkel 28. På forespørsel utsteder Leverandøren en signert databehandleravtale på eget dokument.",
     ],
@@ -113,13 +116,20 @@ export const TERMS: LegalSection[] = [
     ],
   },
   {
-    title: "13. Lovvalg og tvister",
+    title: "13. Hele avtalen og delvis ugyldighet",
+    paragraphs: [
+      "Avtalen, med Personvernerklæringen og prisene på altiv.no, utgjør hele avtalen mellom partene og erstatter tidligere forståelser. Kundens egne standardvilkår, innkjøpsbetingelser eller bestillingsdokumenter gjelder ikke, selv om Leverandøren ikke uttrykkelig har avvist dem.",
+      "Skulle en bestemmelse i Avtalen bli kjent ugyldig eller ikke kunne håndheves, påvirker det ikke gyldigheten av de øvrige bestemmelsene. Den ugyldige bestemmelsen skal erstattes av en gyldig bestemmelse som ligger så nær den opprinnelige hensikten som mulig.",
+    ],
+  },
+  {
+    title: "14. Lovvalg og tvister",
     paragraphs: [
       "Avtalen er underlagt norsk rett. Tvister skal søkes løst i minnelighet. Dersom det ikke lykkes, kan hver av partene bringe saken inn for de ordinære domstoler med Oslo tingrett som verneting, med mindre ufravikelig lov gir Kunden rett til å velge annet verneting.",
     ],
   },
   {
-    title: "14. Kontakt",
+    title: "15. Kontakt",
     paragraphs: [
       `Spørsmål om Avtalen rettes til ${CONTACT_EMAIL}.`,
     ],
