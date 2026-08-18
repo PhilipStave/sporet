@@ -1,5 +1,12 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getSessionContext } from "@/lib/queries";
+
+// The logged-in app is private — keep it out of search engines.
+export const metadata: Metadata = {
+  title: "Sporet",
+  robots: { index: false, follow: false },
+};
 import { StoreProvider } from "@/store/Store";
 import { TopNav } from "@/components/TopNav";
 import { CustomerDrawer } from "@/components/drawer/CustomerDrawer";

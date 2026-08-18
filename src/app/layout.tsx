@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import {
   Space_Grotesk,
   Inter,
@@ -6,6 +6,13 @@ import {
   Karla,
 } from "next/font/google";
 import "./globals.css";
+import {
+  SITE_NAME,
+  SITE_TAGLINE,
+  SITE_URL,
+  SITE_DESCRIPTION,
+  SITE_KEYWORDS,
+} from "@/lib/site";
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
@@ -33,9 +40,59 @@ const karla = Karla({
 });
 
 export const metadata: Metadata = {
-  title: "Sporet — CRM for salgsoppfølging",
-  description:
-    "Sporet er et norsk CRM for salgsoppfølging i B2B. Følg hvem som er kontaktet, hvordan, og hvor langt salget har kommet.",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: `${SITE_NAME} — ${SITE_TAGLINE}`,
+    template: `%s · ${SITE_NAME}`,
+  },
+  description: SITE_DESCRIPTION,
+  keywords: SITE_KEYWORDS,
+  applicationName: SITE_NAME,
+  authors: [{ name: SITE_NAME }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  category: "business",
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    locale: "nb_NO",
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    title: `${SITE_NAME} — ${SITE_TAGLINE}`,
+    description: SITE_DESCRIPTION,
+    images: [
+      {
+        url: "/screenshots/02-app-oversikt.png",
+        width: 2560,
+        height: 1600,
+        alt: "Sporet – oversikt med pipeline-verdi, salg, margin og vinnrate",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${SITE_NAME} — ${SITE_TAGLINE}`,
+    description: SITE_DESCRIPTION,
+    images: ["/screenshots/02-app-oversikt.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
+  icons: { icon: "/favicon.ico" },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#faf7f2",
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({

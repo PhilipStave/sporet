@@ -1,12 +1,78 @@
 import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
+import { SITE_NAME, SITE_URL, SITE_DESCRIPTION, PRICING, FAQ } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Sporet — salgsoppfølging for team",
+  title: "Sporet — CRM for salgsoppfølging | Norsk salgsverktøy for B2B",
   description:
-    "Sporet samler kundene, dialogen og salgstallene ett sted. Pipeline på tvers av avdelinger, logg hver kontakt, planlegg neste steg og følg omsetning og margin per selger.",
+    "Sporet samler kundene, dialogen og salgstallene ett sted. Pipeline på tvers av avdelinger, logg hver kontakt, planlegg neste steg og følg omsetning og margin per selger. Fra 500 kr/mnd — ingen installasjon.",
+  alternates: { canonical: "/" },
 };
+
+/** Structured data for search engines: product, pricing, FAQ and organisation. */
+function jsonLd() {
+  const software = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: SITE_NAME,
+    applicationCategory: "BusinessApplication",
+    applicationSubCategory: "CRM",
+    operatingSystem: "Web",
+    inLanguage: "nb-NO",
+    url: SITE_URL,
+    description: SITE_DESCRIPTION,
+    image: `${SITE_URL}/screenshots/02-app-oversikt.png`,
+    offers: PRICING.map((p) => ({
+      "@type": "Offer",
+      name: `Inntil ${p.users} brukere`,
+      price: String(p.price),
+      priceCurrency: "NOK",
+      priceSpecification: {
+        "@type": "UnitPriceSpecification",
+        price: String(p.price),
+        priceCurrency: "NOK",
+        unitText: "MONTH",
+        valueAddedTaxIncluded: false,
+      },
+      availability: "https://schema.org/InStock",
+      url: `${SITE_URL}/#priser`,
+    })),
+    featureList: [
+      "Pipeline med dra-og-slipp",
+      "Kontaktlogg (telefon, e-post, SMS, møte)",
+      "Kalender og neste steg",
+      "Statistikk per avdeling og selger",
+      "Omsetning og margin",
+      "Kunderegister med CSV-eksport",
+      "Roller: administrator og selger",
+    ],
+  };
+  const faq = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: FAQ.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
+  };
+  const org = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: SITE_NAME,
+    url: SITE_URL,
+    logo: `${SITE_URL}/favicon.ico`,
+  };
+  const website = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: SITE_NAME,
+    url: SITE_URL,
+    inLanguage: "nb-NO",
+  };
+  return [software, faq, org, website];
+}
 
 const CheckIcon = () => (
   <svg
@@ -83,6 +149,15 @@ export default function LandingPage() {
         fontFamily: "var(--font-karla)",
       }}
     >
+      {/* Structured data for search engines */}
+      {jsonLd().map((obj, i) => (
+        <script
+          key={i}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(obj) }}
+        />
+      ))}
+
       {/* Header */}
       <header
         style={{
@@ -160,8 +235,11 @@ export default function LandingPage() {
             <em style={{ color: "var(--accent)" }}>hvor langt du er kommet</em>
           </h1>
           <p style={{ margin: 0, fontSize: 19, color: "var(--muted)", maxWidth: "58ch" }}>
-            Sporet samler kundene, dialogen og salgstallene ett sted. Se pipeline
-            på tvers av avdelinger, logg hver kontakt, planlegg neste steg og følg
+            <strong style={{ color: "var(--text)", fontWeight: 600 }}>
+              Sporet er et norsk CRM for salgsoppfølging i B2B.
+            </strong>{" "}
+            Samle kundene, dialogen og salgstallene ett sted. Se pipeline på
+            tvers av avdelinger, logg hver kontakt, planlegg neste steg og følg
             omsetning og margin per selger.
           </p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 6, alignItems: "center" }}>
@@ -181,8 +259,21 @@ export default function LandingPage() {
       {/* Product screenshots */}
       <section
         id="produkt"
+        aria-labelledby="produkt-heading"
         style={{ ...wrap, padding: "0 24px 48px", scrollMarginTop: 80 }}
       >
+        <h2
+          id="produkt-heading"
+          style={{
+            fontFamily: "var(--font-display)",
+            fontWeight: 400,
+            fontSize: "clamp(26px, 3.2vw, 36px)",
+            margin: "0 auto 18px",
+            maxWidth: 940,
+          }}
+        >
+          Alt du trenger for å følge opp salget
+        </h2>
         <div
           style={{
             maxWidth: 940,
@@ -561,28 +652,7 @@ export default function LandingPage() {
           </h2>
         </div>
         <div style={{ display: "grid", gap: 12, maxWidth: 820 }}>
-          {[
-            {
-              q: "Hvordan blir de ansatte med?",
-              a: "Administrator deler bedriftskoden (finnes under Innstillinger). Ansatte går til «Bli med», søker opp bedriften, taster koden og lager sin egen bruker med e-post og passord. Administrator godkjenner deretter brukeren.",
-            },
-            {
-              q: "Ser alle i bedriften de samme kundene?",
-              a: "Ja — hele teamet jobber i én felles database. Du kan filtrere på avdeling, selger og periode, eller velge «Bare meg» for kun dine egne kunder.",
-            },
-            {
-              q: "Kan jeg få ut dataene mine?",
-              a: "Ja. Under Kunder eksporterer du hele kundelisten til CSV (semikolonseparert, klar for Excel).",
-            },
-            {
-              q: "Fungerer det på mobil?",
-              a: "Ja. Sporet er responsivt og fungerer i nettleseren på telefon og nettbrett, uten installasjon.",
-            },
-            {
-              q: "Hva koster det?",
-              a: "Prisen avhenger av antall brukere — fra 500 kr/mnd for opptil 10 brukere. Alle pakker inneholder hele systemet. Se prisene over.",
-            },
-          ].map((f) => (
+          {FAQ.map((f) => (
             <details
               key={f.q}
               style={{
