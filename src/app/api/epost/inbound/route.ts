@@ -63,7 +63,22 @@ export async function POST(req: Request) {
     ...(mail.received_for ?? []),
   ].map((a) => parseAddress(a).email);
   const inboundAddr = allRcpts.find((e) => e.endsWith(`@${INBOUND_DOMAIN}`) && e.startsWith("logg-"));
-  if (!inboundAddr) return ok({ ignored: "no inbound address" });
+
+  // Company mailbox (post@, hei@, support@ …): forward verbatim to the owner's inbox.
+  if (!inboundAddr) {
+    const ours = allRcpts.filter((e) => e.endsWith(`@${INBOUND_DOMAIN}`));
+    const forwardTo = process.env.FORWARD_MAIL_TO;
+    if (ours.length && forwardTo) {
+      const { error: fwdErr } = await resend.emails.receiving.forward({
+        emailId,
+        to: forwardTo,
+        from: `Altiv <post@${INBOUND_DOMAIN}>`,
+        passthrough: true,
+      });
+      return ok({ forwarded: ours, error: fwdErr?.message ?? null });
+    }
+    return ok({ ignored: "no inbound address" });
+  }
   const inboundKey = inboundAddr.split("@")[0];
 
   const { data: org } = await admin
