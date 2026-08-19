@@ -55,6 +55,9 @@ function jsonLd() {
       "Statistikk per avdeling og selger",
       "Omsetning og margin",
       "Kunderegister med CSV-eksport",
+      "Automatisk e-postlogging (BCC)",
+      "Kalenderabonnement for Outlook, Google og iPhone",
+      "Dokumenter på kunden",
       "Roller: administrator og selger",
     ],
   };
@@ -398,6 +401,8 @@ export default function LandingPage() {
             { id: "oppfolging", kicker: "Oppfølging", title: "Neste steg med dato", text: "Sett tid og deltakere, og se alt samlet i kalenderen." },
             { id: "team", kicker: "Team", title: "Avdelinger og selgere", text: "Overfør et salg til en kollega, og se hvem som selger hva." },
             { id: "tall", kicker: "Tall", title: "Omsetning og margin", text: "Følg solgt-for per uke, måned og år — med margin i prosent og kroner." },
+            { id: "epost", kicker: "E-post", title: "E-post logges av seg selv", text: "Sett bedriftens logg-adresse på BCC — e-posten og vedleggene havner på riktig kunde." },
+            { id: "kalender", kicker: "Kalender og filer", title: "I din egen kalender", text: "Oppfølginger i Outlook, Google eller iPhone. Dokumenter lagret på kunden." },
           ].map((c) => (
             <DetailCard
               key={c.kicker}

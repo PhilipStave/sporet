@@ -9,7 +9,7 @@ export const SITE_URL = (
 ).replace(/\/$/, "");
 
 export const SITE_DESCRIPTION =
-  "Altiv er et norsk CRM for salgsoppfølging i B2B. Se pipeline på tvers av avdelinger, logg hver kontakt, planlegg neste steg og følg omsetning og margin per selger. Fra 790 kr/mnd.";
+  "Altiv er et norsk CRM for salgsoppfølging i B2B. Pipeline på tvers av avdelinger, automatisk e-postlogging, oppfølginger i Outlook-kalenderen, dokumenter på kunden og omsetning og margin per selger. Fra 790 kr/mnd.";
 
 export const SITE_KEYWORDS = [
   "CRM",
@@ -24,6 +24,8 @@ export const SITE_KEYWORDS = [
   "salgsstyring",
   "CRM for små bedrifter",
   "CRM Norge",
+  "CRM med e-postlogging",
+  "CRM Outlook kalender",
 ];
 
 export const PRICING = [
@@ -45,6 +47,14 @@ export const FAQ = [
   {
     q: "Kan jeg få ut dataene mine?",
     a: "Ja. Under Kunder eksporterer du hele kundelisten til CSV (semikolonseparert, klar for Excel).",
+  },
+  {
+    q: "Kan e-post logges automatisk?",
+    a: "Ja. Bedriften får en egen logg-adresse (f.eks. logg-a8f3@altiv.no). Sett den på BCC når du sender e-post til en kunde, så legges e-posten — med vedlegg — automatisk i kundens aktivitetslogg. Fungerer med Outlook, Gmail og alle andre e-postprogrammer.",
+  },
+  {
+    q: "Kan jeg se oppfølgingene i Outlook-kalenderen min?",
+    a: "Ja. Under Innstillinger → Kalender trykker du «Outlook», «Google Kalender» eller «iPhone / Mac», så abonnerer kalenderen din på alle neste steg i bedriften. Oppdateres automatisk.",
   },
   {
     q: "Fungerer det på mobil?",

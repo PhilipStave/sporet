@@ -193,6 +193,20 @@ export default function HvorforAltivPage() {
             innboksen til én person.
           </li>
           <li style={li}>
+            <strong>E-post logges av seg selv.</strong> Sett bedriftens logg-adresse på
+            BCC når du sender til en kunde — e-posten og vedleggene havner automatisk i
+            kundens historikk. Ingen må huske å logge.
+          </li>
+          <li style={li}>
+            <strong>Oppfølginger i din egen kalender.</strong> Ett klikk, så dukker alle
+            «neste steg» opp i Outlook, Google Kalender eller på iPhone — og oppdateres
+            automatisk.
+          </li>
+          <li style={li}>
+            <strong>Dokumentene der de hører hjemme.</strong> Tilbud, kontrakter og
+            tegninger lagres på kunden, ikke i noens «Nedlastinger». Alle finner dem.
+          </li>
+          <li style={li}>
             <strong>Neste steg med dato.</strong> Kalenderen viser hva som forfaller i
             dag, i morgen og denne uken. Forfalte oppfølginger blir røde.
           </li>

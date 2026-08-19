@@ -17,6 +17,30 @@ export const FEATURE_DETAILS: Record<string, DetailBlock> = {
       "Aktivitetsloggen viser hele historikken kronologisk, for hele teamet",
       "Kundens «kanal» oppdateres automatisk, så du ser hvordan dere pleier å nå dem",
       "Aktivitet-fanen samler alt på tvers av kunder — filtrer på selger, periode og søk i notater",
+      "E-post du sender til kunden logges automatisk når du setter bedriftens logg-adresse på BCC",
+    ],
+  },
+  epost: {
+    title: "E-post logges av seg selv",
+    lead: "Det meste av kundedialogen skjer på e-post. Med Altiv havner den i kundens historikk uten at noen må huske å logge.",
+    bullets: [
+      "Bedriften får en egen logg-adresse (f.eks. logg-a8f3@altiv.no). Sett den på BCC når du sender e-post — det er alt",
+      "Altiv finner riktig kunde ut fra mottakerens e-postadresse eller firmadomene, og legger e-posten i aktivitetsloggen med emne og tekst",
+      "Vedlegg (tilbud, kontrakter, tegninger) legges automatisk som dokumenter på kunden",
+      "Siterte tråder og signaturer klippes bort, så loggen er lesbar",
+      "Finner den ingen kunde, ligger e-posten klar under Innstillinger — velg kunde med to klikk",
+      "Bare e-post fra bedriftens egne brukere blir logget. Fungerer med Outlook, Gmail og alt annet",
+    ],
+  },
+  kalender: {
+    title: "I din egen kalender",
+    lead: "Oppfølgingene du setter i Altiv dukker opp i Outlook, Google Kalender eller på iPhone — der du faktisk ser dem.",
+    bullets: [
+      "Ett klikk under Innstillinger → Kalender: «Outlook», «Google Kalender» eller «iPhone / Mac»",
+      "Alle «neste steg» i bedriften vises som hendelser, med kontaktperson, telefon og lenke rett inn til kunden",
+      "Oppdateres automatisk når noen endrer en oppfølging i Altiv — ingen manuell synk",
+      "Dokumenter: last opp tilbud, kontrakter og tegninger direkte på kunden — dra og slipp, åpne fra hvor som helst",
+      "Alt lagres privat per bedrift; ingen andre bedrifter kan nå filene deres",
     ],
   },
   oppfolging: {
@@ -60,7 +84,7 @@ export const STEP_DETAILS: Record<string, DetailBlock> = {
     bullets: [
       "Bedriftsnavn, avdelinger og hvilke funksjoner teamet skal se (Kalender, Statistikk, Selgere, Kunder, Aktivitet)",
       "Din egen admin-bruker med e-post og passord",
-      "14 dagers gratis prøve starter automatisk — full funksjonalitet, ingen kort kreves for å prøve",
+      "14 dagers gratis prøve starter automatisk — full funksjonalitet, ingen trekk før prøveperioden er over",
       "Systemet starter tomt — ingen eksempeldata å rydde bort",
     ],
   },
@@ -104,6 +128,7 @@ export function planDetail(users: string, price: string): DetailBlock {
     bullets: [
       "14 dager gratis prøve — ingen trekk før prøveperioden er over",
       "Hele systemet: Pipeline, Oversikt, Kalender, Statistikk, Selgere, Kunder, Aktivitet",
+      "E-postlogging, kalenderabonnement (Outlook/Google/iPhone) og dokumenter på kunden",
       "Ubegrenset antall kunder, avdelinger og aktiviteter",
       "Egen isolert database for bedriften — ingen andre ser dataene deres",
       "CSV-eksport av alt når som helst",
