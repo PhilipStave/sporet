@@ -1,7 +1,17 @@
 import Link from "next/link";
-import Image from "next/image";
 import type { Metadata } from "next";
 import { SITE_NAME, SITE_URL, SITE_DESCRIPTION, PRICING, FAQ } from "@/lib/site";
+import {
+  LandingProvider,
+  DetailCard,
+  ZoomImage,
+} from "@/components/landing/DetailModal";
+import {
+  FEATURE_DETAILS,
+  STEP_DETAILS,
+  SCREENSHOT_DETAILS,
+  planDetail,
+} from "@/lib/landingContent";
 
 export const metadata: Metadata = {
   title: "Altiv — CRM for salgsoppfølging | Norsk salgsverktøy for B2B",
@@ -140,6 +150,7 @@ const outlineBtn: React.CSSProperties = {
 
 export default function LandingPage() {
   return (
+    <LandingProvider>
     <div
       className="landing"
       style={{
@@ -284,16 +295,17 @@ export default function LandingPage() {
             boxShadow: "var(--shadow)",
           }}
         >
-          <Image
+          <ZoomImage
             src="/screenshots/02-app-oversikt.png"
             alt="Oversikt med pipeline-verdi, solgt for, margin og vinnrate"
-            width={2560}
-            height={1600}
+            detail={SCREENSHOT_DETAILS.oversikt}
             priority
             sizes="(max-width: 940px) 100vw, 940px"
-            style={{ display: "block", width: "100%", height: "auto" }}
           />
         </div>
+        <p style={{ textAlign: "center", fontSize: 13, color: "var(--muted)", margin: "10px 0 0" }}>
+          Klikk på bildene og kortene for å se mer.
+        </p>
 
         <div
           style={{
@@ -309,18 +321,21 @@ export default function LandingPage() {
               alt: "Pipeline som tavle med steg fra potensiell kunde til vunnet",
               title: "Pipeline.",
               text: "Dra kundene mellom stegene, filtrer på selger og periode.",
+              detail: SCREENSHOT_DETAILS.pipeline,
             },
             {
               img: "/screenshots/02-app.png",
               alt: "Statistikk med linjediagram over salg per avdeling",
               title: "Statistikk.",
               text: "Sammenlign avdelinger og selgere på omsetning og margin.",
+              detail: SCREENSHOT_DETAILS.statistikk,
             },
             {
               img: "/screenshots/03-app.png",
               alt: "Kunderegister med kontaktinfo, produkt og selger",
               title: "Kunder.",
               text: "Kontaktinfo, hva de har kjøpt og hvem som solgte.",
+              detail: SCREENSHOT_DETAILS.kunder,
             },
           ].map((f) => (
             <figure key={f.title} style={{ margin: 0, display: "flex", flexDirection: "column", gap: 12 }}>
@@ -333,13 +348,11 @@ export default function LandingPage() {
                   boxShadow: "var(--shadow)",
                 }}
               >
-                <Image
+                <ZoomImage
                   src={f.img}
                   alt={f.alt}
-                  width={2560}
-                  height={1600}
+                  detail={f.detail}
                   sizes="(max-width: 700px) 100vw, 33vw"
-                  style={{ display: "block", width: "100%", height: "auto" }}
                 />
               </span>
               <figcaption style={{ fontSize: 15, color: "var(--muted)" }}>
@@ -363,13 +376,14 @@ export default function LandingPage() {
           }}
         >
           {[
-            { kicker: "Kontakt", title: "Hver samtale logget", text: "Telefon, e-post, SMS og møter havner i kundens aktivitetslogg med dato." },
-            { kicker: "Oppfølging", title: "Neste steg med dato", text: "Sett tid og deltakere, og se alt samlet i kalenderen." },
-            { kicker: "Team", title: "Avdelinger og selgere", text: "Overfør et salg til en kollega, og se hvem som selger hva." },
-            { kicker: "Tall", title: "Omsetning og margin", text: "Følg solgt-for per uke, måned og år — med margin i prosent og kroner." },
+            { id: "kontakt", kicker: "Kontakt", title: "Hver samtale logget", text: "Telefon, e-post, SMS og møter havner i kundens aktivitetslogg med dato." },
+            { id: "oppfolging", kicker: "Oppfølging", title: "Neste steg med dato", text: "Sett tid og deltakere, og se alt samlet i kalenderen." },
+            { id: "team", kicker: "Team", title: "Avdelinger og selgere", text: "Overfør et salg til en kollega, og se hvem som selger hva." },
+            { id: "tall", kicker: "Tall", title: "Omsetning og margin", text: "Følg solgt-for per uke, måned og år — med margin i prosent og kroner." },
           ].map((c) => (
-            <div
+            <DetailCard
               key={c.kicker}
+              detail={FEATURE_DETAILS[c.id]}
               style={{
                 background: "var(--surface)",
                 border: "1px solid var(--divider)",
@@ -394,7 +408,10 @@ export default function LandingPage() {
                 {c.title}
               </h4>
               <p style={{ margin: 0, fontSize: 15, color: "var(--muted)" }}>{c.text}</p>
-            </div>
+              <span style={{ fontSize: 13, fontWeight: 700, color: "var(--accent)", marginTop: 4 }}>
+                Les mer →
+              </span>
+            </DetailCard>
           ))}
         </div>
       </section>
@@ -458,45 +475,65 @@ export default function LandingPage() {
           ].map((s) => (
             <div
               key={s.n}
+              className="land-card"
               style={{
                 background: "var(--surface)",
                 border: "1px solid var(--divider)",
                 borderRadius: "var(--r-lg-land)",
-                padding: 24,
                 display: "flex",
                 flexDirection: "column",
-                gap: 10,
+                overflow: "hidden",
               }}
             >
-              <span
+              {/* Clickable body → detail modal */}
+              <DetailCard
+                detail={STEP_DETAILS[s.n]}
                 style={{
-                  width: 34,
-                  height: 34,
-                  borderRadius: 999,
-                  background: "var(--accent-soft)",
-                  color: "var(--accent-hover)",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontWeight: 700,
-                  fontSize: 15,
+                  background: "transparent",
+                  border: "none",
+                  padding: 24,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 10,
+                  flex: 1,
                 }}
               >
-                {s.n}
-              </span>
-              <h4 style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 22 }}>
-                {s.title}
-              </h4>
-              <p style={{ margin: 0, fontSize: 15, color: "var(--muted)", flex: 1 }}>{s.text}</p>
-              {s.href.startsWith("#") ? (
-                <a href={s.href} style={{ fontSize: 14, fontWeight: 700, color: "var(--accent)" }}>
-                  {s.cta} →
-                </a>
-              ) : (
-                <Link href={s.href} style={{ fontSize: 14, fontWeight: 700, color: "var(--accent)" }}>
-                  {s.cta} →
-                </Link>
-              )}
+                <span
+                  style={{
+                    width: 34,
+                    height: 34,
+                    borderRadius: 999,
+                    background: "var(--accent-soft)",
+                    color: "var(--accent-hover)",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontWeight: 700,
+                    fontSize: 15,
+                  }}
+                >
+                  {s.n}
+                </span>
+                <h4 style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 22 }}>
+                  {s.title}
+                </h4>
+                <p style={{ margin: 0, fontSize: 15, color: "var(--muted)" }}>{s.text}</p>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "var(--muted)", marginTop: 2 }}>
+                  Les mer →
+                </span>
+              </DetailCard>
+              {/* Action link stays a real link */}
+              <div style={{ padding: "0 24px 20px" }}>
+                {s.href.startsWith("#") ? (
+                  <a href={s.href} style={{ fontSize: 14, fontWeight: 700, color: "var(--accent)" }}>
+                    {s.cta} →
+                  </a>
+                ) : (
+                  <Link href={s.href} style={{ fontSize: 14, fontWeight: 700, color: "var(--accent)" }}>
+                    {s.cta} →
+                  </Link>
+                )}
+              </div>
             </div>
           ))}
         </div>
@@ -534,17 +571,29 @@ export default function LandingPage() {
           {plans.map((p) => (
             <div
               key={p.users}
+              className="land-card"
               style={{
                 background: "var(--surface)",
                 border: `1px solid ${p.popular ? "var(--ink)" : "var(--divider)"}`,
                 borderRadius: "var(--r-lg-land)",
-                padding: 26,
                 display: "flex",
                 flexDirection: "column",
-                gap: 12,
+                overflow: "hidden",
                 boxShadow: p.popular
                   ? "0 14px 34px rgba(27,26,24,.10)"
                   : "0 1px 2px rgba(27,26,24,.04)",
+              }}
+            >
+            <DetailCard
+              detail={planDetail(p.users, p.price, p.extra)}
+              style={{
+                background: "transparent",
+                border: "none",
+                padding: "26px 26px 0",
+                display: "flex",
+                flexDirection: "column",
+                gap: 12,
+                flex: 1,
               }}
             >
               <span
@@ -605,6 +654,11 @@ export default function LandingPage() {
                   </span>
                 ))}
               </span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: "var(--muted)" }}>
+                Se alt som er inkludert →
+              </span>
+            </DetailCard>
+            <div style={{ padding: "16px 26px 26px" }}>
               <Link
                 href="/setup"
                 style={{
@@ -616,7 +670,6 @@ export default function LandingPage() {
                   borderRadius: 999,
                   fontWeight: 700,
                   fontSize: 15,
-                  marginTop: "auto",
                   ...(p.popular
                     ? { background: "var(--ink)", color: "#f7f4ee" }
                     : { background: "transparent", border: "1px solid var(--divider)", color: "var(--text)" }),
@@ -624,6 +677,7 @@ export default function LandingPage() {
               >
                 Kom i gang
               </Link>
+            </div>
             </div>
           ))}
         </div>
@@ -770,5 +824,6 @@ export default function LandingPage() {
         </div>
       </footer>
     </div>
+    </LandingProvider>
   );
 }
