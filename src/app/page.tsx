@@ -81,7 +81,20 @@ function jsonLd() {
     url: SITE_URL,
     inLanguage: "nb-NO",
   };
-  return [software, faq, org, website];
+  // Site structure — helps search engines understand and link the public pages.
+  const breadcrumbs = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Altiv", item: `${SITE_URL}/` },
+      { "@type": "ListItem", position: 2, name: "Priser", item: `${SITE_URL}/#priser` },
+      { "@type": "ListItem", position: 3, name: "Sett opp bedriften", item: `${SITE_URL}/setup` },
+      { "@type": "ListItem", position: 4, name: "Bli med i en bedrift", item: `${SITE_URL}/bli-med` },
+      { "@type": "ListItem", position: 5, name: "Vilkår", item: `${SITE_URL}/vilkar` },
+      { "@type": "ListItem", position: 6, name: "Personvern", item: `${SITE_URL}/personvern` },
+    ],
+  };
+  return [software, faq, org, website, breadcrumbs];
 }
 
 const CheckIcon = () => (
@@ -297,7 +310,7 @@ export default function LandingPage() {
         >
           <ZoomImage
             src="/screenshots/02-app-oversikt.png"
-            alt="Oversikt med pipeline-verdi, solgt for, margin og vinnrate"
+            alt="Altiv CRM – oversikt over salgspipeline med pipeline-verdi, omsetning, margin og vinnrate per avdeling"
             detail={SCREENSHOT_DETAILS.oversikt}
             priority
             sizes="(max-width: 940px) 100vw, 940px"
@@ -318,21 +331,21 @@ export default function LandingPage() {
           {[
             {
               img: "/screenshots/01-app.png",
-              alt: "Pipeline som tavle med steg fra potensiell kunde til vunnet",
+              alt: "Altiv CRM – salgspipeline som kanban-tavle med dra-og-slipp, fra potensiell kunde til vunnet",
               title: "Pipeline.",
               text: "Dra kundene mellom stegene, filtrer på selger og periode.",
               detail: SCREENSHOT_DETAILS.pipeline,
             },
             {
               img: "/screenshots/02-app.png",
-              alt: "Statistikk med linjediagram over salg per avdeling",
+              alt: "Altiv CRM – salgsstatistikk med linjediagram over omsetning per avdeling og selger",
               title: "Statistikk.",
               text: "Sammenlign avdelinger og selgere på omsetning og margin.",
               detail: SCREENSHOT_DETAILS.statistikk,
             },
             {
               img: "/screenshots/03-app.png",
-              alt: "Kunderegister med kontaktinfo, produkt og selger",
+              alt: "Altiv CRM – kunderegister med kontaktperson, produkt, selger, steg og verdi, eksport til CSV",
               title: "Kunder.",
               text: "Kontaktinfo, hva de har kjøpt og hvem som solgte.",
               detail: SCREENSHOT_DETAILS.kunder,

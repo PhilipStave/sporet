@@ -53,7 +53,11 @@ export const metadata: Metadata = {
   creator: SITE_NAME,
   publisher: SITE_NAME,
   category: "business",
-  alternates: { canonical: "/" },
+  alternates: {
+    canonical: "/",
+    languages: { "nb-NO": "/", "no": "/" },
+  },
+  // Open Graph / Twitter images come from app/opengraph-image.tsx (1200×630).
   openGraph: {
     type: "website",
     locale: "nb_NO",
@@ -61,21 +65,20 @@ export const metadata: Metadata = {
     siteName: SITE_NAME,
     title: `${SITE_NAME} — ${SITE_TAGLINE}`,
     description: SITE_DESCRIPTION,
-    images: [
-      {
-        url: "/screenshots/02-app-oversikt.png",
-        width: 2560,
-        height: 1600,
-        alt: "Altiv – oversikt med pipeline-verdi, salg, margin og vinnrate",
-      },
-    ],
+    countryName: "Norway",
   },
   twitter: {
     card: "summary_large_image",
     title: `${SITE_NAME} — ${SITE_TAGLINE}`,
     description: SITE_DESCRIPTION,
-    images: ["/screenshots/02-app-oversikt.png"],
   },
+  other: {
+    "geo.region": "NO",
+    "geo.placename": "Norge",
+    "content-language": "nb-NO",
+  },
+  // Add verification tokens here when you register with search engines:
+  // verification: { google: "…", other: { "msvalidate.01": "…" } },
   robots: {
     index: true,
     follow: true,

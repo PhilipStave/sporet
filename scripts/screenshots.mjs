@@ -2,6 +2,12 @@
 // Creates a throw-away demo org, logs in, shoots, then deletes everything.
 import { chromium } from "playwright";
 import { createClient } from "@supabase/supabase-js";
+import { readFileSync } from "fs";
+
+// Keep the demo user's accepted-terms version in sync with the app (else the re-accept gate blocks login).
+const LEGAL_VERSION =
+  readFileSync(new globalThis.URL("../src/lib/legal.ts", import.meta.url), "utf8")
+    .match(/LEGAL_VERSION = "([^"]+)"/)?.[1] || "";
 
 const URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -27,7 +33,10 @@ async function seed() {
     .from("departments")
     .insert(deptNames.map((name) => ({ org_id: org.id, name })))
     .select("id, name");
-  await admin.from("profiles").insert({ id: uid, org_id: org.id, full_name: "Anders Vik", email, phone: "", role: "admin", status: "active" });
+  await admin.from("profiles").insert({ id: uid, org_id: org.id, full_name: "Anders Vik", email, phone: "", role: "admin", status: "active", terms_accepted_version: LEGAL_VERSION });
+  await admin.rpc("seed_default_stages", { p_org: org.id });
+  // Mark the demo org as an active subscriber so no trial banner shows in screenshots.
+  await admin.from("organizations").update({ subscription_status: "active", plan: "100", current_period_end: "2099-12-31T00:00:00Z" }).eq("id", org.id);
   const d = (n) => depts.find((x) => x.name === n).id;
   const days = (n) => new Date(Date.now() + n * 86400000).toISOString();
   const date = (n) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10);
@@ -60,7 +69,8 @@ async function seed() {
   for (let m = 0; m < 12; m++) {
     deptCycle.forEach((dept, di) => {
       const jitter = ((m * 7 + di * 13) % 9) / 10; // deterministic 0..0.8
-      const value = Math.round(baseValues[dept] * (0.6 + jitter) / 10000) * 10000;
+      // Modest values (~60–140k) so open-stage bars stay visible next to Vunnet in the overview.
+      const value = Math.round((baseValues[dept] / 6) * (0.6 + jitter) / 10000) * 10000;
       const off = -(m * 30 + 15) + di * 3;
       rows.push([`${wonNames[m]} ${di + 1}`, "Kontakt", "Innkjøp", value, 16 + ((m + di) % 9), "vunnet", "epost", d(dept), sellers[(m + di) % 4], off, null, null, "Leveranse"]);
     });
