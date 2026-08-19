@@ -77,8 +77,10 @@ export const metadata: Metadata = {
     "geo.placename": "Norge",
     "content-language": "nb-NO",
   },
-  // Add verification tokens here when you register with search engines:
-  // verification: { google: "…", other: { "msvalidate.01": "…" } },
+  // Search-engine ownership verification (Google is verified via DNS TXT).
+  verification: {
+    other: { "msvalidate.01": "C99E54ABD19C69B1418F8138556C795D" },
+  },
   robots: {
     index: true,
     follow: true,
