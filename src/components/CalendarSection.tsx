@@ -19,7 +19,7 @@ export function CalendarSection({ initialToken }: { initialToken: string | null 
   // One-click "add subscription" deep links. Outlook (work/school + personal) and Google both
   // accept a pre-filled URL; the user only confirms. webcal: covers Apple + desktop Outlook.
   const calName = "Altiv";
-  const outlookAdd = `https://outlook.office.com/calendar/0/addfromweb?url=${encodeURIComponent(webcal)}&name=${encodeURIComponent(calName)}`;
+  const outlookAdd = `https://outlook.office.com/calendar/0/addfromweb?url=${encodeURIComponent(url)}&name=${encodeURIComponent(calName)}`;
   const googleAdd = `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(webcal)}`;
 
   const copy = async () => {
