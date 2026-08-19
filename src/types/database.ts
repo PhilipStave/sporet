@@ -24,6 +24,23 @@ export type OrganizationRow = {
   current_period_end: string | null;
   stripe_customer_id: string | null;
   stripe_subscription_id: string | null;
+  inbound_key: string | null;
+  created_at: string;
+}
+
+export type InboundEmailRow = {
+  id: string;
+  org_id: string;
+  deal_id: string | null;
+  resend_id: string;
+  from_email: string;
+  from_name: string;
+  sender_profile_id: string | null;
+  to_emails: string[];
+  subject: string;
+  body_text: string;
+  received_at: string;
+  status: "matched" | "unmatched" | "rejected";
   created_at: string;
 }
 
@@ -150,6 +167,7 @@ export type Database = {
       invites: Table<InviteRow>;
       pipeline_stages: Table<PipelineStageRow>;
       deal_documents: Table<DealDocumentRow>;
+      inbound_emails: Table<InboundEmailRow>;
     };
     Views: { [_ in never]: never };
     Functions: {
@@ -157,6 +175,7 @@ export type Database = {
       is_admin: { Args: Record<PropertyKey, never>; Returns: boolean };
       seed_default_stages: { Args: { p_org: string }; Returns: undefined };
       rotate_calendar_token: { Args: Record<PropertyKey, never>; Returns: string };
+      rotate_inbound_key: { Args: Record<PropertyKey, never>; Returns: string };
     };
     Enums: { [_ in never]: never };
     CompositeTypes: { [_ in never]: never };

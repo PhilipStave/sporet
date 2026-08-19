@@ -4,6 +4,7 @@ import { Suspense, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BillingSection } from "@/components/BillingSection";
 import { CalendarSection } from "@/components/CalendarSection";
+import { EmailLoggingSection } from "@/components/EmailLoggingSection";
 import { StagesEditor } from "@/components/StagesEditor";
 import { useStore } from "@/store/Store";
 import { createClient } from "@/lib/supabase/client";
@@ -281,6 +282,10 @@ export default function InnstillingerPage() {
 
       <Section title="Kalender">
         <CalendarSection initialToken={profile.calendar_token ?? null} />
+      </Section>
+
+      <Section title="E-postlogging">
+        <EmailLoggingSection initialKey={org.inbound_key ?? null} />
       </Section>
 
       {isAdmin && (
