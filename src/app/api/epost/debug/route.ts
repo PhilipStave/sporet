@@ -7,7 +7,8 @@ export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const bearer = req.headers.get("authorization")?.replace(/^Bearer /, "");
+  const { data: { user } } = await supabase.auth.getUser(bearer || undefined);
   if (!user) return NextResponse.json({ error: "unauth" }, { status: 401 });
   const { data: me } = await supabase.from("profiles").select("role").eq("id", user.id).single();
   if (me?.role !== "admin") return NextResponse.json({ error: "admin" }, { status: 403 });
