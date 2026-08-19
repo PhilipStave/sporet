@@ -214,6 +214,9 @@ export default function LandingPage() {
             <a href="#slik" className="land-navlink">
               Slik funker det
             </a>
+            <Link href="/hvorfor-altiv" className="land-navlink">
+              Hvorfor Altiv
+            </Link>
             <a href="#priser" className="land-navlink">
               Priser
             </a>
@@ -826,6 +829,7 @@ export default function LandingPage() {
             <a href="#slik" style={{ color: "var(--muted)" }}>Slik funker det</a>
             <a href="#priser" style={{ color: "var(--muted)" }}>Priser</a>
             <a href="#faq" style={{ color: "var(--muted)" }}>Spørsmål</a>
+            <Link href="/hvorfor-altiv" style={{ color: "var(--muted)" }}>Hvorfor Altiv</Link>
             <Link href="/bli-med" style={{ color: "var(--muted)" }}>Bli med</Link>
             <Link href="/login" style={{ color: "var(--muted)" }}>Logg inn</Link>
             <Link href="/vilkar" style={{ color: "var(--muted)" }}>Vilkår</Link>
