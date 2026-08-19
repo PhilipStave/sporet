@@ -274,7 +274,7 @@ export default function HvorforAltivPage() {
               Prøv Altiv gratis i 14 dager
             </h3>
             <p style={{ margin: 0, fontSize: 15, color: "#c3ccc4" }}>
-              Sett opp bedriften på to minutter. Ingen kort, ingen binding.
+              Sett opp bedriften på to minutter. Ingen binding, ingen trekk i prøveperioden.
             </p>
           </div>
           <Link
@@ -299,6 +299,10 @@ export default function HvorforAltivPage() {
           <Link href="/#produkt" style={{ color: "var(--accent)", fontWeight: 600 }}>produktet</Link>,{" "}
           <Link href="/#priser" style={{ color: "var(--accent)", fontWeight: 600 }}>prisene</Link>,{" "}
           <Link href="/#faq" style={{ color: "var(--accent)", fontWeight: 600 }}>vanlige spørsmål</Link>.
+          {" "}Fra bloggen:{" "}
+          <Link href="/blogg/hva-er-crm" style={{ color: "var(--accent)", fontWeight: 600 }}>Hva er et CRM-system?</Link>,{" "}
+          <Link href="/blogg/excel-vs-crm" style={{ color: "var(--accent)", fontWeight: 600 }}>Excel som CRM</Link>,{" "}
+          <Link href="/blogg/salgspipeline" style={{ color: "var(--accent)", fontWeight: 600 }}>Slik bygger du en salgspipeline</Link>.
         </p>
       </main>
 
