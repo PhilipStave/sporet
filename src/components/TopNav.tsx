@@ -274,6 +274,16 @@ export function TopNav() {
                 >
                   <Icon name="settings" size={16} /> Innstillinger
                 </Link>
+                {profile.is_superadmin && (
+                  <Link
+                    href="/admin"
+                    className="menu-item"
+                    style={menuItemStyle}
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    <Icon name="grid" size={16} /> Altiv-administrasjon
+                  </Link>
+                )}
                 <button
                   type="button"
                   className="menu-item"

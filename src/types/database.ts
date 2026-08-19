@@ -62,6 +62,7 @@ export type ProfileRow = {
   terms_accepted_version: string | null;
   terms_accepted_at: string | null;
   calendar_token: string | null;
+  is_superadmin: boolean;
   created_at: string;
 }
 
