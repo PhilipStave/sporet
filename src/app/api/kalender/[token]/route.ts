@@ -24,6 +24,18 @@ function fold(line: string) {
   return out.join("\r\n");
 }
 const pad = (n: number) => String(n).padStart(2, "0");
+/** Europe/Oslo wall-clock → UTC instant, honouring DST (no tz library needed). */
+function osloToUtc(ymd: string, hh: number, mm: number): Date {
+  const guess = new Date(`${ymd}T${pad(hh)}:${pad(mm)}:00Z`);
+  const fmt = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Europe/Oslo", hour12: false,
+    year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit",
+  });
+  const parts = Object.fromEntries(fmt.formatToParts(guess).map((p) => [p.type, p.value]));
+  const asOslo = Date.UTC(+parts.year, +parts.month - 1, +parts.day, +parts.hour % 24, +parts.minute);
+  const offsetMs = asOslo - guess.getTime(); // how far Oslo is ahead of UTC at that instant
+  return new Date(guess.getTime() - offsetMs);
+}
 function stampUtc(d: Date) {
   return `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}${pad(d.getUTCSeconds())}Z`;
 }
@@ -79,15 +91,19 @@ export async function GET(_req: Request, ctx: { params: Promise<{ token: string 
     lines.push(`UID:deal-${d.id}@altiv.no`);
     lines.push(`DTSTAMP:${now}`);
     if (d.next_step_time && /^\d{2}:\d{2}/.test(d.next_step_time)) {
-      // Timed event, 30 min, floating local time (Europe/Oslo via X-WR-TIMEZONE).
+      // Timed event, 30 min. Emit in UTC (most interoperable — Outlook.com rejects TZID without VTIMEZONE).
       const [hh, mm] = d.next_step_time.split(":").map(Number);
-      const start = new Date(Date.UTC(2000, 0, 1, hh, mm));
+      const start = osloToUtc(d.next_step_date, hh, mm);
       const end = new Date(start.getTime() + 30 * 60000);
-      const t = (x: Date) => `${pad(x.getUTCHours())}${pad(x.getUTCMinutes())}00`;
-      lines.push(`DTSTART;TZID=Europe/Oslo:${date}T${t(start)}`);
-      lines.push(`DTEND;TZID=Europe/Oslo:${date}T${t(end)}`);
+      lines.push(`DTSTART:${stampUtc(start)}`);
+      lines.push(`DTEND:${stampUtc(end)}`);
     } else {
+      // All-day: DTEND is exclusive (next day). Outlook requires DTEND to be present.
+      const next = new Date(d.next_step_date + "T00:00:00Z");
+      next.setUTCDate(next.getUTCDate() + 1);
+      const nextStr = `${next.getUTCFullYear()}${pad(next.getUTCMonth() + 1)}${pad(next.getUTCDate())}`;
       lines.push(`DTSTART;VALUE=DATE:${date}`);
+      lines.push(`DTEND;VALUE=DATE:${nextStr}`);
     }
     lines.push(fold(`SUMMARY:${esc(summary)}`));
     lines.push(fold(`DESCRIPTION:${esc(desc)}`));
