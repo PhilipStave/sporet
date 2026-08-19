@@ -113,10 +113,22 @@ export function EmailLoggingSection({ initialKey }: { initialKey: string | null 
             <button className="btn btn-primary" onClick={copy} type="button">
               <Icon name={copied ? "check" : "copy"} size={15} /> {copied ? "Kopiert" : "Kopier adresse"}
             </button>
+            <a className="btn" href="/api/epost/kontakt" title="Laster ned en kontakt du kan åpne i Outlook/Apple/Google — så dukker «Altiv» opp når du skriver i BCC">
+              <Icon name="download" size={15} /> Legg til som kontakt
+            </a>
+            <a
+              className="btn"
+              href="https://outlook.office.com/mail/options/mail/rules"
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Åpner Outlook-regler — lag en regel som alltid sender kopi til logg-adressen"
+            >
+              <Icon name="bolt" size={15} /> Automatisk i Outlook
+            </a>
           </div>
           <div style={{ display: "flex", gap: 14, marginTop: 10, fontSize: 13 }}>
             <button type="button" className="linklike" onClick={() => setShowHelp((v) => !v)}>
-              {showHelp ? "Skjul veiledning" : "Slik bruker du den"}
+              {showHelp ? "Skjul veiledning" : "Slik setter du det opp"}
             </button>
             {isAdmin && (
               <button type="button" className="linklike" onClick={rotate} disabled={busy} style={{ color: "var(--muted)" }}>
@@ -127,12 +139,16 @@ export function EmailLoggingSection({ initialKey }: { initialKey: string | null 
           {showHelp && (
             <div style={{ marginTop: 12, fontSize: 13, lineHeight: 1.6, display: "grid", gap: 10 }}>
               <div>
-                <strong>Hver gang:</strong> Skriv e-posten til kunden som vanlig, legg{" "}
-                <code style={{ fontSize: 12 }}>{address}</code> i BCC-feltet, send. Ferdig.
+                <strong>Helautomatisk (anbefalt) — Outlook-regel, én gang:</strong> Trykk «Automatisk i Outlook» →
+                «Legg til ny regel» → navn «Altiv logg» → Betingelse: <em>Gjelder alle meldinger</em> (eller «Jeg er
+                avsender») → Handling: <em>Videresend til</em> / <em>Send kopi (Cc/Bcc) til</em>{" "}
+                <code style={{ fontSize: 12 }}>{address}</code> → Lagre. Etter dette logges alt du sender, uten at
+                du gjør noe. E-post til ukjente adresser havner i «Ikke plassert» under — forkast eller plasser med to klikk.
               </div>
               <div>
-                <strong>Tips — lag den til en kontakt:</strong> Lagre adressen som kontakten «Altiv logg» i Outlook,
-                så skriver du bare «Altiv» i BCC neste gang.
+                <strong>Manuelt — når du vil:</strong> Skriv e-posten som vanlig, legg{" "}
+                <code style={{ fontSize: 12 }}>{address}</code> i BCC, send. Trykk «Legg til som kontakt» først, så
+                dukker «Altiv logg» opp når du skriver «Al…» i BCC-feltet.
               </div>
               <div>
                 <strong>Hvordan vet Altiv hvilken kunde?</strong> Den ser på hvem e-posten er sendt til og finner
