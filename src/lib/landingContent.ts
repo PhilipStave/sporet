@@ -97,17 +97,16 @@ export const STEP_DETAILS: Record<string, DetailBlock> = {
   },
 };
 
-export function planDetail(users: string, price: string, extra: string): DetailBlock {
+export function planDetail(users: string, price: string): DetailBlock {
   return {
     title: `${users} · ${price} kr/mnd`,
     lead: "Alle pakker inneholder hele systemet — forskjellen er bare hvor mange brukere som kan logge inn. Velg den som passer teamet i dag; bytt når som helst.",
     bullets: [
-      "14 dager gratis prøve — ingen kort kreves for å prøve",
+      "14 dager gratis prøve — ingen trekk før prøveperioden er over",
       "Hele systemet: Pipeline, Oversikt, Kalender, Statistikk, Selgere, Kunder, Aktivitet",
       "Ubegrenset antall kunder, avdelinger og aktiviteter",
       "Egen isolert database for bedriften — ingen andre ser dataene deres",
       "CSV-eksport av alt når som helst",
-      `Inkludert: ${extra}`,
       "Månedlig, ingen binding — avslutt når som helst i Innstillinger",
       "Pris eks. mva. Betaling med kort via Stripe, eller faktura på forespørsel",
     ],

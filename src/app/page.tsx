@@ -112,18 +112,20 @@ const CheckIcon = () => (
   </svg>
 );
 
+// Every plan includes the whole system — only the user limit differs.
 const BASE_FEATURES = [
-  "Hele systemet",
-  "Ubegrenset antall kunder",
-  "Statistikk og margin",
+  "Hele systemet — ingen funksjoner låst",
+  "Ubegrenset antall kunder og avtaler",
+  "Pipeline, kalender og aktivitetslogg",
+  "Statistikk, margin og selgeroversikt",
   "Support på e-post",
 ];
 
 const PLAN_DEFS = [
-  { users: "0–10 brukere", price: "790", popular: false, extra: "Kalender og oppfølging" },
-  { users: "0–20 brukere", price: "1 490", popular: true, extra: "Avdelinger og selgeroversikt" },
-  { users: "0–50 brukere", price: "3 490", popular: false, extra: "Eksport og aktivitetslogg" },
-  { users: "0–100 brukere", price: "5 990", popular: false, extra: "Prioritert support" },
+  { users: "0–10 brukere", price: "790", popular: false },
+  { users: "0–20 brukere", price: "1 490", popular: true },
+  { users: "0–50 brukere", price: "3 490", popular: false },
+  { users: "0–100 brukere", price: "5 990", popular: false },
 ];
 
 const plans = PLAN_DEFS.map((p) => {
@@ -132,7 +134,7 @@ const plans = PLAN_DEFS.map((p) => {
   return {
     ...p,
     perUser: `fra ${per} kr per bruker`,
-    features: [...BASE_FEATURES, p.extra],
+    features: BASE_FEATURES,
   };
 });
 
@@ -601,7 +603,7 @@ export default function LandingPage() {
               }}
             >
             <DetailCard
-              detail={planDetail(p.users, p.price, p.extra)}
+              detail={planDetail(p.users, p.price)}
               style={{
                 background: "transparent",
                 border: "none",
