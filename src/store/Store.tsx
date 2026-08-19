@@ -46,6 +46,8 @@ interface StoreValue {
   loading: boolean;
   /** False when the org's trial/subscription has lapsed (read-only mode). */
   canWrite: boolean;
+  /** Append an entry to a customer's activity log. */
+  logActivity: (dealId: string, a: { icon: string; label: string; note: string }) => Promise<void>;
 
   scope: Scope;
   setScope: (s: Scope) => void;
@@ -452,6 +454,7 @@ export function StoreProvider({
     deals,
     loading,
     canWrite,
+    logActivity: insertActivity,
     scope,
     setScope,
     query,

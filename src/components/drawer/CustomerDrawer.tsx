@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useStore } from "@/store/Store";
 import { Icon } from "@/components/Icon";
 import { Autocomplete } from "@/components/Autocomplete";
+import { DealDocuments } from "@/components/drawer/DealDocuments";
 import {
   CHANNEL_ORDER,
   CHANNELS,
@@ -428,6 +429,10 @@ function DrawerInner({ deal }: { deal: Deal }) {
           rows={3}
           style={{ resize: "vertical", minHeight: 72 }}
         />
+
+        {/* Documents */}
+        <SectionTitle>Dokumenter</SectionTitle>
+        <DealDocuments dealId={deal.id} />
 
         {/* Activity log */}
         <SectionTitle>Aktivitetslogg</SectionTitle>

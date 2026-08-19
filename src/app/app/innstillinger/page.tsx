@@ -3,6 +3,7 @@
 import { Suspense, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BillingSection } from "@/components/BillingSection";
+import { CalendarSection } from "@/components/CalendarSection";
 import { StagesEditor } from "@/components/StagesEditor";
 import { useStore } from "@/store/Store";
 import { createClient } from "@/lib/supabase/client";
@@ -276,6 +277,10 @@ export default function InnstillingerPage() {
             </button>
           </div>
         </div>
+      </Section>
+
+      <Section title="Kalender">
+        <CalendarSection initialToken={profile.calendar_token ?? null} />
       </Section>
 
       {isAdmin && (

@@ -44,6 +44,20 @@ export type ProfileRow = {
   status: "pending" | "active";
   terms_accepted_version: string | null;
   terms_accepted_at: string | null;
+  calendar_token: string | null;
+  created_at: string;
+}
+
+export type DealDocumentRow = {
+  id: string;
+  org_id: string;
+  deal_id: string;
+  name: string;
+  path: string;
+  size: number;
+  mime: string;
+  uploaded_by: string | null;
+  uploaded_by_name: string;
   created_at: string;
 }
 
@@ -135,12 +149,14 @@ export type Database = {
       activities: Table<ActivityRow>;
       invites: Table<InviteRow>;
       pipeline_stages: Table<PipelineStageRow>;
+      deal_documents: Table<DealDocumentRow>;
     };
     Views: { [_ in never]: never };
     Functions: {
       current_org_id: { Args: Record<PropertyKey, never>; Returns: string };
       is_admin: { Args: Record<PropertyKey, never>; Returns: boolean };
       seed_default_stages: { Args: { p_org: string }; Returns: undefined };
+      rotate_calendar_token: { Args: Record<PropertyKey, never>; Returns: string };
     };
     Enums: { [_ in never]: never };
     CompositeTypes: { [_ in never]: never };
