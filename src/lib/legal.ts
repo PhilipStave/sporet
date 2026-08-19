@@ -139,19 +139,21 @@ export const PRIVACY: LegalSection[] = [
   {
     title: "4. Underleverandører og overføring",
     paragraphs: [
-      "Vi bruker Supabase (database og autentisering), Vercel (hosting og drift) og Stripe (betaling). Alle er bundet av databehandleravtaler. Der data behandles utenfor EØS, sikres overføringen med EU-kommisjonens standardpersonvernbestemmelser (SCC) eller annet gyldig grunnlag.",
+      "Vi bruker Supabase (database og autentisering), Vercel (hosting og drift) og Stripe (betaling). Alle er bundet av skriftlige databehandleravtaler. Endring eller tillegg av underdatabehandlere varsles kundene minst 30 dager i forveien.",
+      "Der data behandles utenfor EØS, sikres overføringen med EU-kommisjonens standardpersonvernbestemmelser (SCC) eller annet gyldig overføringsgrunnlag. Dokumentasjon på overføringsgrunnlag gjøres tilgjengelig på forespørsel.",
     ],
   },
   {
     title: "5. Lagringstid",
     paragraphs: [
-      "Konto- og kundedata lagres så lenge Kunden har en aktiv bedriftskonto. Når en bedrift slettes fra Innstillinger, slettes alle tilhørende data permanent. Ved oppsigelse slettes data etter 30 dager. Fakturagrunnlag oppbevares i 5 år etter bokføringsloven. Serverlogger slettes etter maksimalt 90 dager.",
+      "Konto- og kundedata lagres så lenge Kunden har en aktiv bedriftskonto. Når Kunden selv sletter bedriftskontoen fra Innstillinger, slettes alle tilhørende data permanent med en gang. Ved oppsigelse eller opphør slettes data etter 30 dager. Kontoer som har stått passive i lesemodus i over 12 måneder kan slettes; Kunden varsles da skriftlig minst 90 dager i forveien og tilbys eksport. Fakturagrunnlag oppbevares i 5 år etter bokføringsloven. Serverlogger slettes etter maksimalt 90 dager.",
     ],
   },
   {
     title: "6. Sikkerhet",
     paragraphs: [
-      "Data overføres kryptert (TLS) og lagres kryptert i hvile. Hver bedrifts data er isolert med tilgangskontroll på databasenivå (Row Level Security), slik at ingen bedrift kan se en annens data. Passord lagres kun som hash. Tilgang til produksjonssystemer er begrenset til autorisert personell. Ved brudd på personopplysningssikkerheten varsler vi Datatilsynet innen 72 timer der loven krever det, og berørte kunder uten ugrunnet opphold.",
+      "Data overføres kryptert (TLS) og lagres kryptert i hvile hos vår databaseleverandør. Hver bedrifts data er isolert med tilgangskontroll på databasenivå (Row Level Security), slik at ingen bedrift kan se en annens data. Passord lagres kun som irreversibel hash. Tilgang til produksjonssystemer er begrenset til autorisert personell. Vi beskriver her de tiltakene som faktisk er på plass, og oppdaterer erklæringen etter hvert som tiltak legges til.",
+      "Ved brudd på personopplysningssikkerheten som berører kundedata varsler vi berørte kunder uten ugrunnet opphold og senest innen 48 timer etter at vi ble kjent med bruddet, med den informasjon vi har på varslingstidspunktet, slik at kunden kan overholde sin 72-timersfrist overfor Datatilsynet. Der vi selv er behandlingsansvarlig, varsler vi Datatilsynet innen 72 timer der loven krever det.",
     ],
   },
   {
