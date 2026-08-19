@@ -62,7 +62,7 @@ export function DealCard({
           height: 22,
           border: "none",
           background: "transparent",
-          color: "#c2c7d2",
+          color: "var(--placeholder)",
           borderRadius: 6,
           display: "inline-flex",
           alignItems: "center",
@@ -124,8 +124,8 @@ export function DealCard({
                 ? pillStyle(STAGE_COLORS.tapt)
                 : {
                     ...pillStyle("#64748b"),
-                    background: "#eef0f4",
-                    color: "#4b5566",
+                    background: "var(--tint-neutral)",
+                    color: "var(--tint-neutral-text)",
                   }
             }
           >

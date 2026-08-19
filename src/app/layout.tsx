@@ -6,6 +6,7 @@ import {
   Karla,
 } from "next/font/google";
 import "./globals.css";
+import { ThemeProvider, themeInitScript } from "@/components/ThemeProvider";
 import {
   SITE_NAME,
   SITE_TAGLINE,
@@ -103,9 +104,16 @@ export default function RootLayout({
   return (
     <html
       lang="nb"
+      suppressHydrationWarning
       className={`${spaceGrotesk.variable} ${inter.variable} ${instrumentSerif.variable} ${karla.variable}`}
     >
-      <body>{children}</body>
+      <head>
+        {/* Sets data-theme before first paint to avoid a light→dark flash. */}
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
+      <body>
+        <ThemeProvider>{children}</ThemeProvider>
+      </body>
     </html>
   );
 }

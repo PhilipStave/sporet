@@ -299,8 +299,8 @@ export default function InnstillingerPage() {
                       alignItems: "center",
                       gap: 12,
                       padding: "10px 12px",
-                      border: "1px solid #f0e4c8",
-                      background: "#fdfaf1",
+                      border: "1px solid var(--tint-warn-border)",
+                      background: "var(--tint-warn)",
                       borderRadius: 10,
                     }}
                   >
@@ -561,8 +561,8 @@ export default function InnstillingerPage() {
             style={{
               padding: 20,
               marginBottom: 16,
-              borderColor: "#f0d0cc",
-              background: "#fffaf9",
+              borderColor: "var(--tint-danger-border)",
+              background: "var(--tint-danger)",
             }}
           >
             <h4 style={{ fontSize: 16, marginBottom: 6, color: "var(--danger)" }}>
@@ -588,9 +588,9 @@ export default function InnstillingerPage() {
                 onClick={deleteCompany}
                 disabled={deleting || delConfirm.trim() !== org.name.trim()}
                 style={{
-                  border: "1px solid #e0a8a0",
-                  background: delConfirm.trim() === org.name.trim() ? "var(--danger)" : "#f5e5e2",
-                  color: delConfirm.trim() === org.name.trim() ? "#fff" : "#b08a85",
+                  border: "1px solid var(--tint-danger-border)",
+                  background: delConfirm.trim() === org.name.trim() ? "var(--danger)" : "var(--tint-danger)",
+                  color: delConfirm.trim() === org.name.trim() ? "#fff" : "var(--muted)",
                   borderRadius: 10,
                   padding: "9px 14px",
                   fontSize: 14,

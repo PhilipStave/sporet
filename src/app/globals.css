@@ -16,6 +16,20 @@
   --danger: #c0392b;
   --row-hover: #fafbfc;
 
+  /* Semantic tints (status banners, pills) */
+  --tint-neutral: #eef0f4;
+  --tint-neutral-text: #4b5566;
+  --tint-success: #e6f7f0;
+  --tint-success-text: #046c4e;
+  --tint-warn: #fff8e6;
+  --tint-warn-border: #f0e0b0;
+  --tint-warn-text: #8a6100;
+  --tint-danger: #fdf3f2;
+  --tint-danger-border: #f0d0cc;
+  --border-strong: #cfd3de;
+  --placeholder: #9aa1b1;
+  --axis-ink: #1b1a18;
+
   /* Stage colors */
   --stage-ny: #64748b;
   --stage-kontaktet: #0ea5e9;
@@ -46,7 +60,84 @@
   --font-karla: var(--font-karla), system-ui, sans-serif;
 }
 
-/* Landing page palette, scoped */
+/* ============================================================
+   Dark mode — applied via data-theme="dark" on <html>
+   (set by ThemeProvider; "system" resolves to the OS preference)
+   ============================================================ */
+html[data-theme="dark"] {
+  --bg: #0f1117;
+  --surface: #171a23;
+  --text: #e8eaf0;
+  --muted: #9aa3b5;
+  --border: #272b38;
+  --primary: #7c74ff;
+  --primary-hover: #9089ff;
+  --primary-050: #23233f;
+  --danger: #f07167;
+  --row-hover: #1d212c;
+
+  --tint-neutral: #232736;
+  --tint-neutral-text: #c3c9d6;
+  --tint-success: #12301f;
+  --tint-success-text: #6ee7b7;
+  --tint-warn: #2e2410;
+  --tint-warn-border: #4a3a14;
+  --tint-warn-text: #fbbf24;
+  --tint-danger: #35191a;
+  --tint-danger-border: #5a2a2c;
+  --border-strong: #3a3f50;
+  --placeholder: #6b7384;
+  --axis-ink: #e8eaf0;
+
+  /* Slightly lifted stage colours for contrast on dark */
+  --stage-ny: #8b97ab;
+  --stage-kontaktet: #38bdf8;
+  --stage-dialog: #818cf8;
+  --stage-tilbud: #a78bfa;
+  --stage-forhandling: #fbbf24;
+  --stage-vunnet: #34d399;
+  --stage-tapt: #f87171;
+  --stage-ikkesvart: #a5b0c2;
+
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 14px rgba(0, 0, 0, 0.35);
+  --shadow-dialog: 0 20px 50px rgba(0, 0, 0, 0.6);
+  --shadow-drawer: -8px 0 30px rgba(0, 0, 0, 0.5);
+
+  color-scheme: dark;
+}
+
+/* Hard-coded light greys used in a few places → token-ish overrides in dark */
+html[data-theme="dark"] .btn:hover {
+  border-color: #3a3f50;
+}
+html[data-theme="dark"] .btn-primary:disabled {
+  background: #272b38;
+  border-color: #272b38;
+  color: #6b7384;
+}
+html[data-theme="dark"] .chip:hover:not([data-active="true"]) {
+  border-color: #3a3f50;
+}
+html[data-theme="dark"] .chip[data-active="true"]:hover {
+  background: #2b2b52;
+}
+html[data-theme="dark"] .nav-tab[data-active="true"]:hover {
+  background: #2b2b52 !important;
+}
+html[data-theme="dark"] .deal-card:hover {
+  border-color: #3a3f50 !important;
+}
+html[data-theme="dark"] .field-input:hover:not(:focus) {
+  border-color: #3a3f50;
+}
+html[data-theme="dark"] .field-input::placeholder {
+  color: #6b7384;
+}
+html[data-theme="dark"] .scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #3a3f50;
+}
+
+/* Landing page palette, scoped (stays light — brand editorial style) */
 .landing {
   --bg: #faf7f2;
   --surface: #ffffff;

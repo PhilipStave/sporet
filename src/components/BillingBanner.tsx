@@ -18,9 +18,9 @@ export function BillingBanner() {
   if (a.state === "trial" && (a.daysLeft ?? 99) > 7) return null;
 
   const danger = !a.canWrite;
-  const bg = danger ? "#fdf3f2" : "#fff8e6";
-  const border = danger ? "#f0d0cc" : "#f0e0b0";
-  const color = danger ? "var(--danger)" : "#8a6100";
+  const bg = danger ? "var(--tint-danger)" : "var(--tint-warn)";
+  const border = danger ? "var(--tint-danger-border)" : "var(--tint-warn-border)";
+  const color = danger ? "var(--danger)" : "var(--tint-warn-text)";
 
   return (
     <div

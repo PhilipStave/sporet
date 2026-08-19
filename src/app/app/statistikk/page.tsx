@@ -462,7 +462,7 @@ function Chart({
                       })
                       .join(" ")}
                     fill="none"
-                    stroke="#1b1a18"
+                    stroke="var(--axis-ink)"
                     strokeWidth={2}
                     strokeDasharray="3 3"
                     vectorEffect="non-scaling-stroke"
@@ -599,7 +599,7 @@ function Chart({
               style={{
                 width: 14,
                 height: 0,
-                borderTop: "2px dashed #1b1a18",
+                borderTop: "2px dashed var(--axis-ink)",
               }}
             />
             Alle (total)

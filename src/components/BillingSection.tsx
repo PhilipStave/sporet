@@ -40,16 +40,16 @@ export function BillingSection() {
 
   const currentPlan = PLANS.find((p) => p.id === org.plan);
   const stateColor =
-    a.state === "active" ? "#059669" : a.canWrite ? "#8a6100" : "var(--danger)";
+    a.state === "active" ? "#059669" : a.canWrite ? "var(--tint-warn-text)" : "var(--danger)";
   const stateBg =
-    a.state === "active" ? "#e6f7f0" : a.canWrite ? "#fff8e6" : "#fdf3f2";
+    a.state === "active" ? "var(--tint-success)" : a.canWrite ? "var(--tint-warn)" : "var(--tint-danger)";
 
   return (
     <div id="abonnement" className="card" style={{ padding: 20, marginBottom: 16, scrollMarginTop: 90 }}>
       <h4 style={{ fontSize: 16, marginBottom: 12 }}>Abonnement</h4>
 
       {justPaid && (
-        <div style={{ marginBottom: 12, padding: "10px 14px", background: "#e6f7f0", color: "#046c4e", borderRadius: 10, fontSize: 14 }}>
+        <div style={{ marginBottom: 12, padding: "10px 14px", background: "var(--tint-success)", color: "var(--tint-success-text)", borderRadius: 10, fontSize: 14 }}>
           Takk! Betalingen er registrert. Det kan ta et øyeblikk før statusen under oppdateres.
         </div>
       )}

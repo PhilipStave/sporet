@@ -321,7 +321,7 @@ export default function OversiktPage() {
                   flex: 1,
                   height: 14,
                   borderRadius: 999,
-                  background: "#eef0f4",
+                  background: "var(--tint-neutral)",
                   overflow: "hidden",
                 }}
               >
@@ -404,7 +404,7 @@ export default function OversiktPage() {
                       style={
                         overdue
                           ? pillStyle(STAGE_COLORS.tapt)
-                          : { ...pillStyle("#64748b"), background: "#eef0f4", color: "#4b5566" }
+                          : { ...pillStyle("#64748b"), background: "var(--tint-neutral)", color: "var(--tint-neutral-text)" }
                       }
                     >
                       {fmtDateShort(d.next_step_date)}

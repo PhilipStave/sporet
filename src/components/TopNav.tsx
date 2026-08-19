@@ -8,6 +8,7 @@ import { Icon } from "./Icon";
 import { Dropdown } from "./Dropdown";
 import { useStore } from "@/store/Store";
 import { createClient } from "@/lib/supabase/client";
+import { ThemeToggle } from "./ThemeToggle";
 import { initials } from "@/lib/format";
 import { type FeatureKey } from "@/lib/constants";
 
@@ -247,6 +248,22 @@ export function TopNav() {
                     {profile.role === "admin" ? "Administrator" : "Selger"} ·{" "}
                     {org.name}
                   </div>
+                </div>
+                <div style={{ height: 1, background: "var(--border)", margin: "2px 0 6px" }} />
+                <div style={{ padding: "4px 6px 8px" }}>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 600,
+                      textTransform: "uppercase",
+                      letterSpacing: ".04em",
+                      color: "var(--muted)",
+                      marginBottom: 6,
+                    }}
+                  >
+                    Fargetema
+                  </div>
+                  <ThemeToggle />
                 </div>
                 <div style={{ height: 1, background: "var(--border)", margin: "2px 0 6px" }} />
                 <Link
