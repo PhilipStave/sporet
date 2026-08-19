@@ -16,7 +16,7 @@ import {
 export const metadata: Metadata = {
   title: "Altiv — CRM for salgsoppfølging | Norsk salgsverktøy for B2B",
   description:
-    "Altiv samler kundene, dialogen og salgstallene ett sted. Pipeline på tvers av avdelinger, logg hver kontakt, planlegg neste steg og følg omsetning og margin per selger. Fra 500 kr/mnd — ingen installasjon.",
+    "Altiv samler kundene, dialogen og salgstallene ett sted. Pipeline på tvers av avdelinger, logg hver kontakt, planlegg neste steg og følg omsetning og margin per selger. Fra 790 kr/mnd — ingen installasjon.",
   alternates: { canonical: "/" },
 };
 
@@ -120,10 +120,10 @@ const BASE_FEATURES = [
 ];
 
 const PLAN_DEFS = [
-  { users: "0–10 brukere", price: "500", popular: false, extra: "Kalender og oppfølging" },
-  { users: "0–20 brukere", price: "900", popular: true, extra: "Avdelinger og selgeroversikt" },
-  { users: "0–50 brukere", price: "2 000", popular: false, extra: "Eksport og aktivitetslogg" },
-  { users: "0–100 brukere", price: "3 000", popular: false, extra: "Prioritert support" },
+  { users: "0–10 brukere", price: "790", popular: false, extra: "Kalender og oppfølging" },
+  { users: "0–20 brukere", price: "1 490", popular: true, extra: "Avdelinger og selgeroversikt" },
+  { users: "0–50 brukere", price: "3 490", popular: false, extra: "Eksport og aktivitetslogg" },
+  { users: "0–100 brukere", price: "5 990", popular: false, extra: "Prioritert support" },
 ];
 
 const plans = PLAN_DEFS.map((p) => {
@@ -701,6 +701,10 @@ export default function LandingPage() {
         <p style={{ fontSize: 14, color: "var(--muted)", marginTop: 20 }}>
           Alle priser er per måned, eks. mva. Trenger dere flere enn 100 brukere,
           ta kontakt for tilbud.
+        </p>
+        <p style={{ fontSize: 14, color: "var(--muted)", marginTop: 8 }}>
+          Til sammenligning koster tradisjonelle CRM-systemer typisk fra 450 kr{" "}
+          <em>per bruker</em> per måned — et team på 10 betaler da fra 4 500 kr/mnd.
         </p>
       </section>
 

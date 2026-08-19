@@ -9,7 +9,7 @@ export const SITE_URL = (
 ).replace(/\/$/, "");
 
 export const SITE_DESCRIPTION =
-  "Altiv er et norsk CRM for salgsoppfølging i B2B. Se pipeline på tvers av avdelinger, logg hver kontakt, planlegg neste steg og følg omsetning og margin per selger. Fra 500 kr/mnd.";
+  "Altiv er et norsk CRM for salgsoppfølging i B2B. Se pipeline på tvers av avdelinger, logg hver kontakt, planlegg neste steg og følg omsetning og margin per selger. Fra 790 kr/mnd.";
 
 export const SITE_KEYWORDS = [
   "CRM",
@@ -27,10 +27,10 @@ export const SITE_KEYWORDS = [
 ];
 
 export const PRICING = [
-  { users: 10, price: 500 },
-  { users: 20, price: 900 },
-  { users: 50, price: 2000 },
-  { users: 100, price: 3000 },
+  { users: 10, price: 790 },
+  { users: 20, price: 1490 },
+  { users: 50, price: 3490 },
+  { users: 100, price: 5990 },
 ];
 
 export const FAQ = [
@@ -52,6 +52,6 @@ export const FAQ = [
   },
   {
     q: "Hva koster det?",
-    a: "Prisen avhenger av antall brukere — fra 500 kr/mnd for opptil 10 brukere. Alle pakker inneholder hele systemet.",
+    a: "Prisen avhenger av antall brukere — fra 790 kr/mnd for opptil 10 brukere. Alle pakker inneholder hele systemet.",
   },
 ];

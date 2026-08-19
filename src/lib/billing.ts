@@ -9,10 +9,10 @@ export const PLANS: {
   label: string;
   envKey: string;
 }[] = [
-  { id: "10", users: 10, price: 500, label: "Inntil 10 brukere", envKey: "STRIPE_PRICE_10" },
-  { id: "20", users: 20, price: 900, label: "Inntil 20 brukere", envKey: "STRIPE_PRICE_20" },
-  { id: "50", users: 50, price: 2000, label: "Inntil 50 brukere", envKey: "STRIPE_PRICE_50" },
-  { id: "100", users: 100, price: 3000, label: "Inntil 100 brukere", envKey: "STRIPE_PRICE_100" },
+  { id: "10", users: 10, price: 790, label: "Inntil 10 brukere", envKey: "STRIPE_PRICE_10" },
+  { id: "20", users: 20, price: 1490, label: "Inntil 20 brukere", envKey: "STRIPE_PRICE_20" },
+  { id: "50", users: 50, price: 3490, label: "Inntil 50 brukere", envKey: "STRIPE_PRICE_50" },
+  { id: "100", users: 100, price: 5990, label: "Inntil 100 brukere", envKey: "STRIPE_PRICE_100" },
 ];
 
 export const TRIAL_DAYS = 14;

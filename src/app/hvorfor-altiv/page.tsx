@@ -5,7 +5,7 @@ import { SITE_URL } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Hvorfor Altiv? Enkelt CRM for små og mellomstore bedrifter i Norge",
   description:
-    "Leter du etter et enkelt CRM-system for salgsoppfølging? Altiv er laget for norske bedrifter som selger B2B — uten kompleksiteten i HubSpot og Salesforce. Pipeline, kontaktlogg, statistikk og margin. Fra 500 kr/mnd, 14 dager gratis.",
+    "Leter du etter et enkelt CRM-system for salgsoppfølging? Altiv er laget for norske bedrifter som selger B2B — uten kompleksiteten i HubSpot og Salesforce. Pipeline, kontaktlogg, statistikk og margin. Fra 790 kr/mnd, 14 dager gratis.",
   alternates: { canonical: "/hvorfor-altiv" },
   openGraph: {
     title: "Hvorfor Altiv? Enkelt CRM for små og mellomstore bedrifter",
@@ -227,8 +227,8 @@ export default function HvorforAltivPage() {
         <h2 style={h2}>Hva koster det?</h2>
         <p style={p}>
           Prisen følger antall brukere, ikke antall funksjoner — alle pakker inneholder
-          hele systemet. Fra <strong>500 kr/mnd</strong> for inntil 10 brukere til
-          3 000 kr/mnd for inntil 100. Ingen binding, ingen oppstartsgebyr, avslutt når
+          hele systemet. Fra <strong>790 kr/mnd</strong> for inntil 10 brukere til
+          5 990 kr/mnd for inntil 100. Ingen binding, ingen oppstartsgebyr, avslutt når
           som helst. Alle nye bedrifter får <strong>14 dager gratis</strong> med full
           funksjonalitet — og du trenger ikke legge inn kort for å prøve.
         </p>
