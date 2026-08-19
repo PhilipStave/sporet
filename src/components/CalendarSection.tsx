@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Icon } from "@/components/Icon";
+import { SITE_URL } from "@/lib/site";
 
 // Settings block: personal iCal subscription link for "neste steg" across the organisation.
 export function CalendarSection({ initialToken }: { initialToken: string | null }) {
@@ -12,8 +13,8 @@ export function CalendarSection({ initialToken }: { initialToken: string | null 
   const [busy, setBusy] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
 
-  const origin = typeof window !== "undefined" ? window.location.origin : "";
-  const url = token ? `${origin}/api/kalender/${token}` : "";
+  // Always a full https:// URL (SITE_URL) so copy/paste into Outlook never loses the scheme.
+  const url = token ? `${SITE_URL}/api/kalender/${token}` : "";
   const webcal = url.replace(/^https?:/, "webcal:");
 
   const copy = async () => {
