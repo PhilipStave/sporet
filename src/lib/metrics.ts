@@ -1,13 +1,15 @@
-import { ACTIVE_STAGES, STAGE_PROB, type Stage } from "./constants";
+import { ACTIVE_STAGES, STAGE_PROB, WON_KEY, LOST_KEY, type Stage } from "./constants";
 import { diffDays, type Period, PERIOD_DAYS } from "./format";
 import type { Deal } from "@/types";
 
-export const isOpen = (d: Deal) => ACTIVE_STAGES.includes(d.stage);
+/** Open = in one of the org's "counts as open" stages (defaults to built-ins). */
+export const isOpenIn = (openKeys: string[]) => (d: Deal) => openKeys.includes(d.stage);
+export const isOpen = isOpenIn(ACTIVE_STAGES);
 
 /** Timestamp that represents the last meaningful change for period filtering. */
 export function stageTime(d: Deal): string {
-  if (d.stage === "vunnet") return d.won_at || d.updated_at;
-  if (d.stage === "tapt") return d.lost_at || d.updated_at;
+  if (d.stage === WON_KEY) return d.won_at || d.updated_at;
+  if (d.stage === LOST_KEY) return d.lost_at || d.updated_at;
   return d.updated_at;
 }
 
@@ -31,16 +33,25 @@ export interface Overview {
   dueList: Deal[];
 }
 
-export function computeOverview(deals: Deal[]): Overview {
-  const openDeals = deals.filter(isOpen);
+/**
+ * @param openKeys  the org's open-stage keys, in pipeline order
+ * @param lateKeys  stages considered "late" for Snittverdi (default: last two open stages)
+ */
+export function computeOverview(
+  deals: Deal[],
+  openKeys: string[] = ACTIVE_STAGES,
+  lateKeys?: string[]
+): Overview {
+  const openDeals = deals.filter(isOpenIn(openKeys));
   const pipelineValue = openDeals.reduce((a, d) => a + (d.value || 0), 0);
   const weightedValue = openDeals.reduce(
     (a, d) => a + (d.value || 0) * (STAGE_PROB[d.stage] || 0),
     0
   );
-  const won = deals.filter((d) => d.stage === "vunnet");
-  const lost = deals.filter((d) => d.stage === "tapt");
+  const won = deals.filter((d) => d.stage === WON_KEY);
+  const lost = deals.filter((d) => d.stage === LOST_KEY);
   const noReply = deals.filter((d) => d.stage === "ikkesvart");
+  const late = lateKeys ?? openKeys.slice(-2);
 
   const winRate =
     won.length + lost.length > 0
@@ -55,9 +66,7 @@ export function computeOverview(deals: Deal[]): Overview {
   );
   const avgMarginPct = marTotV > 0 ? Math.round((marTotM / marTotV) * 100) : 0;
 
-  const avgBase = deals.filter(
-    (d) => d.stage === "tilbud" || d.stage === "forhandling"
-  );
+  const avgBase = deals.filter((d) => late.includes(d.stage));
   const avgDeal = avgBase.length
     ? Math.round(avgBase.reduce((a, d) => a + (d.value || 0), 0) / avgBase.length)
     : 0;
@@ -100,7 +109,7 @@ export function sellersFromWon(
     if (n) by[n] = { name: n, count: 0, total: 0, margin: 0, marginPct: 0 };
   });
   deals
-    .filter((d) => d.stage === "vunnet")
+    .filter((d) => d.stage === WON_KEY)
     .forEach((d) => {
       const n = (d.owner_name || "").trim() || "Ukjent";
       const o = (by[n] = by[n] || {

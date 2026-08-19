@@ -1,11 +1,10 @@
 "use client";
 
 import { useStore } from "@/store/Store";
+import { stageLabel, stageColor } from "@/lib/stages";
 import { Icon } from "@/components/Icon";
 import {
   CHANNELS,
-  STAGE_COLORS,
-  STAGE_LABELS,
   pillStyle,
 } from "@/lib/constants";
 import {
@@ -19,7 +18,7 @@ import type { Deal } from "@/types";
 const GRID = "1.5fr 1.3fr 1fr .9fr .9fr 1.3fr .8fr";
 
 export function Table({ deals }: { deals: Deal[] }) {
-  const { setSelectedDealId } = useStore();
+  const { setSelectedDealId, stageMaps } = useStore();
 
   return (
     <div
@@ -87,8 +86,8 @@ export function Table({ deals }: { deals: Deal[] }) {
                 {d.contact || "—"}
               </span>
               <span>
-                <span style={pillStyle(STAGE_COLORS[d.stage])}>
-                  {STAGE_LABELS[d.stage]}
+                <span style={pillStyle(stageColor(stageMaps, d.stage))}>
+                  {stageLabel(stageMaps, d.stage)}
                 </span>
               </span>
               <span

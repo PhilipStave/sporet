@@ -2,13 +2,14 @@
 
 import { useMemo, useState } from "react";
 import { useStore } from "@/store/Store";
+import { stageLabel, stageColor } from "@/lib/stages";
 import { DetailModal, type DetailData } from "@/components/DetailModal";
-import { STAGE_COLORS, STAGE_LABELS, pillStyle } from "@/lib/constants";
+import { WON_KEY, pillStyle } from "@/lib/constants";
 import { fmtKr, initials, type Period } from "@/lib/format";
 import { sellersFromWon, withinDays } from "@/lib/metrics";
 
 export default function SelgerePage() {
-  const { scopedDeals, members, setSelectedDealId, deptName } = useStore();
+  const { scopedDeals, members, setSelectedDealId, deptName, stageMaps } = useStore();
   const [period, setPeriod] = useState<Period>("alle");
   const [openSeller, setOpenSeller] = useState<string | null>(null);
 
@@ -25,7 +26,7 @@ export default function SelgerePage() {
   const detailData: DetailData | null = useMemo(() => {
     if (!openSeller) return null;
     const list = periodDeals
-      .filter((d) => d.stage === "vunnet" && (d.owner_name || "Ukjent") === openSeller)
+      .filter((d) => d.stage === WON_KEY && (d.owner_name || "Ukjent") === openSeller)
       .sort((a, b) => b.value - a.value);
     const tv = list.reduce((a, d) => a + d.value, 0);
     const tm = list.reduce((a, d) => a + d.value * ((d.margin_pct || 0) / 100), 0);
@@ -37,8 +38,8 @@ export default function SelgerePage() {
         id: d.id,
         company: d.company || "Ny kunde",
         sub: [deptName(d.department_id), d.product].filter(Boolean).join(" · "),
-        tagLabel: STAGE_LABELS[d.stage],
-        tagStyle: pillStyle(STAGE_COLORS[d.stage]),
+        tagLabel: stageLabel(stageMaps, d.stage),
+        tagStyle: pillStyle(stageColor(stageMaps, d.stage)),
         value: fmtKr(d.value),
         onOpen: () => {
           setSelectedDealId(d.id);
@@ -46,7 +47,7 @@ export default function SelgerePage() {
         },
       })),
     };
-  }, [openSeller, periodDeals, deptName, setSelectedDealId]);
+  }, [openSeller, periodDeals, deptName, setSelectedDealId, stageMaps]);
 
   return (
     <div className="animate-fade">

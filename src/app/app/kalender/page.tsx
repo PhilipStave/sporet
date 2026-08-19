@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { useStore } from "@/store/Store";
 import { Icon } from "@/components/Icon";
-import { CHANNELS, ACTIVE_STAGES } from "@/lib/constants";
+import { CHANNELS } from "@/lib/constants";
 import { diffDays, fmtDateShort, fmtTime } from "@/lib/format";
 import type { Deal } from "@/types";
 
@@ -16,16 +16,16 @@ const GROUPS = [
 ];
 
 export default function KalenderPage() {
-  const { scopedDeals, setSelectedDealId, deptName } = useStore();
+  const { scopedDeals, setSelectedDealId, deptName, stageMaps } = useStore();
 
   const withSteps = useMemo(
     () =>
       scopedDeals
-        .filter((d) => d.next_step_date && ACTIVE_STAGES.includes(d.stage))
+        .filter((d) => d.next_step_date && stageMaps.open.includes(d.stage))
         .sort((a, b) =>
           (a.next_step_date || "").localeCompare(b.next_step_date || "")
         ),
-    [scopedDeals]
+    [scopedDeals, stageMaps.open]
   );
 
   const grouped = GROUPS.map((g) => ({

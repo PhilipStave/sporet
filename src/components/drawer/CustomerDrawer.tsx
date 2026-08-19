@@ -5,18 +5,16 @@ import { useStore } from "@/store/Store";
 import { Icon } from "@/components/Icon";
 import { Autocomplete } from "@/components/Autocomplete";
 import {
-  STAGE_ORDER,
-  STAGE_LABELS,
-  STAGE_COLORS,
   CHANNEL_ORDER,
   CHANNELS,
   TAG_LIST,
   LOST_REASONS,
   pillStyle,
-  type Stage,
+  LOST_KEY,
   type Channel,
 } from "@/lib/constants";
 import { fmtKr, fmtDateShort, relativeLabel, fmtTime } from "@/lib/format";
+import { stageLabel, stageColor, type StageConfig } from "@/lib/stages";
 import type { Deal } from "@/types";
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
@@ -57,6 +55,7 @@ function DrawerInner({ deal }: { deal: Deal }) {
     members,
     profile,
     deptName,
+    stageMaps,
   } = useStore();
 
   // Local editable state, initialised from the deal on mount.
@@ -127,8 +126,8 @@ function DrawerInner({ deal }: { deal: Deal }) {
             justifyContent: "space-between",
           }}
         >
-          <span style={pillStyle(STAGE_COLORS[deal.stage])}>
-            {STAGE_LABELS[deal.stage]}
+          <span style={pillStyle(stageColor(stageMaps, deal.stage))}>
+            {stageLabel(stageMaps, deal.stage)}
           </span>
           <button
             type="button"
@@ -283,12 +282,12 @@ function DrawerInner({ deal }: { deal: Deal }) {
         {/* Stage */}
         <SectionTitle>Steg i prosessen</SectionTitle>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-          {STAGE_ORDER.map((s) => (
+          {stageMaps.list.map((s) => (
             <StageChip
-              key={s}
+              key={s.id}
               stage={s}
-              active={deal.stage === s}
-              onClick={() => moveStage(deal.id, s)}
+              active={deal.stage === s.key}
+              onClick={() => moveStage(deal.id, s.key)}
             />
           ))}
         </div>
@@ -395,7 +394,7 @@ function DrawerInner({ deal }: { deal: Deal }) {
         </div>
 
         {/* Lost reason */}
-        {deal.stage === "tapt" && (
+        {deal.stage === LOST_KEY && (
           <>
             <SectionTitle>Tapt-årsak</SectionTitle>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
@@ -513,11 +512,11 @@ function StageChip({
   active,
   onClick,
 }: {
-  stage: Stage;
+  stage: StageConfig;
   active: boolean;
   onClick: () => void;
 }) {
-  const color = STAGE_COLORS[stage];
+  const color = stage.color;
   return (
     <button
       type="button"
@@ -544,7 +543,7 @@ function StageChip({
           display: "inline-block",
         }}
       />
-      {STAGE_LABELS[stage]}
+      {stage.label}
     </button>
   );
 }

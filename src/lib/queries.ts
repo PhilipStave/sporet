@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import type { Organization, Profile, Department, Member } from "@/types";
+import type { StageConfig } from "@/lib/stages";
 
 export interface ActiveSession {
   kind: "active";
@@ -7,6 +8,7 @@ export interface ActiveSession {
   org: Organization;
   departments: Department[];
   members: Member[];
+  stages: StageConfig[];
 }
 
 export type SessionResult =
@@ -45,21 +47,31 @@ export async function getSessionContext(): Promise<SessionResult> {
     return { kind: "pending", fullName: profile.full_name };
   }
 
-  const [{ data: org }, { data: departments }, { data: profiles }, { data: links }] =
-    await Promise.all([
-      supabase.from("organizations").select("*").eq("id", profile.org_id).single(),
-      supabase
-        .from("departments")
-        .select("*")
-        .eq("org_id", profile.org_id)
-        .order("created_at"),
-      supabase
-        .from("profiles")
-        .select("*")
-        .eq("org_id", profile.org_id)
-        .order("full_name"),
-      supabase.from("profile_departments").select("profile_id, department_id"),
-    ]);
+  const [
+    { data: org },
+    { data: departments },
+    { data: profiles },
+    { data: links },
+    { data: stages },
+  ] = await Promise.all([
+    supabase.from("organizations").select("*").eq("id", profile.org_id).single(),
+    supabase
+      .from("departments")
+      .select("*")
+      .eq("org_id", profile.org_id)
+      .order("created_at"),
+    supabase
+      .from("profiles")
+      .select("*")
+      .eq("org_id", profile.org_id)
+      .order("full_name"),
+    supabase.from("profile_departments").select("profile_id, department_id"),
+    supabase
+      .from("pipeline_stages")
+      .select("id, key, label, color, position, is_system, counts_as_open")
+      .eq("org_id", profile.org_id)
+      .order("position"),
+  ]);
 
   if (!org) return { kind: "none" };
 
@@ -81,5 +93,6 @@ export async function getSessionContext(): Promise<SessionResult> {
     org: org as Organization,
     departments: (departments || []) as Department[],
     members,
+    stages: (stages || []) as StageConfig[],
   };
 }

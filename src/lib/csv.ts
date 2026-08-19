@@ -1,4 +1,5 @@
 import { STAGE_LABELS } from "./constants";
+import type { StageMaps } from "./stages";
 import type { Deal } from "@/types";
 
 function esc(v: unknown): string {
@@ -9,7 +10,8 @@ function esc(v: unknown): string {
 /** Semicolon-separated CSV with a UTF-8 BOM, downloaded as altiv-kunder.csv. */
 export function exportCustomersCsv(
   deals: Deal[],
-  deptName: (id: string | null) => string
+  deptName: (id: string | null) => string,
+  stageMaps?: StageMaps
 ) {
   const head = [
     "Selskap",
@@ -34,7 +36,7 @@ export function exportCustomersCsv(
         d.contact_role,
         d.email || "",
         d.phone || "",
-        STAGE_LABELS[d.stage] || d.stage,
+        stageMaps?.labels[d.stage] || STAGE_LABELS[d.stage] || d.stage,
         deptName(d.department_id),
         d.owner_name || "",
         d.product || "",

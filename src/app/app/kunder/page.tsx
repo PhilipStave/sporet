@@ -2,9 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { useStore } from "@/store/Store";
+import { stageLabel, stageColor } from "@/lib/stages";
 import { Icon } from "@/components/Icon";
 import { Autocomplete } from "@/components/Autocomplete";
-import { STAGE_COLORS, STAGE_LABELS, pillStyle } from "@/lib/constants";
+import { pillStyle } from "@/lib/constants";
 import { fmtKr, fmtDateShort, type Period } from "@/lib/format";
 import { withinDays } from "@/lib/metrics";
 import { exportCustomersCsv } from "@/lib/csv";
@@ -12,7 +13,7 @@ import { exportCustomersCsv } from "@/lib/csv";
 const GRID = "1.5fr 1.4fr 1.2fr 1fr .9fr .8fr .8fr";
 
 export default function KunderPage() {
-  const { scopedDeals, departments, sellerNames, setSelectedDealId, deptName } =
+  const { scopedDeals, departments, sellerNames, setSelectedDealId, deptName, stageMaps } =
     useStore();
 
   const [query, setQuery] = useState("");
@@ -69,7 +70,7 @@ export default function KunderPage() {
         <h2 style={{ fontSize: 26 }}>Kunder</h2>
         <button
           className="btn"
-          onClick={() => exportCustomersCsv(filtered, deptName)}
+          onClick={() => exportCustomersCsv(filtered, deptName, stageMaps)}
         >
           <Icon name="download" size={16} /> Eksporter CSV
         </button>
@@ -228,8 +229,8 @@ export default function KunderPage() {
               </span>
               <span style={{ minWidth: 0 }}>{d.owner_name || "—"}</span>
               <span>
-                <span style={pillStyle(STAGE_COLORS[d.stage])}>
-                  {STAGE_LABELS[d.stage]}
+                <span style={pillStyle(stageColor(stageMaps, d.stage))}>
+                  {stageLabel(stageMaps, d.stage)}
                 </span>
               </span>
               <span style={{ fontWeight: 500 }}>

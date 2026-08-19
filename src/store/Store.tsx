@@ -12,9 +12,17 @@ import { createClient } from "@/lib/supabase/client";
 import { computeAccess } from "@/lib/billing";
 import {
   CHANNELS,
+  WON_KEY,
+  LOST_KEY,
   type Channel,
   type Stage,
 } from "@/lib/constants";
+import {
+  buildStageMaps,
+  keyFromLabel,
+  type StageConfig,
+  type StageMaps,
+} from "@/lib/stages";
 import type {
   Deal,
   Organization,
@@ -51,6 +59,14 @@ interface StoreValue {
   deptName: (id: string | null) => string;
   sellerNames: string[];
 
+  /** Pipeline stages for this org (ordered) + derived lookups. */
+  stages: StageConfig[];
+  stageMaps: StageMaps;
+  addStage: (label: string, color: string, countsAsOpen: boolean) => Promise<string | null>;
+  updateStage: (id: string, patch: Partial<Pick<StageConfig, "label" | "color" | "counts_as_open">>) => Promise<string | null>;
+  deleteStage: (id: string) => Promise<string | null>;
+  moveStageOrder: (id: string, dir: -1 | 1) => Promise<void>;
+
   createDeal: (partial?: Partial<Deal>) => Promise<string | null>;
   updateDeal: (id: string, patch: Partial<Deal>) => Promise<void>;
   moveStage: (id: string, stage: Stage) => Promise<void>;
@@ -86,12 +102,14 @@ export function StoreProvider({
   profile,
   departments,
   members,
+  stages: initialStages,
   children,
 }: {
   org: Organization;
   profile: Profile;
   departments: Department[];
   members: Member[];
+  stages: StageConfig[];
   children: React.ReactNode;
 }) {
   const supabase = useMemo(() => createClient(), []);
@@ -100,6 +118,95 @@ export function StoreProvider({
   const [scope, setScope] = useState<Scope>({ type: "all" });
   const [query, setQuery] = useState("");
   const [selectedDealId, setSelectedDealId] = useState<string | null>(null);
+  const [stages, setStages] = useState<StageConfig[]>(initialStages);
+  const stageMaps = useMemo(() => buildStageMaps(stages), [stages]);
+
+  // ---- stage admin (RLS restricts writes to admins) ----
+  const addStage = useCallback(
+    async (label: string, color: string, countsAsOpen: boolean) => {
+      const name = label.trim();
+      if (!name) return "Skriv inn et navn.";
+      const key = keyFromLabel(name, stages.map((s) => s.key));
+      // Insert before the system stages (won/lost) so new steps land in the flow.
+      const firstSystem = stages.find((s) => s.is_system);
+      const position = firstSystem ? firstSystem.position : stages.length;
+      const { data, error } = await supabase
+        .from("pipeline_stages")
+        .insert({ org_id: org.id, key, label: name, color, position, counts_as_open: countsAsOpen })
+        .select("id, key, label, color, position, is_system, counts_as_open")
+        .single();
+      if (error || !data) return error?.message || "Kunne ikke legge til steg.";
+      // Shift later stages down by one to keep positions unique & ordered.
+      const shifted = stages.map((s) =>
+        s.position >= position ? { ...s, position: s.position + 1 } : s
+      );
+      const next = [...shifted, data as StageConfig].sort((a, b) => a.position - b.position);
+      setStages(next);
+      await Promise.all(
+        shifted
+          .filter((s) => s.position >= position + 1)
+          .map((s) => supabase.from("pipeline_stages").update({ position: s.position }).eq("id", s.id))
+      );
+      return null;
+    },
+    [supabase, org.id, stages]
+  );
+
+  const updateStage = useCallback(
+    async (id: string, patch: Partial<Pick<StageConfig, "label" | "color" | "counts_as_open">>) => {
+      const clean = { ...patch };
+      if (clean.label !== undefined) {
+        clean.label = clean.label.trim();
+        if (!clean.label) return "Navnet kan ikke være tomt.";
+      }
+      setStages((cur) => cur.map((s) => (s.id === id ? { ...s, ...clean } : s)));
+      const { error } = await supabase.from("pipeline_stages").update(clean).eq("id", id);
+      return error ? error.message : null;
+    },
+    [supabase]
+  );
+
+  const deleteStage = useCallback(
+    async (id: string) => {
+      const st = stages.find((s) => s.id === id);
+      if (!st) return "Fant ikke steget.";
+      if (st.is_system) return "«Vunnet» og «Tapt» kan gis nytt navn, men ikke slettes.";
+      const remaining = stages.filter((s) => s.id !== id);
+      if (!remaining.some((s) => s.counts_as_open))
+        return "Det må finnes minst ett åpent steg.";
+      // Move deals in this stage to the first open stage.
+      const target = buildStageMaps(remaining).firstKey;
+      const affected = deals.filter((d) => d.stage === st.key);
+      setDeals((cur) => cur.map((d) => (d.stage === st.key ? { ...d, stage: target } : d)));
+      setStages(remaining);
+      if (affected.length) {
+        await supabase.from("deals").update({ stage: target }).eq("stage", st.key).eq("org_id", org.id);
+      }
+      const { error } = await supabase.from("pipeline_stages").delete().eq("id", id);
+      return error ? error.message : null;
+    },
+    [supabase, org.id, stages, deals]
+  );
+
+  const moveStageOrder = useCallback(
+    async (id: string, dir: -1 | 1) => {
+      const sorted = [...stages].sort((a, b) => a.position - b.position);
+      const i = sorted.findIndex((s) => s.id === id);
+      const j = i + dir;
+      if (i < 0 || j < 0 || j >= sorted.length) return;
+      const a = sorted[i];
+      const b = sorted[j];
+      const next = sorted.map((s) =>
+        s.id === a.id ? { ...s, position: b.position } : s.id === b.id ? { ...s, position: a.position } : s
+      );
+      setStages(next);
+      await Promise.all([
+        supabase.from("pipeline_stages").update({ position: b.position }).eq("id", a.id),
+        supabase.from("pipeline_stages").update({ position: a.position }).eq("id", b.id),
+      ]);
+    },
+    [supabase, stages]
+  );
 
   const refresh = useCallback(async () => {
     const { data, error } = await supabase
@@ -235,7 +342,7 @@ export function StoreProvider({
         product: partial?.product ?? "",
         value: partial?.value ?? 0,
         margin_pct: partial?.margin_pct ?? 0,
-        stage: (partial?.stage as Stage) ?? "ny",
+        stage: (partial?.stage as Stage) ?? stageMaps.firstKey,
         channel: (partial?.channel as Channel) ?? "epost",
         tags: partial?.tags ?? [],
         notes: partial?.notes ?? "",
@@ -262,17 +369,17 @@ export function StoreProvider({
       setDeals((arr) => [deal, ...arr]);
       return deal.id;
     },
-    [supabase, org.id, profile.id, profile.full_name, departments, members]
+    [supabase, org.id, profile.id, profile.full_name, departments, members, stageMaps.firstKey]
   );
 
   const moveStage = useCallback(
     async (id: string, stage: Stage) => {
       const now = new Date().toISOString();
       const patch: Partial<Deal> = { stage, updated_at: now };
-      if (stage === "vunnet") patch.won_at = now;
-      if (stage === "tapt") patch.lost_at = now;
+      if (stage === WON_KEY) patch.won_at = now;
+      if (stage === LOST_KEY) patch.lost_at = now;
       await updateDeal(id, patch);
-      if (stage === "vunnet")
+      if (stage === WON_KEY)
         await insertActivity(id, {
           icon: "check",
           label: "Vunnet",
@@ -354,6 +461,12 @@ export function StoreProvider({
     scopedDeals,
     deptName,
     sellerNames,
+    stages,
+    stageMaps,
+    addStage,
+    updateStage,
+    deleteStage,
+    moveStageOrder,
     createDeal,
     updateDeal,
     moveStage,

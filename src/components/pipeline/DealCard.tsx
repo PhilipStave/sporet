@@ -5,7 +5,6 @@ import { CSS } from "@dnd-kit/utilities";
 import { Icon } from "@/components/Icon";
 import {
   CHANNELS,
-  STAGE_COLORS,
   pillStyle,
 } from "@/lib/constants";
 import { fmtShort, fmtDateShort, fmtTime, diffDays } from "@/lib/format";
@@ -121,7 +120,7 @@ export function DealCard({
           <span
             style={
               overdue
-                ? pillStyle(STAGE_COLORS.tapt)
+                ? pillStyle("var(--danger)")
                 : {
                     ...pillStyle("#64748b"),
                     background: "var(--tint-neutral)",

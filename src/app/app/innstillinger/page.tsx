@@ -3,6 +3,7 @@
 import { Suspense, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BillingSection } from "@/components/BillingSection";
+import { StagesEditor } from "@/components/StagesEditor";
 import { useStore } from "@/store/Store";
 import { createClient } from "@/lib/supabase/client";
 import { Icon } from "@/components/Icon";
@@ -406,6 +407,11 @@ export default function InnstillingerPage() {
                 <Icon name="plus" size={15} /> Legg til
               </button>
             </div>
+          </Section>
+
+          {/* Pipeline stages */}
+          <Section title="Pipeline-steg">
+            <StagesEditor onMessage={flash} />
           </Section>
 
           {/* Team (editable) */}

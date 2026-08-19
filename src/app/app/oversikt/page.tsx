@@ -6,26 +6,31 @@ import { useStore } from "@/store/Store";
 import { Icon } from "@/components/Icon";
 import { DetailModal, type DetailData, type DetailRow } from "@/components/DetailModal";
 import {
-  STAGE_ORDER,
-  STAGE_LABELS,
-  STAGE_COLORS,
-  ACTIVE_STAGES,
   pillStyle,
 } from "@/lib/constants";
 import { fmtKr, fmtShort, diffDays, fmtDateShort } from "@/lib/format";
+import { stageLabel, stageColor } from "@/lib/stages";
 import { computeOverview, withinDays } from "@/lib/metrics";
 import type { Deal } from "@/types";
 
 type SoldPeriod = "uke" | "mnd" | "ar";
 
 export default function OversiktPage() {
-  const { scopedDeals, deptName, setSelectedDealId } = useStore();
+  const { scopedDeals, deptName, setSelectedDealId, stageMaps } = useStore();
   const router = useRouter();
   const [soldPeriod, setSoldPeriod] = useState<SoldPeriod>("uke");
   const [detail, setDetail] = useState<string | null>(null);
 
-  const o = useMemo(() => computeOverview(scopedDeals), [scopedDeals]);
+  const o = useMemo(
+    () => computeOverview(scopedDeals, stageMaps.open),
+    [scopedDeals, stageMaps.open]
+  );
 
+  // "Late" stages used for Snittverdi = last two open stages (e.g. Tilbud sendt / Forhandling)
+  const lateLabel = stageMaps.open
+    .slice(-2)
+    .map((k) => stageLabel(stageMaps, k).toLowerCase())
+    .join(" / ");
   const spSub = { uke: "denne uken", mnd: "denne måneden", ar: "i år" }[
     soldPeriod
   ];
@@ -44,8 +49,8 @@ export default function OversiktPage() {
       id: d.id,
       company: d.company || "Ny kunde",
       sub: parts.join(" · "),
-      tagLabel: STAGE_LABELS[d.stage],
-      tagStyle: pillStyle(STAGE_COLORS[d.stage]),
+      tagLabel: stageLabel(stageMaps, d.stage),
+      tagStyle: pillStyle(stageColor(stageMaps, d.stage)),
       value: fmtKr(d.value),
       onOpen: () => {
         setSelectedDealId(d.id);
@@ -105,14 +110,14 @@ export default function OversiktPage() {
       const list = [...o.avgBase].sort((a, b) => b.value - a.value);
       return {
         title: "Snittverdi",
-        subtitle: `${list.length} deals i tilbud sendt / forhandling`,
+        subtitle: `${list.length} deals i ${lateLabel}`,
         banner: `Snittverdi: ${fmtKr(o.avgDeal)}`,
         rows: list.map(drow),
       };
     }
     return null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [detail, o, soldDeals, soldValue, spSub]);
+  }, [detail, o, soldDeals, soldValue, spSub, stageMaps]);
 
   const cards = [
     {
@@ -151,7 +156,7 @@ export default function OversiktPage() {
     {
       kicker: "Snittverdi",
       value: fmtKr(o.avgDeal),
-      sub: "tilbud sendt / forhandling",
+      sub: lateLabel,
       icon: "trending",
       color: "#f59e0b",
       onClick: () => setDetail("snitt"),
@@ -167,7 +172,8 @@ export default function OversiktPage() {
   ];
 
   // Pipeline pr. steg
-  const stageBars = STAGE_ORDER.map((stage) => {
+  const stageBars = stageMaps.list.map((st) => {
+    const stage = st.key;
     const list = scopedDeals.filter((d) => d.stage === stage);
     const sum = list.reduce((a, d) => a + (d.value || 0), 0);
     return { stage, count: list.length, sum };
@@ -178,12 +184,12 @@ export default function OversiktPage() {
   const upcoming = useMemo(
     () =>
       scopedDeals
-        .filter((d) => d.next_step_date && ACTIVE_STAGES.includes(d.stage))
+        .filter((d) => d.next_step_date && stageMaps.open.includes(d.stage))
         .sort((a, b) =>
           (a.next_step_date || "").localeCompare(b.next_step_date || "")
         )
         .slice(0, 8),
-    [scopedDeals]
+    [scopedDeals, stageMaps.open]
   );
 
   return (
@@ -314,7 +320,7 @@ export default function OversiktPage() {
               }}
             >
               <span style={{ width: 108, fontSize: 13, flexShrink: 0 }}>
-                {STAGE_LABELS[b.stage]}
+                {stageLabel(stageMaps, b.stage)}
               </span>
               <span
                 style={{
@@ -330,7 +336,7 @@ export default function OversiktPage() {
                     display: "block",
                     height: "100%",
                     width: `${(b.sum / maxSum) * 100}%`,
-                    background: STAGE_COLORS[b.stage],
+                    background: stageColor(stageMaps, b.stage),
                     borderRadius: 999,
                     transition: "width .3s ease",
                   }}
@@ -403,7 +409,7 @@ export default function OversiktPage() {
                     <span
                       style={
                         overdue
-                          ? pillStyle(STAGE_COLORS.tapt)
+                          ? pillStyle("var(--danger)")
                           : { ...pillStyle("#64748b"), background: "var(--tint-neutral)", color: "var(--tint-neutral-text)" }
                       }
                     >

@@ -38,6 +38,7 @@ export default async function AppLayout({
       profile={session.profile}
       departments={session.departments}
       members={session.members}
+      stages={session.stages}
     >
       <div style={{ minHeight: "100dvh", display: "flex", flexDirection: "column" }}>
         <TopNav />

@@ -99,6 +99,9 @@ export async function setupCompany(
     return { error: orgErr?.message || "Kunne ikke opprette bedrift." };
   }
 
+  // 2b. Default pipeline stages for the new organisation
+  await admin.rpc("seed_default_stages", { p_org: org.id });
+
   // 3. Departments
   const { data: deptRows, error: deptErr } = await admin
     .from("departments")

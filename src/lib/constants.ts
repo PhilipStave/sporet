@@ -1,14 +1,14 @@
 // Domain constants for Altiv CRM — mirrors the design handoff spec.
+// Stages are now customisable per organisation (see lib/stages.ts); the
+// values below are the DEFAULTS a new company starts with, and the fallback
+// when an org has no custom stages configured.
 
-export type Stage =
-  | "ny"
-  | "kontaktet"
-  | "dialog"
-  | "tilbud"
-  | "forhandling"
-  | "vunnet"
-  | "tapt"
-  | "ikkesvart";
+/** A stage key. Built-in defaults are listed, but orgs may add their own. */
+export type Stage = string;
+
+/** System stage keys that always exist (renamable, never deletable). */
+export const WON_KEY = "vunnet";
+export const LOST_KEY = "tapt";
 
 export type Channel = "telefon" | "epost" | "sms" | "mote";
 
@@ -141,6 +141,10 @@ export function stageColor(stage: Stage): string {
 }
 
 export function pillStyle(color: string): React.CSSProperties {
+  // Works for hex colours (#rrggbb → 12% tint) and CSS variables (color-mix).
+  const bg = color.startsWith("#")
+    ? `${color}1f`
+    : `color-mix(in srgb, ${color} 14%, transparent)`;
   return {
     display: "inline-flex",
     alignItems: "center",
@@ -149,7 +153,7 @@ export function pillStyle(color: string): React.CSSProperties {
     fontSize: "11px",
     fontWeight: 600,
     whiteSpace: "nowrap",
-    background: `${color}1f`,
+    background: bg,
     color,
   };
 }

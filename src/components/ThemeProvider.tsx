@@ -33,12 +33,13 @@ function apply(pref: ThemePref): "light" | "dark" {
   return resolved;
 }
 
+// Default is LIGHT. "Auto" (follow the OS) is opt-in.
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   // Initial state mirrors what the no-flash script already set on <html>.
   const [pref, setPrefState] = useState<ThemePref>(() => {
-    if (typeof window === "undefined") return "system";
+    if (typeof window === "undefined") return "light";
     const saved = window.localStorage.getItem(STORAGE_KEY) as ThemePref | null;
-    return saved === "light" || saved === "dark" ? saved : "system";
+    return saved === "dark" || saved === "system" ? saved : "light";
   });
   const [resolved, setResolved] = useState<"light" | "dark">(() => {
     if (typeof document === "undefined") return "light";
@@ -49,7 +50,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   const setPref = useCallback((p: ThemePref) => {
     setPrefState(p);
-    if (p === "system") window.localStorage.removeItem(STORAGE_KEY);
+    if (p === "light") window.localStorage.removeItem(STORAGE_KEY); // light = default
     else window.localStorage.setItem(STORAGE_KEY, p);
     setResolved(apply(p));
   }, []);
@@ -67,4 +68,5 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 }
 
 /** Inline, runs before paint: sets data-theme so there is no light→dark flash. */
-export const themeInitScript = `(function(){try{var k='${STORAGE_KEY}';var s=localStorage.getItem(k);var d=s==='dark'||(s!=='light'&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.setAttribute('data-theme',d?'dark':'light');}catch(e){}})();`;
+// Default light; dark only if explicitly chosen, or if "system" chosen and the OS is dark.
+export const themeInitScript = `(function(){try{var k='${STORAGE_KEY}';var s=localStorage.getItem(k);var d=s==='dark'||(s==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.setAttribute('data-theme',d?'dark':'light');}catch(e){}})();`;

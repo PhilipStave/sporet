@@ -8,13 +8,13 @@ import { Autocomplete } from "@/components/Autocomplete";
 import { Board } from "@/components/pipeline/Board";
 import { Table } from "@/components/pipeline/Table";
 import { NewCustomerDialog } from "@/components/pipeline/NewCustomerDialog";
-import { ACTIVE_STAGES } from "@/lib/constants";
+
 import { fmtKr, withinPeriod, type Period } from "@/lib/format";
 
 type FilterKind = "alle" | "apne" | "vunnet" | "tapt";
 
 export default function PipelinePage() {
-  const { scopedDeals, departments, sellerNames, canWrite } = useStore();
+  const { scopedDeals, departments, sellerNames, canWrite, stageMaps } = useStore();
 
   const [mode, setMode] = useState<"tavle" | "tabell">("tavle");
   const [query, setQuery] = useState("");
@@ -33,7 +33,7 @@ export default function PipelinePage() {
   const filtered = useMemo(() => {
     const q = query.toLowerCase().trim();
     return scopedDeals.filter((d) => {
-      if (filter === "apne" && !ACTIVE_STAGES.includes(d.stage)) return false;
+      if (filter === "apne" && !stageMaps.open.includes(d.stage)) return false;
       if (filter === "vunnet" && d.stage !== "vunnet") return false;
       if (filter === "tapt" && d.stage !== "tapt") return false;
       if (deptFilter.length && !deptFilter.includes(d.department_id ?? ""))
@@ -52,9 +52,9 @@ export default function PipelinePage() {
         return false;
       return true;
     });
-  }, [scopedDeals, query, filter, deptFilter, period, seller]);
+  }, [scopedDeals, query, filter, deptFilter, period, seller, stageMaps.open]);
 
-  const openDeals = filtered.filter((d) => ACTIVE_STAGES.includes(d.stage));
+  const openDeals = filtered.filter((d) => stageMaps.open.includes(d.stage));
   const openValue = openDeals.reduce((a, d) => a + (d.value || 0), 0);
 
   return (
@@ -145,8 +145,8 @@ export default function PipelinePage() {
           options={[
             { value: "alle", label: "Alle deals" },
             { value: "apne", label: "Kun åpne" },
-            { value: "vunnet", label: "Vunnet" },
-            { value: "tapt", label: "Tapt" },
+            { value: "vunnet", label: stageMaps.labels["vunnet"] || "Vunnet" },
+            { value: "tapt", label: stageMaps.labels["tapt"] || "Tapt" },
           ]}
         />
 

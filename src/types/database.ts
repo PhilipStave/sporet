@@ -94,6 +94,18 @@ export type ActivityRow = {
   created_at: string;
 }
 
+export type PipelineStageRow = {
+  id: string;
+  org_id: string;
+  key: string;
+  label: string;
+  color: string;
+  position: number;
+  is_system: boolean;
+  counts_as_open: boolean;
+  created_at: string;
+}
+
 export type InviteRow = {
   id: string;
   org_id: string;
@@ -122,11 +134,13 @@ export type Database = {
       deals: Table<DealRow>;
       activities: Table<ActivityRow>;
       invites: Table<InviteRow>;
+      pipeline_stages: Table<PipelineStageRow>;
     };
     Views: { [_ in never]: never };
     Functions: {
       current_org_id: { Args: Record<PropertyKey, never>; Returns: string };
       is_admin: { Args: Record<PropertyKey, never>; Returns: boolean };
+      seed_default_stages: { Args: { p_org: string }; Returns: undefined };
     };
     Enums: { [_ in never]: never };
     CompositeTypes: { [_ in never]: never };

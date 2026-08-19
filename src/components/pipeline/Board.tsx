@@ -8,25 +8,21 @@ import {
   useDroppable,
   type DragEndEvent,
 } from "@dnd-kit/core";
-import {
-  STAGE_ORDER,
-  STAGE_LABELS,
-  STAGE_COLORS,
-  type Stage,
-} from "@/lib/constants";
+import { type Stage } from "@/lib/constants";
 import { fmtShort } from "@/lib/format";
 import { DealCard } from "./DealCard";
 import { useStore } from "@/store/Store";
 import type { Deal } from "@/types";
+import type { StageConfig } from "@/lib/stages";
 
-function Column({ stage, deals }: { stage: Stage; deals: Deal[] }) {
-  const { setNodeRef, isOver } = useDroppable({ id: stage });
+function Column({ stage, deals }: { stage: StageConfig; deals: Deal[] }) {
+  const { setNodeRef, isOver } = useDroppable({ id: stage.key });
   const { setSelectedDealId, deleteDeal } = useStore();
-  const color = STAGE_COLORS[stage];
+  const color = stage.color;
   const sum = deals.reduce((a, d) => a + (d.value || 0), 0);
-  // First two stages show a customer count instead of a sum.
-  const isCountStage = stage === "ny" || stage === "kontaktet";
-  const meta = isCountStage
+  // Early (lead-ish) stages show a customer count instead of a sum — keep the
+  // original behaviour for the first two open stages.
+  const meta = stage.position <= 1 && stage.counts_as_open
     ? `${deals.length} kunder`
     : `${deals.length} · ${fmtShort(sum)} kr`;
 
@@ -51,9 +47,7 @@ function Column({ stage, deals }: { stage: Stage; deals: Deal[] }) {
               background: color,
             }}
           />
-          <span style={{ fontWeight: 600, fontSize: 14 }}>
-            {STAGE_LABELS[stage]}
-          </span>
+          <span style={{ fontWeight: 600, fontSize: 14 }}>{stage.label}</span>
         </div>
         <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 3 }}>
           {meta}
@@ -90,7 +84,7 @@ function Column({ stage, deals }: { stage: Stage; deals: Deal[] }) {
 }
 
 export function Board({ deals }: { deals: Deal[] }) {
-  const { moveStage } = useStore();
+  const { moveStage, stageMaps } = useStore();
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
@@ -103,6 +97,13 @@ export function Board({ deals }: { deals: Deal[] }) {
     if (deal && deal.stage !== overStage) moveStage(dealId, overStage);
   };
 
+  // Deals whose stage was deleted are shown in the first open column.
+  const known = new Set(stageMaps.order);
+  const dealsFor = (key: string) =>
+    deals.filter(
+      (d) => d.stage === key || (!known.has(d.stage) && key === stageMaps.firstKey)
+    );
+
   return (
     <DndContext sensors={sensors} onDragEnd={onDragEnd}>
       <div
@@ -114,12 +115,8 @@ export function Board({ deals }: { deals: Deal[] }) {
           paddingBottom: 12,
         }}
       >
-        {STAGE_ORDER.map((stage) => (
-          <Column
-            key={stage}
-            stage={stage}
-            deals={deals.filter((d) => d.stage === stage)}
-          />
+        {stageMaps.list.map((stage) => (
+          <Column key={stage.id} stage={stage} deals={dealsFor(stage.key)} />
         ))}
       </div>
     </DndContext>

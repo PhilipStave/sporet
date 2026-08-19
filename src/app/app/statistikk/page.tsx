@@ -2,8 +2,9 @@
 
 import { useMemo, useState } from "react";
 import { useStore } from "@/store/Store";
+import { stageLabel, stageColor } from "@/lib/stages";
 import { DetailModal, type DetailData } from "@/components/DetailModal";
-import { STAGE_COLORS, STAGE_LABELS, pillStyle } from "@/lib/constants";
+import { WON_KEY, pillStyle } from "@/lib/constants";
 import { fmtKr, fmtShort } from "@/lib/format";
 import { stageTime } from "@/lib/metrics";
 import type { Deal } from "@/types";
@@ -83,7 +84,7 @@ function buildBuckets(period: StatPeriod): Bucket[] {
 }
 
 export default function StatistikkPage() {
-  const { scopedDeals, departments, setSelectedDealId, deptName } = useStore();
+  const { scopedDeals, departments, setSelectedDealId, deptName, stageMaps } = useStore();
   const [chartType, setChartType] = useState<ChartType>("bar");
   const [period, setPeriod] = useState<StatPeriod>("alle");
   const [selDepts, setSelDepts] = useState<string[]>(
@@ -94,7 +95,7 @@ export default function StatistikkPage() {
   const [drill, setDrill] = useState<string | null>(null); // dept id or "alle"
 
   const won = useMemo(
-    () => scopedDeals.filter((d) => d.stage === "vunnet"),
+    () => scopedDeals.filter((d) => d.stage === WON_KEY),
     [scopedDeals]
   );
 
@@ -174,8 +175,8 @@ export default function StatistikkPage() {
         sub: [deptName(d.department_id), d.owner_name, d.product]
           .filter(Boolean)
           .join(" · "),
-        tagLabel: STAGE_LABELS[d.stage],
-        tagStyle: pillStyle(STAGE_COLORS[d.stage]),
+        tagLabel: stageLabel(stageMaps, d.stage),
+        tagStyle: pillStyle(stageColor(stageMaps, d.stage)),
         value: fmtKr(d.value),
         onOpen: () => {
           setSelectedDealId(d.id);
@@ -183,7 +184,7 @@ export default function StatistikkPage() {
         },
       })),
     };
-  }, [drill, won, period, buckets, deptName, setSelectedDealId]);
+  }, [drill, won, period, buckets, deptName, setSelectedDealId, stageMaps]);
 
   // Department total cards
   const deptCards = departments
