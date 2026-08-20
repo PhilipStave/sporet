@@ -598,6 +598,30 @@ export default function LandingPage() {
             </div>
           ))}
         </div>
+
+        {/* Visible screenshot: what setting up a company actually looks like */}
+        <figure style={{ margin: "36px 0 0", display: "grid", gap: 10 }}>
+          <span
+            style={{
+              borderRadius: "var(--r-lg-land)",
+              overflow: "hidden",
+              border: "1px solid var(--divider)",
+              boxShadow: "0 18px 50px rgba(27,26,24,.10)",
+              display: "block",
+              maxWidth: 860,
+              margin: "0 auto",
+            }}
+          >
+            <ZoomImage
+              src="/screenshots/04-setup.png"
+              alt="Oppsett av bedrift i Altiv: bedriftsnavn, avdelinger, funksjoner og administrator-bruker"
+              sizes="(max-width: 900px) 100vw, 860px"
+            />
+          </span>
+          <figcaption style={{ fontSize: 14, color: "var(--muted)", textAlign: "center" }}>
+            Slik ser steg 1 ut: bedriftsnavn, avdelinger, funksjoner og din admin-bruker — ferdig på to minutter.
+          </figcaption>
+        </figure>
       </section>
 
       {/* Pricing */}
