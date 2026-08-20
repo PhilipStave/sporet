@@ -439,6 +439,45 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Demo video */}
+      <section style={{ ...wrap, padding: "0 24px 56px" }}>
+        <div style={{ maxWidth: 620, marginBottom: 22 }}>
+          <h2
+            style={{
+              fontFamily: "var(--font-display)",
+              fontWeight: 400,
+              fontSize: "clamp(32px, 4.2vw, 48px)",
+              lineHeight: 1.1,
+              margin: "0 0 10px",
+            }}
+          >
+            Se Altiv i bruk
+          </h2>
+          <p style={{ margin: 0, fontSize: 17, color: "var(--muted)", lineHeight: 1.6 }}>
+            Under ett minutt: logg inn, flytt en kunde i pipelinen, åpne kundekortet og se
+            statistikken. Ekte system, ingen klipping.
+          </p>
+        </div>
+        <video
+          controls
+          muted
+          playsInline
+          preload="metadata"
+          poster="/demo-poster.jpg"
+          style={{
+            width: "100%",
+            borderRadius: "var(--r-lg-land)",
+            border: "1px solid var(--divider)",
+            boxShadow: "0 18px 50px rgba(27,26,24,.12)",
+            display: "block",
+            background: "var(--surface)",
+          }}
+        >
+          <source src="/demo.mp4" type="video/mp4" />
+          <source src="/demo.webm" type="video/webm" />
+        </video>
+      </section>
+
       {/* How it works */}
       <section
         id="slik"
