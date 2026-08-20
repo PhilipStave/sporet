@@ -309,7 +309,7 @@ export default function LandingPage() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+            gridTemplateColumns: "minmax(0, 2.01fr) minmax(0, 1fr)",
             gap: 20,
             alignItems: "stretch",
           }}

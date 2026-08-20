@@ -5,7 +5,7 @@ const BASE = process.env.SHOT_BASE || "http://localhost:3100";
 
 const browser = await chromium.launch();
 const ctx = await browser.newContext({
-  viewport: { width: 1280, height: 900 },
+  viewport: { width: 780, height: 980 },
   deviceScaleFactor: 2,
   locale: "nb-NO",
 });
