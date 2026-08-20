@@ -18,11 +18,17 @@ export async function GET(req: Request) {
   const forwardId = url.searchParams.get("forward");
 
   if (forwardId) {
-    const res = await resend.emails.receiving.forward({
-      emailId: forwardId,
-      to: process.env.FORWARD_MAIL_TO!,
+    const { data: mail, error } = await resend.emails.receiving.get(forwardId);
+    if (error || !mail) return NextResponse.json({ error: error?.message ?? "not found" }, { status: 404 });
+    const res = await resend.emails.send({
       from: "Altiv <post@altiv.no>",
-      passthrough: true,
+      to: process.env.FORWARD_MAIL_TO!,
+      replyTo: mail.from,
+      subject: mail.subject || "(uten emne)",
+      text: `Fra: ${mail.from}
+
+${mail.text ?? ""}`,
+      html: mail.html ?? undefined,
     });
     return NextResponse.json({ forwardTo: process.env.FORWARD_MAIL_TO, result: res });
   }

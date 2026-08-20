@@ -72,11 +72,22 @@ export async function POST(req: Request) {
     const forwardTo = process.env.FORWARD_MAIL_TO;
     if (ours.length && forwardTo) {
       const domain = FORWARD_DOMAINS.find((d) => ours[0].endsWith(`@${d}`)) ?? INBOUND_DOMAIN;
-      const { error: fwdErr } = await resend.emails.receiving.forward({
-        emailId,
+      const brand = domain === "stavesoftware.no" ? "Stave Software" : "Altiv";
+      const origFrom = parseAddress(mail.from);
+      // Re-send under our own domain (DMARC-aligned — a passthrough of e.g. an Outlook sender
+      // would fail the sender domain's DMARC and get junked). Reply-To points at the real sender.
+      const banner = `Til: ${ours.join(", ")} · Fra: ${mail.from}`;
+      const { error: fwdErr } = await resend.emails.send({
+        from: `${brand} <post@${domain}>`,
         to: forwardTo,
-        from: `${domain === "stavesoftware.no" ? "Stave Software" : "Altiv"} <post@${domain}>`,
-        passthrough: true,
+        replyTo: mail.from,
+        subject: mail.subject || "(uten emne)",
+        text: `${banner}
+
+${mail.text ?? ""}`,
+        html: mail.html
+          ? `<p style="color:#888;font-size:12px;margin:0 0 12px">${banner}</p>${mail.html}`
+          : undefined,
       });
       return ok({ forwarded: ours, error: fwdErr?.message ?? null });
     }
