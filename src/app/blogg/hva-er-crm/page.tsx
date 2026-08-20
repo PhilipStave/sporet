@@ -9,13 +9,13 @@ export const metadata: Metadata = {
   title: post.title,
   description: post.description,
   alternates: { canonical: `/blogg/${post.slug}` },
-  openGraph: { title: post.title, description: post.description, type: "article" },
+  openGraph: { title: post.title, description: post.description, type: "article", images: [post.image] },
 };
 
 export default function Page() {
   return (
     <ArticleLayout
-      meta={{ slug: `blogg/${post.slug}`, kicker: "Blogg · CRM-grunnkurs", title: post.title, description: post.description, datePublished: post.datePublished }}
+      meta={{ slug: `blogg/${post.slug}`, kicker: "Blogg · CRM-grunnkurs", title: post.title, description: post.description, datePublished: post.datePublished, image: post.image, imageAlt: post.imageAlt }}
       related={[
         { href: "/blogg/excel-vs-crm", label: "Excel som CRM — når bør du bytte?" },
         { href: "/blogg/salgspipeline", label: "Slik bygger du en salgspipeline" },

@@ -33,6 +33,7 @@ export default function BlogIndex() {
             href={`/blogg/${post.slug}`}
             style={{
               display: "block",
+              overflow: "hidden",
               padding: "22px 24px",
               border: "1px solid var(--divider)",
               borderRadius: "var(--r-lg-land)",
@@ -40,6 +41,12 @@ export default function BlogIndex() {
               color: "var(--text)",
             }}
           >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={post.image}
+              alt={post.imageAlt}
+              style={{ width: "calc(100% + 48px)", margin: "-22px -24px 14px", display: "block" }}
+            />
             <div style={{ fontSize: 13, color: "var(--muted)", marginBottom: 6 }}>
               {new Date(post.datePublished).toLocaleDateString("nb-NO", { day: "numeric", month: "long", year: "numeric" })}
               {" · "}

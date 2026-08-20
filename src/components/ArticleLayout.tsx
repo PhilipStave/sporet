@@ -26,6 +26,8 @@ export type ArticleMeta = {
   description: string;
   datePublished: string;
   dateModified?: string;
+  image?: string;
+  imageAlt?: string;
 };
 
 export function ArticleLayout({
@@ -47,6 +49,7 @@ export function ArticleLayout({
     author: { "@type": "Organization", name: "Altiv" },
     publisher: { "@type": "Organization", name: "Altiv", url: SITE_URL },
     mainEntityOfPage: url,
+    ...(meta.image ? { image: `${SITE_URL}${meta.image}` } : {}),
     datePublished: meta.datePublished,
     dateModified: meta.dateModified ?? meta.datePublished,
   };
@@ -123,6 +126,22 @@ export function ArticleLayout({
         >
           {meta.title}
         </h1>
+
+        {meta.image && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={meta.image}
+            alt={meta.imageAlt ?? ""}
+            style={{
+              width: "100%",
+              height: "auto",
+              borderRadius: "var(--r-lg-land)",
+              border: "1px solid var(--divider)",
+              margin: "6px 0 18px",
+              display: "block",
+            }}
+          />
+        )}
 
         {children}
 
