@@ -14,6 +14,8 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 const INBOUND_DOMAIN = "altiv.no";
+// Company mailboxes on these domains are forwarded verbatim to FORWARD_MAIL_TO.
+const FORWARD_DOMAINS = ["altiv.no", "stavesoftware.no"];
 const MAX_NOTE = 4000;
 
 function ok(body: Record<string, unknown> = {}) {
@@ -64,15 +66,16 @@ export async function POST(req: Request) {
   ].map((a) => parseAddress(a).email);
   const inboundAddr = allRcpts.find((e) => e.endsWith(`@${INBOUND_DOMAIN}`) && e.startsWith("logg-"));
 
-  // Company mailbox (post@, hei@, support@ …): forward verbatim to the owner's inbox.
+  // Company mailbox (post@, hei@, support@ … on any of our domains): forward verbatim to the owner's inbox.
   if (!inboundAddr) {
-    const ours = allRcpts.filter((e) => e.endsWith(`@${INBOUND_DOMAIN}`));
+    const ours = allRcpts.filter((e) => FORWARD_DOMAINS.some((d) => e.endsWith(`@${d}`)));
     const forwardTo = process.env.FORWARD_MAIL_TO;
     if (ours.length && forwardTo) {
+      const domain = FORWARD_DOMAINS.find((d) => ours[0].endsWith(`@${d}`)) ?? INBOUND_DOMAIN;
       const { error: fwdErr } = await resend.emails.receiving.forward({
         emailId,
         to: forwardTo,
-        from: `Altiv <post@${INBOUND_DOMAIN}>`,
+        from: `${domain === "stavesoftware.no" ? "Stave Software" : "Altiv"} <post@${domain}>`,
         passthrough: true,
       });
       return ok({ forwarded: ours, error: fwdErr?.message ?? null });
