@@ -79,10 +79,10 @@ async function clickAt(page, locator, ms = 700) {
 async function record() {
   const browser = await chromium.launch();
   const ctx = await browser.newContext({
-    viewport: { width: 1600, height: 900 },
-    deviceScaleFactor: 1.25,
+    viewport: { width: 1920, height: 1080 },
+    deviceScaleFactor: 1,
     locale: "nb-NO",
-    recordVideo: { dir: "scripts/out", size: { width: 1600, height: 900 } },
+    recordVideo: { dir: "scripts/out", size: { width: 1920, height: 1080 } },
   });
   await ctx.addInitScript(CURSOR_SCRIPT);
   const page = await ctx.newPage();
@@ -180,7 +180,7 @@ async function record() {
     await pause(2000);
   }
   // settle on the chart
-  await glide(page, 800, 500, 700);
+  await glide(page, 960, 600, 700);
   await pause(1400);
 
   // ---- Selgere: ranking + sorting ----
@@ -198,7 +198,7 @@ async function record() {
   await clickAt(page, page.getByRole("link", { name: "Kunder" }).first(), 700);
   await page.waitForLoadState("networkidle");
   await pause(1600);
-  await glide(page, 800, 560, 600);
+  await glide(page, 960, 640, 600);
   for (let i = 0; i < 8; i++) { await page.mouse.wheel(0, 60); await pause(80); }
   await pause(1400);
 
