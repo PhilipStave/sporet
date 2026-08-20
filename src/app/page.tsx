@@ -845,6 +845,7 @@ export default function LandingPage() {
             <Link href="/bli-med" style={{ color: "var(--muted)" }}>Bli med</Link>
             <Link href="/login" style={{ color: "var(--muted)" }}>Logg inn</Link>
             <Link href="/vilkar" style={{ color: "var(--muted)" }}>Vilkår</Link>
+            <Link href="/admin" style={{ color: "var(--muted)", opacity: 0.7 }}>Admin</Link>
             <Link href="/personvern" style={{ color: "var(--muted)" }}>Personvern</Link>
           </nav>
           <span style={{ fontSize: 14, color: "var(--muted)" }}>

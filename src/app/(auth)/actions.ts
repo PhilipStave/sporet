@@ -165,11 +165,20 @@ export async function login(
   if (!email || !password) return { error: "Fyll inn e-post og passord." };
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data: signIn, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
     const msg = error.message.toLowerCase();
     if (msg.includes("invalid")) return { error: "Feil e-post eller passord." };
     return { error: error.message };
+  }
+  // Platform owner (no tenant org) lands in /admin instead of the app.
+  if (signIn.user) {
+    const { data: me } = await createAdminClient()
+      .from("profiles")
+      .select("org_id, is_superadmin")
+      .eq("id", signIn.user.id)
+      .maybeSingle();
+    if (me?.is_superadmin && !me.org_id) redirect("/admin");
   }
   redirect("/app/oversikt");
 }
