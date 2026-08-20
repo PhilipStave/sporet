@@ -61,6 +61,10 @@ export const FAQ = [
     a: "Ja. Altiv er responsivt og fungerer i nettleseren på telefon og nettbrett, uten installasjon.",
   },
   {
+    q: "Hvordan kommer jeg i kontakt med dere?",
+    a: "Send en e-post til post@altiv.no, så svarer vi raskt. Alle kunder får support på e-post inkludert i prisen.",
+  },
+  {
     q: "Hva koster det?",
     a: "Prisen avhenger av antall brukere — fra 790 kr/mnd for opptil 10 brukere. Alle pakker inneholder hele systemet.",
   },

@@ -325,6 +325,7 @@ export default function HvorforAltivPage() {
           <Link href="/" style={{ color: "var(--muted)" }}>Forside</Link>
           <Link href="/vilkar" style={{ color: "var(--muted)" }}>Vilkår</Link>
           <Link href="/personvern" style={{ color: "var(--muted)" }}>Personvern</Link>
+          <a href="mailto:post@altiv.no" style={{ color: "var(--muted)", marginLeft: "auto" }}>post@altiv.no</a>
         </div>
       </footer>
     </div>

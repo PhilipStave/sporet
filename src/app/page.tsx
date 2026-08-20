@@ -75,7 +75,7 @@ function jsonLd() {
     "@type": "Organization",
     name: SITE_NAME,
     url: SITE_URL,
-    logo: `${SITE_URL}/favicon.ico`,
+    logo: `${SITE_URL}/icons/icon-512.png`,
   };
   const website = {
     "@context": "https://schema.org",
@@ -845,11 +845,12 @@ export default function LandingPage() {
             <Link href="/bli-med" style={{ color: "var(--muted)" }}>Bli med</Link>
             <Link href="/login" style={{ color: "var(--muted)" }}>Logg inn</Link>
             <Link href="/vilkar" style={{ color: "var(--muted)" }}>Vilkår</Link>
-            <Link href="/admin" style={{ color: "var(--muted)", opacity: 0.7 }}>Admin</Link>
             <Link href="/personvern" style={{ color: "var(--muted)" }}>Personvern</Link>
+            <Link href="/admin" style={{ color: "var(--muted)", opacity: 0.7 }}>Admin</Link>
           </nav>
           <span style={{ fontSize: 14, color: "var(--muted)" }}>
-            Salgsoppfølging for team som selger til bedrifter og det offentlige.
+            Salgsoppfølging for team som selger til bedrifter og det offentlige. Spørsmål?{" "}
+            <a href="mailto:post@altiv.no" style={{ color: "var(--accent)", fontWeight: 600 }}>post@altiv.no</a>
           </span>
         </div>
       </footer>
