@@ -309,7 +309,7 @@ export default function LandingPage() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "minmax(0, 1.55fr) minmax(0, 1fr)",
+            gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
             gap: 20,
             alignItems: "stretch",
           }}
@@ -330,7 +330,7 @@ export default function LandingPage() {
                 alt="Altiv CRM – oversikt over salgspipeline med pipeline-verdi, omsetning, margin og vinnrate per avdeling"
                 detail={SCREENSHOT_DETAILS.oversikt}
                 priority
-                sizes="(max-width: 900px) 100vw, 640px"
+                sizes="(max-width: 900px) 100vw, 550px"
               />
             </span>
             <figcaption style={{ fontSize: 13, color: "var(--muted)", textAlign: "center" }}>
@@ -351,7 +351,7 @@ export default function LandingPage() {
                 src="/screenshots/04-setup.png"
                 alt="Oppsett av bedrift i Altiv: bedriftsnavn, avdelinger, funksjoner og administrator-bruker"
                 detail={STEP_DETAILS["1"]}
-                sizes="(max-width: 900px) 100vw, 420px"
+                sizes="(max-width: 900px) 100vw, 550px"
               />
             </span>
             <figcaption style={{ fontSize: 13, color: "var(--muted)", textAlign: "center" }}>
