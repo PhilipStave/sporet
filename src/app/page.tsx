@@ -308,21 +308,56 @@ export default function LandingPage() {
         </h2>
         <div
           style={{
-            maxWidth: 940,
-            margin: "0 auto",
-            borderRadius: "var(--r-lg-land)",
-            overflow: "hidden",
-            border: "1px solid var(--divider)",
-            boxShadow: "var(--shadow)",
+            display: "grid",
+            gridTemplateColumns: "minmax(0, 1.55fr) minmax(0, 1fr)",
+            gap: 20,
+            alignItems: "stretch",
           }}
+          className="hero-shots"
         >
-          <ZoomImage
-            src="/screenshots/02-app-oversikt.png"
-            alt="Altiv CRM – oversikt over salgspipeline med pipeline-verdi, omsetning, margin og vinnrate per avdeling"
-            detail={SCREENSHOT_DETAILS.oversikt}
-            priority
-            sizes="(max-width: 940px) 100vw, 940px"
-          />
+          <figure style={{ margin: 0, display: "flex", flexDirection: "column", gap: 8 }}>
+            <span
+              style={{
+                borderRadius: "var(--r-lg-land)",
+                overflow: "hidden",
+                border: "1px solid var(--divider)",
+                boxShadow: "var(--shadow)",
+                display: "block",
+              }}
+            >
+              <ZoomImage
+                src="/screenshots/02-app-oversikt.png"
+                alt="Altiv CRM – oversikt over salgspipeline med pipeline-verdi, omsetning, margin og vinnrate per avdeling"
+                detail={SCREENSHOT_DETAILS.oversikt}
+                priority
+                sizes="(max-width: 900px) 100vw, 640px"
+              />
+            </span>
+            <figcaption style={{ fontSize: 13, color: "var(--muted)", textAlign: "center" }}>
+              Oversikten — tallene som betyr noe, i det du logger inn.
+            </figcaption>
+          </figure>
+          <figure style={{ margin: 0, display: "flex", flexDirection: "column", gap: 8 }}>
+            <span
+              style={{
+                borderRadius: "var(--r-lg-land)",
+                overflow: "hidden",
+                border: "1px solid var(--divider)",
+                boxShadow: "var(--shadow)",
+                display: "block",
+              }}
+            >
+              <ZoomImage
+                src="/screenshots/04-setup.png"
+                alt="Oppsett av bedrift i Altiv: bedriftsnavn, avdelinger, funksjoner og administrator-bruker"
+                detail={STEP_DETAILS["1"]}
+                sizes="(max-width: 900px) 100vw, 420px"
+              />
+            </span>
+            <figcaption style={{ fontSize: 13, color: "var(--muted)", textAlign: "center" }}>
+              Oppsettet — bedrift, avdelinger og team på to minutter.
+            </figcaption>
+          </figure>
         </div>
         <p style={{ textAlign: "center", fontSize: 13, color: "var(--muted)", margin: "10px 0 0" }}>
           Klikk på bildene og kortene for å se mer.
@@ -599,29 +634,6 @@ export default function LandingPage() {
           ))}
         </div>
 
-        {/* Visible screenshot: what setting up a company actually looks like */}
-        <figure style={{ margin: "36px 0 0", display: "grid", gap: 10 }}>
-          <span
-            style={{
-              borderRadius: "var(--r-lg-land)",
-              overflow: "hidden",
-              border: "1px solid var(--divider)",
-              boxShadow: "0 18px 50px rgba(27,26,24,.10)",
-              display: "block",
-              maxWidth: 860,
-              margin: "0 auto",
-            }}
-          >
-            <ZoomImage
-              src="/screenshots/04-setup.png"
-              alt="Oppsett av bedrift i Altiv: bedriftsnavn, avdelinger, funksjoner og administrator-bruker"
-              sizes="(max-width: 900px) 100vw, 860px"
-            />
-          </span>
-          <figcaption style={{ fontSize: 14, color: "var(--muted)", textAlign: "center" }}>
-            Slik ser steg 1 ut: bedriftsnavn, avdelinger, funksjoner og din admin-bruker — ferdig på to minutter.
-          </figcaption>
-        </figure>
       </section>
 
       {/* Pricing */}

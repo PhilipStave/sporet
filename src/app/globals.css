@@ -528,3 +528,10 @@ a {
   text-underline-offset: 2px;
 }
 .linklike:disabled { opacity: .5; cursor: default; }
+
+/* Hero screenshot pair stacks on narrow screens */
+@media (max-width: 820px) {
+  .hero-shots {
+    grid-template-columns: 1fr !important;
+  }
+}
