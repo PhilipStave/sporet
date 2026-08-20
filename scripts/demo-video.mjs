@@ -79,10 +79,10 @@ async function clickAt(page, locator, ms = 700) {
 async function record() {
   const browser = await chromium.launch();
   const ctx = await browser.newContext({
-    viewport: { width: 1280, height: 720 },
-    deviceScaleFactor: 1.5,
+    viewport: { width: 1600, height: 900 },
+    deviceScaleFactor: 1.25,
     locale: "nb-NO",
-    recordVideo: { dir: "scripts/out", size: { width: 1280, height: 720 } },
+    recordVideo: { dir: "scripts/out", size: { width: 1600, height: 900 } },
   });
   await ctx.addInitScript(CURSOR_SCRIPT);
   const page = await ctx.newPage();
@@ -180,8 +180,32 @@ async function record() {
     await pause(2000);
   }
   // settle on the chart
-  await glide(page, 640, 430, 700);
-  await pause(1500);
+  await glide(page, 800, 500, 700);
+  await pause(1400);
+
+  // ---- Selgere: ranking + sorting ----
+  await clickAt(page, page.getByRole("link", { name: "Selgere" }).first(), 700);
+  await page.waitForLoadState("networkidle");
+  await pause(1400);
+  await clickAt(page, page.getByRole("button", { name: "Alt", exact: true }).first(), 500);
+  await pause(1100);
+  await clickAt(page, page.getByRole("button", { name: "Margin %", exact: true }), 600);
+  await pause(1400);
+  await clickAt(page, page.getByRole("button", { name: "Margin kr", exact: true }), 550);
+  await pause(1400);
+
+  // ---- Kunder: table view ----
+  await clickAt(page, page.getByRole("link", { name: "Kunder" }).first(), 700);
+  await page.waitForLoadState("networkidle");
+  await pause(1600);
+  await glide(page, 800, 560, 600);
+  for (let i = 0; i < 8; i++) { await page.mouse.wheel(0, 60); await pause(80); }
+  await pause(1400);
+
+  // ---- Kalender ----
+  await clickAt(page, page.getByRole("link", { name: "Kalender" }).first(), 700);
+  await page.waitForLoadState("networkidle");
+  await pause(2300);
 
   await ctx.close();
   await browser.close();

@@ -43,6 +43,11 @@ async function shoot() {
     await page.waitForTimeout(700);
   });
   await shot("/app/kunder", "03-app.png");
+  await shot("/app/kalender", "05-kalender.png");
+  await shot("/app/selgere", "06-selgere.png", async () => {
+    await page.getByRole("button", { name: "Alt", exact: true }).click().catch(() => {});
+    await page.waitForTimeout(500);
+  });
 
   await browser.close();
 }

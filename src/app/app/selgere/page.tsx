@@ -12,6 +12,8 @@ export default function SelgerePage() {
   const { scopedDeals, members, setSelectedDealId, deptName, stageMaps } = useStore();
   const [period, setPeriod] = useState<Period>("alle");
   const [openSeller, setOpenSeller] = useState<string | null>(null);
+  const [sortKey, setSortKey] = useState<"total" | "margin" | "marginPct">("total");
+  const [asc, setAsc] = useState(false);
 
   const periodDeals = useMemo(
     () => scopedDeals.filter((d) => withinDays(d, period)),
@@ -22,6 +24,13 @@ export default function SelgerePage() {
     () => sellersFromWon(periodDeals, members.map((m) => m.full_name)),
     [periodDeals, members]
   );
+
+  // Rank is always by the chosen key, best first (1 = highest) — direction only flips the display order.
+  const ranked = useMemo(() => {
+    const sorted = [...sellers].sort((a, b) => b[sortKey] - a[sortKey]);
+    const withRank = sorted.map((s, i) => ({ ...s, rank: i + 1 }));
+    return asc ? withRank.reverse() : withRank;
+  }, [sellers, sortKey, asc]);
 
   const detailData: DetailData | null = useMemo(() => {
     if (!openSeller) return null;
@@ -67,23 +76,52 @@ export default function SelgerePage() {
             Hva hver selger har solgt, sum og margin
           </span>
         </div>
-        <div className="pillgroup">
-          {(
-            [
-              ["uke", "Uke"],
-              ["mnd", "Måned"],
-              ["ar", "År"],
-              ["alle", "Alt"],
-            ] as const
-          ).map(([id, label]) => (
-            <button
-              key={id}
-              data-active={period === id}
-              onClick={() => setPeriod(id as Period)}
-            >
-              {label}
-            </button>
-          ))}
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+          <div className="pillgroup">
+            {(
+              [
+                ["total", "Solgt for"],
+                ["margin", "Margin kr"],
+                ["marginPct", "Margin %"],
+              ] as const
+            ).map(([id, label]) => (
+              <button
+                key={id}
+                data-active={sortKey === id}
+                onClick={() => setSortKey(id)}
+                title={"Sorter etter " + label.toLowerCase()}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            className="btn"
+            onClick={() => setAsc((v) => !v)}
+            title="Snu rekkefølgen"
+            style={{ padding: "7px 13px", fontSize: 13 }}
+          >
+            {asc ? "Siste → første" : "Første → siste"}
+          </button>
+          <div className="pillgroup">
+            {(
+              [
+                ["uke", "Uke"],
+                ["mnd", "Måned"],
+                ["ar", "År"],
+                ["alle", "Alt"],
+              ] as const
+            ).map(([id, label]) => (
+              <button
+                key={id}
+                data-active={period === id}
+                onClick={() => setPeriod(id as Period)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -94,13 +132,14 @@ export default function SelgerePage() {
           gap: 14,
         }}
       >
-        {sellers.map((s) => (
+        {ranked.map((s) => (
           <button
             key={s.name}
             type="button"
             onClick={() => setOpenSeller(s.name)}
             className="stat-card"
             style={{
+              position: "relative",
               textAlign: "left",
               background: "var(--surface)",
               border: "1px solid var(--border)",
@@ -111,6 +150,27 @@ export default function SelgerePage() {
               opacity: s.count > 0 ? 1 : 0.75,
             }}
           >
+            <span
+              title={`${s.rank}. plass`}
+              style={{
+                position: "absolute",
+                top: 12,
+                right: 12,
+                minWidth: 26,
+                height: 26,
+                padding: "0 7px",
+                borderRadius: 999,
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 13,
+                fontWeight: 700,
+                background: s.rank === 1 && s.count > 0 ? "var(--primary)" : "var(--primary-050)",
+                color: s.rank === 1 && s.count > 0 ? "#fff" : "var(--primary)",
+              }}
+            >
+              {s.rank}.
+            </span>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <span
                 style={{
@@ -140,7 +200,7 @@ export default function SelgerePage() {
             </div>
           </button>
         ))}
-        {sellers.length === 0 && (
+        {ranked.length === 0 && (
           <p style={{ fontSize: 14, color: "var(--muted)" }}>
             Ingen selgere ennå.
           </p>

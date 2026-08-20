@@ -52,6 +52,8 @@ export const FEATURE_DETAILS: Record<string, DetailBlock> = {
       "Forfalte oppfølginger markeres rødt på kundekortet, i tavlen og i oversikten",
       "Marker som fullført med ett klikk — det skrives automatisk inn i aktivitetsloggen",
     ],
+    image: "/screenshots/05-kalender.png",
+    imageAlt: "Kalenderen i Altiv: oppfølginger gruppert i Forfalt, I dag, I morgen og Denne uken",
   },
   team: {
     title: "Avdelinger og selgere",
@@ -62,7 +64,10 @@ export const FEATURE_DETAILS: Record<string, DetailBlock> = {
       "Overfør en kunde til en kollega med ett klikk (autocomplete på navn)",
       "Selgere-fanen viser hva hver selger har solgt, til hvilken sum og margin — klikk for detaljer",
       "Nye ansatte melder seg på med bedriftskode; admin godkjenner før de får tilgang",
+      "Selgerne rangeres 1., 2., 3. — sorter etter solgt for, margin i kroner eller margin i prosent",
     ],
+    image: "/screenshots/06-selgere.png",
+    imageAlt: "Selgere i Altiv, rangert etter salg med sum og margin per selger",
   },
   tall: {
     title: "Omsetning og margin",

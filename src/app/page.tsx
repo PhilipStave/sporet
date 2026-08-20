@@ -454,8 +454,8 @@ export default function LandingPage() {
             Se Altiv i bruk
           </h2>
           <p style={{ margin: 0, fontSize: 17, color: "var(--muted)", lineHeight: 1.6 }}>
-            Under ett minutt: logg inn, flytt en kunde i pipelinen, åpne kundekortet og se
-            statistikken. Ekte system, ingen klipping.
+            Litt over ett minutt: logg inn, flytt en kunde i pipelinen, åpne kundekortet, og se
+            statistikk, selgere med rangering, kundelisten og kalenderen. Ekte system, ingen klipping.
           </p>
         </div>
         <video
@@ -474,7 +474,6 @@ export default function LandingPage() {
           }}
         >
           <source src="/demo.mp4" type="video/mp4" />
-          <source src="/demo.webm" type="video/webm" />
         </video>
       </section>
 
