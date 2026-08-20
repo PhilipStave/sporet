@@ -87,6 +87,8 @@ export const STEP_DETAILS: Record<string, DetailBlock> = {
       "14 dagers gratis prøve starter automatisk — full funksjonalitet, ingen trekk før prøveperioden er over",
       "Systemet starter tomt — ingen eksempeldata å rydde bort",
     ],
+    image: "/screenshots/04-setup.png",
+    imageAlt: "Oppsett av bedrift i Altiv: bedriftsnavn, avdelinger, funksjoner og administrator",
   },
   "2": {
     title: "Slipp inn teamet",

@@ -30,7 +30,17 @@ const CURSOR_SCRIPT = `
   };
   const move = (e) => { make(); const c = document.getElementById("__cursor"); if (c) { c.style.left = e.clientX + "px"; c.style.top = e.clientY + "px"; } };
   window.addEventListener("mousemove", move, true);
-  window.addEventListener("mousedown", () => { const c = document.getElementById("__cursor"); if (c) c.style.transform = "translate(-50%,-50%) scale(.72)"; }, true);
+  window.addEventListener("mousedown", (e) => {
+    const c = document.getElementById("__cursor"); if (c) c.style.transform = "translate(-50%,-50%) scale(.72)";
+    const r = document.createElement("div");
+    r.style.cssText = "position:fixed;z-index:999998;width:14px;height:14px;border-radius:50%;" +
+      "border:3px solid rgba(168,64,42,.85);pointer-events:none;transform:translate(-50%,-50%);" +
+      "transition:width .45s ease-out,height .45s ease-out,opacity .45s ease-out;opacity:1;" +
+      "left:" + e.clientX + "px;top:" + e.clientY + "px";
+    document.body.appendChild(r);
+    requestAnimationFrame(() => { r.style.width = "56px"; r.style.height = "56px"; r.style.opacity = "0"; });
+    setTimeout(() => r.remove(), 600);
+  }, true);
   window.addEventListener("mouseup", () => { const c = document.getElementById("__cursor"); if (c) c.style.transform = "translate(-50%,-50%) scale(1)"; }, true);
   if (document.readyState !== "loading") make(); else document.addEventListener("DOMContentLoaded", make);
 })();`;
@@ -90,15 +100,19 @@ async function record() {
   await clickAt(page, page.locator('button[type="submit"]'), 550);
   await page.waitForURL(/\/app\//, { timeout: 30000 });
   await page.waitForLoadState("networkidle");
-  await pause(2400);
+  // Data loads client-side after mount — wait until the seeded numbers are actually on screen.
+  await page.waitForFunction(() => document.body.innerText.includes("10 åpne deals"), null, { timeout: 20000 }).catch(() => {});
+  await pause(1600);
 
-  // ---- Oversikt: hover two stat cards ----
+  // ---- Oversikt: hover "Solgt for", flip the period toggle (numbers update live) ----
   const cards = page.locator(".stat-card");
   if (await cards.count()) {
     await glideTo(page, cards.nth(1), 800);
-    await pause(1100);
-    await glideTo(page, cards.nth(4), 700);
-    await pause(1100);
+    await pause(900);
+    await clickAt(page, page.getByRole("button", { name: "Måned", exact: true }).first(), 450);
+    await pause(1200);
+    await clickAt(page, page.getByRole("button", { name: "År", exact: true }).first(), 400);
+    await pause(1300);
   } else {
     await pause(1800);
   }
@@ -106,7 +120,7 @@ async function record() {
   // ---- Pipeline via top nav ----
   await clickAt(page, page.getByRole("link", { name: "Pipeline" }).first(), 700);
   await page.waitForLoadState("networkidle");
-  await pause(2000);
+  await pause(1700);
 
   // Drag the "Oslo Konsult" card onto the neighbouring column (drop on a card there = joins that column).
   try {
