@@ -489,8 +489,8 @@ export default function LandingPage() {
             Se Altiv i bruk
           </h2>
           <p style={{ margin: 0, fontSize: 17, color: "var(--muted)", lineHeight: 1.6 }}>
-            Litt over ett minutt: logg inn, flytt en kunde i pipelinen, åpne kundekortet, og se
-            statistikk, selgere med rangering, kundelisten og kalenderen. Ekte system, ingen klipping.
+            80 sekunder: logg inn, opprett en kunde, flytt den i pipelinen, logg en telefon, og se
+            statistikk, selgerrangering, kundelisten og kalenderen. Ekte system, ingen klipping.
           </p>
         </div>
         <video
