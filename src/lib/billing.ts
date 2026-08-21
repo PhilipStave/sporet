@@ -23,11 +23,12 @@ export function planById(id: string | null | undefined) {
 
 export function priceIdFor(planId: string): string | undefined {
   const p = planById(planId);
-  return p ? process.env[p.envKey] : undefined;
+  // Trim: pasted env values sometimes carry a stray newline, which Stripe rejects.
+  return p ? process.env[p.envKey]?.trim() : undefined;
 }
 
 export function planFromPriceId(priceId: string): Plan | null {
-  const p = PLANS.find((x) => process.env[x.envKey] === priceId);
+  const p = PLANS.find((x) => process.env[x.envKey]?.trim() === priceId);
   return p ? p.id : null;
 }
 
