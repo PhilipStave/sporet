@@ -810,6 +810,7 @@ export default function LandingPage() {
           {FAQ.map((f) => (
             <details
               key={f.q}
+              className="land-faq"
               style={{
                 background: "var(--surface)",
                 border: "1px solid var(--divider)",
@@ -823,11 +824,16 @@ export default function LandingPage() {
                   fontWeight: 700,
                   fontSize: 16,
                   listStyle: "none",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 12,
                 }}
               >
                 {f.q}
+                <span className="faq-chev" aria-hidden>+</span>
               </summary>
-              <p style={{ margin: "10px 0 0", fontSize: 15, color: "var(--muted)" }}>
+              <p className="faq-body" style={{ margin: "10px 0 0", fontSize: 15, color: "var(--muted)", lineHeight: 1.6 }}>
                 {f.a}
               </p>
             </details>

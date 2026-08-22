@@ -535,3 +535,44 @@ a {
     grid-template-columns: 1fr !important;
   }
 }
+
+/* Landing FAQ accordions */
+.land-faq {
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.land-faq:hover {
+  border-color: var(--accent);
+  box-shadow: 0 8px 24px rgba(27, 26, 24, 0.07);
+}
+.land-faq[open] {
+  border-color: var(--accent);
+}
+.land-faq summary::-webkit-details-marker {
+  display: none;
+}
+.land-faq .faq-chev {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  transition: transform 0.2s ease, background 0.15s ease;
+}
+.land-faq[open] .faq-chev {
+  transform: rotate(45deg);
+  background: var(--accent);
+  color: #fff;
+}
+.land-faq .faq-body {
+  animation: faq-in 0.18s ease;
+}
+@keyframes faq-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
