@@ -307,7 +307,20 @@ export default function OversiktPage() {
         }}
         className="oversikt-panels"
       >
-        <div className="card" style={{ padding: 20 }}>
+        <div
+          className="card stat-card"
+          role="button"
+          tabIndex={0}
+          title="Åpne pipelinen"
+          onClick={() => router.push("/app/pipeline")}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              router.push("/app/pipeline");
+            }
+          }}
+          style={{ padding: 20, cursor: "pointer" }}
+        >
           <h4 style={{ fontSize: 16, marginBottom: 18 }}>Pipeline pr. steg</h4>
           {stageBars.map((b) => (
             <div
