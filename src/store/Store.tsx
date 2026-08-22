@@ -7,6 +7,7 @@ import {
   useEffect,
   useMemo,
   useState,
+  useRef,
 } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { computeAccess } from "@/lib/billing";
@@ -46,6 +47,9 @@ interface StoreValue {
   loading: boolean;
   /** False when the org's trial/subscription has lapsed (read-only mode). */
   canWrite: boolean;
+  /** Just-deleted customer awaiting the undo window (for the toast). */
+  pendingDelete: Deal | null;
+  undoDelete: (id: string) => void;
   /** Append an entry to a customer's activity log. */
   logActivity: (dealId: string, a: { icon: string; label: string; note: string }) => Promise<void>;
 
@@ -435,14 +439,38 @@ export function StoreProvider({
     [updateDeal]
   );
 
+  // Soft delete: the card disappears immediately, but the row is only deleted after a
+  // short undo window (so activities/documents survive an "Angre").
+  const deleteTimers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
+  const [pendingDelete, setPendingDelete] = useState<Deal | null>(null);
   const deleteDeal = useCallback(
     async (id: string) => {
+      const deal = deals.find((d) => d.id === id);
+      if (!deal) return;
       setDeals((arr) => arr.filter((d) => d.id !== id));
       setSelectedDealId((cur) => (cur === id ? null : cur));
-      await supabase.from("deals").delete().eq("id", id);
+      setPendingDelete(deal);
+      const t = setTimeout(async () => {
+        deleteTimers.current.delete(id);
+        setPendingDelete((cur) => (cur?.id === id ? null : cur));
+        await supabase.from("deals").delete().eq("id", id);
+      }, 6000);
+      deleteTimers.current.set(id, t);
     },
-    [supabase]
+    [supabase, deals]
   );
+  const undoDelete = useCallback((id: string) => {
+    const t = deleteTimers.current.get(id);
+    if (t) clearTimeout(t);
+    deleteTimers.current.delete(id);
+    setPendingDelete((cur) => {
+      if (cur?.id === id) {
+        setDeals((arr) => (arr.some((d) => d.id === id) ? arr : [cur, ...arr]));
+        return null;
+      }
+      return cur;
+    });
+  }, []);
 
   const canWrite = computeAccess(org).canWrite;
 
@@ -455,6 +483,8 @@ export function StoreProvider({
     loading,
     canWrite,
     logActivity: insertActivity,
+    pendingDelete,
+    undoDelete,
     scope,
     setScope,
     query,

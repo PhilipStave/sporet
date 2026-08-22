@@ -73,8 +73,7 @@ function Column({ stage, deals }: { stage: StageConfig; deals: Deal[] }) {
             deal={d}
             onOpen={() => setSelectedDealId(d.id)}
             onDelete={() => {
-              if (confirm(`Slette ${d.company || "denne kunden"}?`))
-                deleteDeal(d.id);
+              deleteDeal(d.id);
             }}
           />
         ))}

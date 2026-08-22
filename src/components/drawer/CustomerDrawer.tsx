@@ -479,8 +479,7 @@ function DrawerInner({ deal }: { deal: Deal }) {
         <button
           type="button"
           onClick={() => {
-            if (confirm(`Slette ${deal.company || "denne kunden"}?`))
-              deleteDeal(deal.id);
+            deleteDeal(deal.id);
           }}
           style={{
             display: "inline-flex",

@@ -11,6 +11,7 @@ import { StoreProvider } from "@/store/Store";
 import { TopNav } from "@/components/TopNav";
 import { CustomerDrawer } from "@/components/drawer/CustomerDrawer";
 import { DealDeepLink } from "@/components/DealDeepLink";
+import { UndoToast } from "@/components/UndoToast";
 import { PendingScreen } from "@/components/PendingScreen";
 import { BillingBanner } from "@/components/BillingBanner";
 import { ReacceptTerms } from "@/components/ReacceptTerms";
@@ -58,6 +59,7 @@ export default async function AppLayout({
       </div>
       <CustomerDrawer />
       <DealDeepLink />
+      <UndoToast />
     </StoreProvider>
   );
 }
