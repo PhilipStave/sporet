@@ -18,6 +18,8 @@ export type OrganizationRow = {
   name: string;
   features: Features;
   join_code: string;
+  join_code_rotate: boolean;
+  join_code_rotated_at: string;
   plan: Plan;
   subscription_status: SubscriptionStatus;
   trial_ends_at: string;

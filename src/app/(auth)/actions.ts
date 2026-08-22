@@ -308,10 +308,27 @@ export async function joinAction(
     if (!orgId) return { stage: "code", error: "Velg en bedrift først." };
     const { data: org } = await admin
       .from("organizations")
-      .select("id, name, join_code")
+      .select("id, name, join_code, join_code_rotate, join_code_rotated_at")
       .eq("id", orgId)
       .maybeSingle();
     if (!org) return { stage: "code", error: "Fant ikke bedriften." };
+    // With auto-rotation on, a code older than 24h is expired: rotate it now and reject.
+    if (
+      org.join_code_rotate &&
+      Date.now() - new Date(org.join_code_rotated_at).getTime() > 24 * 60 * 60 * 1000
+    ) {
+      const { randomBytes } = await import("crypto");
+      await admin
+        .from("organizations")
+        .update({ join_code: randomBytes(4).toString("hex"), join_code_rotated_at: new Date().toISOString() })
+        .eq("id", org.id);
+      return {
+        stage: "code",
+        error: "Bedriftskoden er utløpt. Be administrator om den nye koden.",
+        orgId,
+        orgName: org.name,
+      };
+    }
     if (!code || code !== org.join_code)
       return { stage: "code", error: "Feil bedriftskode.", orgId, orgName: org.name };
     const { data: depts } = await admin

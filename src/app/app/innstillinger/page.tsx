@@ -39,6 +39,7 @@ export default function InnstillingerPage() {
   const [inviteRole, setInviteRole] = useState<"seller" | "admin">("seller");
   const [inviteLink, setInviteLink] = useState("");
   const [joinCode, setJoinCode] = useState(org.join_code);
+  const [autoRotate, setAutoRotate] = useState(org.join_code_rotate);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
 
@@ -482,6 +483,30 @@ export default function InnstillingerPage() {
                 Lag ny kode
               </button>
             </div>
+
+            <label style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, fontSize: 14, cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                checked={autoRotate}
+                onChange={async (e) => {
+                  const on = e.target.checked;
+                  setAutoRotate(on);
+                  await supabase
+                    .from("organizations")
+                    .update({ join_code_rotate: on, join_code_rotated_at: new Date().toISOString() })
+                    .eq("id", org.id);
+                  flash(on ? "Koden byttes nå automatisk hvert døgn." : "Automatisk bytte er slått av.");
+                  router.refresh();
+                }}
+                style={{ width: 17, height: 17, accentColor: "var(--primary)" }}
+              />
+              <span>
+                Bytt koden automatisk hvert døgn
+                <span style={{ display: "block", fontSize: 12, color: "var(--muted)" }}>
+                  Gamle koder slutter å virke etter 24 timer — nyttig hvis koden deles bredt.
+                </span>
+              </span>
+            </label>
 
             <span className="field-label">Delbar lenke</span>
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>

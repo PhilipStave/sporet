@@ -1,4 +1,5 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { randomBytes } from "crypto";
 import type { Organization, Profile, Department, Member } from "@/types";
 import type { StageConfig } from "@/lib/stages";
 
@@ -74,6 +75,21 @@ export async function getSessionContext(): Promise<SessionResult> {
   ]);
 
   if (!org) return { kind: "none" };
+
+  // Optional 24h auto-rotation of the join code (lazy: rotates on first load after expiry).
+  if (org.join_code_rotate) {
+    const age = Date.now() - new Date(org.join_code_rotated_at).getTime();
+    if (age > 24 * 60 * 60 * 1000) {
+      const code = randomBytes(4).toString("hex");
+      const now = new Date().toISOString();
+      await createAdminClient()
+        .from("organizations")
+        .update({ join_code: code, join_code_rotated_at: now })
+        .eq("id", org.id);
+      org.join_code = code;
+      org.join_code_rotated_at = now;
+    }
+  }
 
   const members: Member[] = (profiles || []).map((p) => ({
     id: p.id,
