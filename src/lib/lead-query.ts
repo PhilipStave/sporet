@@ -56,6 +56,9 @@ const STOPPORD = new Set([
   "gjerne", "bedrifter", "bedrift", "firmaer", "firma", "kunder", "kunde",
   "selskaper", "selskap", "ansatte", "mest", "leter", "etter", "trenger",
   "min", "mitt", "våre", "vår", "meg", "oss", "seg", "over", "under", "mellom",
+  // Customer types, not industries. Left to KJOPERE below, which maps them to
+  // the right code — scoring them as words hits "kommunikasjonsutstyr".
+  "kommune", "kommuner", "kommunen", "kommunene", "fylke", "fylker",
 ]);
 
 function normaliser(s: string) {
@@ -77,12 +80,123 @@ function stamme(w: string) {
   return w.replace(/(ene|ane|er|en|et|a|e)$/, "");
 }
 
+
+/**
+ * What you sell -> who buys it. The register is organised by what a company
+ * DOES, so a word-match on the product finds competitors, not customers. This
+ * table closes that gap for the equipment and trade categories Norwegian SMBs
+ * actually sell. Curated, not generated — every code is checked to exist.
+ */
+const KJOPERE: { ord: string[]; koder: string[]; hva: string; former?: string[] }[] = [
+  {
+    ord: ["feiemaskin", "feiing", "gatefeiing", "sopemaskin", "spylebil", "kostebil"],
+    koder: ["84.110", "42.110", "81.230"],
+    hva: "kommuner, veientreprenører og renholdsfirma",
+    former: ["AS", "KOMM", "FYLK"],
+  },
+  {
+    ord: ["gravemaskin", "hjullaster", "anleggsmaskin", "dumper", "beltemaskin",
+          "minigraver", "gravemaskiner", "entreprenørmaskin"],
+    koder: ["43.120", "42.110", "41.000"],
+    hva: "grunnentreprenører, veibyggere og byggefirma",
+  },
+  {
+    ord: ["snøbrøyting", "brøyteutstyr", "snøfreser", "strøapparat", "snømåking"],
+    koder: ["84.110", "42.110", "81.230"],
+    hva: "kommuner, veientreprenører og driftsselskap",
+    former: ["AS", "KOMM", "FYLK"],
+  },
+  {
+    ord: ["lastebil", "tippbil", "kranbil", "semitrailer", "henger"],
+    koder: ["49.410", "43.120", "42.110"],
+    hva: "transportfirma og entreprenører",
+  },
+  {
+    ord: ["traktor", "landbruksmaskin", "skurtresker", "gjødselspreder"],
+    koder: ["01.110", "01.500", "02.200"],
+    hva: "gårdsbruk og skogbruk",
+  },
+  {
+    ord: ["truck", "gaffeltruck", "lagerreol", "lagertruck", "pallereol"],
+    koder: ["52.100", "46.900", "10.890"],
+    hva: "lager, grossister og industri",
+  },
+  {
+    ord: ["kranutstyr", "lift", "personløfter", "stillas", "byggeheis"],
+    koder: ["43.120", "41.000", "43.910"],
+    hva: "entreprenører og byggefirma",
+  },
+  {
+    ord: ["vannrenseanlegg", "pumpe", "kloakkutstyr", "septik"],
+    koder: ["42.210", "36.000", "37.000"],
+    hva: "VA-entreprenører og vannverk",
+  },
+  {
+    ord: ["kontormøbler", "kontorstol", "møterom"],
+    koder: ["69.201", "69.100", "70.200"],
+    hva: "kontorbedrifter, regnskap, advokat og rådgivning",
+  },
+  {
+    ord: ["betongelement", "ferdigbetong", "armering", "forskaling"],
+    koder: ["41.000", "43.120", "42.110"],
+    hva: "byggefirma og grunnentreprenører",
+  },
+  // Generic customer types. Last, so a specific product above wins first.
+  {
+    ord: ["kommune", "fylke", "offentlig sektor", "det offentlige"],
+    koder: ["84.110", "84.120", "84.130"],
+    hva: "kommuner og offentlig forvaltning",
+    former: ["KOMM", "FYLK"],
+  },
+];
+
+/**
+ * Which legal forms to search. AS by default; public-administration codes (84.x)
+ * need KOMM/FYLK, because a municipality is not a limited company and would
+ * otherwise return nothing.
+ */
+function formerFor(koder: string[], eksplisitt?: string[]) {
+  if (eksplisitt?.length) return eksplisitt;
+  const offentlig = koder.some((k) => k.startsWith("84."));
+  return offentlig ? ["AS", "KOMM", "FYLK"] : ["AS"];
+}
+
+/** Human-readable name for those forms, used in the explanation line. */
+function formNavn(former: string[]) {
+  const harOffentlig = former.some((f) => f === "KOMM" || f === "FYLK");
+  if (harOffentlig && former.includes("AS")) return "aksjeselskap og kommuner";
+  if (harOffentlig) return "kommuner og fylker";
+  return "aksjeselskap";
+}
+
+/** Direct hit on the buyer table, before any word scoring. */
+function matchKjopere(tekst: string) {
+  const lav = normaliser(tekst);
+  for (const rad of KJOPERE) {
+    for (const o of rad.ord) {
+      // Substring, so "feiemaskiner" and "feiemaskinen" both land.
+      if (lav.includes(o)) return rad;
+    }
+  }
+  return null;
+}
+
 /** Longest shared prefix of two words. */
 function fellesPrefiks(a: string, b: string) {
   const n = Math.min(a.length, b.length);
   let i = 0;
   while (i < n && a[i] === b[i]) i++;
   return i;
+}
+
+/**
+ * Five shared letters is enough for Norwegian compounds ("betongelement" ~
+ * "betongprodukter", "regnskapstjenester" ~ "regnskapsføring"). Words that
+ * collide at exactly this length — "kommune" against "kommunikasjon" — are
+ * handled by keeping them out of the scoring path entirely.
+ */
+function godtPrefiks(a: string, b: string) {
+  return fellesPrefiks(a, b) >= 5;
 }
 
 function finnSteder(tekst: string) {
@@ -138,11 +252,11 @@ function matchKoder(tekst: string, antall = 3) {
 
       for (const nw of navnOrd) {
         if (nw === w) { beste = Math.max(beste, 10); continue; }
-        if (fellesPrefiks(nw, st) >= 5) beste = Math.max(beste, 6);
+        if (godtPrefiks(nw, st)) beste = Math.max(beste, 6);
       }
       for (const bw of beskrivelseOrd) {
         if (bw === w) { beste = Math.max(beste, 2); continue; }
-        if (fellesPrefiks(bw, st) >= 6) beste = Math.max(beste, 1);
+        if (godtPrefiks(bw, st)) beste = Math.max(beste, 1);
       }
       skaar += beste;
     }
@@ -156,18 +270,28 @@ function matchKoder(tekst: string, antall = 3) {
 
 /** The free path. Always works, costs nothing. */
 export function matchLocally(tekst: string): Interpretation | null {
-  const koder = matchKoder(tekst);
-  if (koder.length === 0) return null;
-
   const sted = finnSteder(tekst);
   const ansatte = finnAnsatte(tekst);
 
-  const deler = [`bransje: ${koder.map((k) => k.n.toLowerCase()).join(", ")}`];
+  // Who buys this? Beats word-matching, which would find competitors instead.
+  const kjoper = matchKjopere(tekst);
+  const koder = kjoper
+    ? kjoper.koder.map((k) => KODER.find((x) => x.k === k)).filter(Boolean as unknown as (v: Kode | undefined) => v is Kode)
+    : matchKoder(tekst);
+  if (koder.length === 0) return null;
+
+  const former = formerFor(koder.map((k) => k.k), kjoper?.former);
+
+  const deler = [
+    kjoper
+      ? `kjøpere: ${kjoper.hva}`
+      : `bransje: ${koder.map((k) => k.n.toLowerCase()).join(", ")}`,
+  ];
   if (sted.navn.length) deler.push(`sted: ${sted.navn.join(", ")}`);
   if (ansatte.fra != null && ansatte.til != null) deler.push(`${ansatte.fra}–${ansatte.til} ansatte`);
   else if (ansatte.fra != null) deler.push(`minst ${ansatte.fra} ansatte`);
   else if (ansatte.til != null) deler.push(`opp til ${ansatte.til} ansatte`);
-  deler.push("aksjeselskap");
+  deler.push(formNavn(former));
 
   return {
     filter: {
@@ -175,7 +299,7 @@ export function matchLocally(tekst: string): Interpretation | null {
       kommunenummer: sted.numre.length ? sted.numre : undefined,
       fraAntallAnsatte: ansatte.fra,
       tilAntallAnsatte: ansatte.til,
-      organisasjonsform: "AS",
+      organisasjonsformer: former,
     },
     forklaring: deler.join(" · "),
     kilde: "lokal",
@@ -280,7 +404,7 @@ async function interpretWithAi(tekst: string): Promise<Interpretation | null> {
         kommunenummer: sted.numre.length ? sted.numre : undefined,
         fraAntallAnsatte: ansatte.fra ?? bruk.input.fraAntallAnsatte,
         tilAntallAnsatte: ansatte.til ?? bruk.input.tilAntallAnsatte,
-        organisasjonsform: "AS",
+        organisasjonsformer: formerFor(koder),
       },
       forklaring: String(bruk.input.begrunnelse ?? "").slice(0, 300),
       kilde: "ai",

@@ -16,10 +16,10 @@ type Svar = {
 };
 
 const EKSEMPLER = [
+  "feiemaskiner til kommuner",
+  "gravemaskiner til entreprenører",
   "betongelementer til boligprosjekter i Bergen",
   "regnskapstjenester til småbedrifter i Oslo",
-  "gravemaskiner og anleggsmaskiner",
-  "kontormøbler til bedrifter med 10-50 ansatte",
 ];
 
 export default function FinnKunderPage() {
@@ -126,7 +126,7 @@ export default function FinnKunderPage() {
             onKeyDown={(e) => {
               if (e.key === "Enter") sok();
             }}
-            placeholder="Hva selger du, og til hvem?"
+            placeholder="Hva selger du? F.eks. «feiemaskiner» eller «gravemaskiner»"
             style={{
               flex: "1 1 320px",
               minWidth: 0,

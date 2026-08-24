@@ -10,8 +10,12 @@ export type LeadFilter = {
   kommunenummer?: string[];
   fraAntallAnsatte?: number;
   tilAntallAnsatte?: number;
-  /** "AS", "ENK", "ASA"… Defaults to AS so we avoid sole traders (personal data). */
-  organisasjonsform?: string;
+  /**
+   * "AS", "KOMM", "FYLK"… Defaults to AS alone, which keeps sole traders (and
+   * therefore personal names) out. Public-sector targets need KOMM/FYLK, since
+   * a municipality is not a limited company.
+   */
+  organisasjonsformer?: string[];
 };
 
 export type Lead = {
@@ -64,7 +68,8 @@ function toLead(e: BrregEnhet): Lead {
 function buildUrl(filter: LeadFilter, kode: string, size: number) {
   const p = new URLSearchParams();
   p.set("naeringskode", kode);
-  p.set("organisasjonsform", filter.organisasjonsform ?? "AS");
+  const former = filter.organisasjonsformer?.length ? filter.organisasjonsformer : ["AS"];
+  former.forEach((f) => p.append("organisasjonsform", f));
   p.set("size", String(size));
   if (filter.fraAntallAnsatte != null) p.set("fraAntallAnsatte", String(filter.fraAntallAnsatte));
   if (filter.tilAntallAnsatte != null) p.set("tilAntallAnsatte", String(filter.tilAntallAnsatte));
