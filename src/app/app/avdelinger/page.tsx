@@ -19,18 +19,27 @@ const SORTS: { id: SortKey; label: string }[] = [
 ];
 
 export default function AvdelingerPage() {
-  const { deals, departments, setSelectedDealId, stageMaps } = useStore();
+  const { scopedDeals, departments, scope, setSelectedDealId, stageMaps } = useStore();
   const [period, setPeriod] = useState<Period>("alle");
   const [sortKey, setSortKey] = useState<SortKey>("total");
   const [asc, setAsc] = useState(false);
   const [openDept, setOpenDept] = useState<{ id: string; name: string } | null>(null);
 
-  // Department view is always company-wide (that is the point of comparing them).
-  const periodDeals = useMemo(() => deals.filter((d) => withinDays(d, period)), [deals, period]);
+  // Follows the department/"bare meg" selector in the top bar, like every other page.
+  const periodDeals = useMemo(
+    () => scopedDeals.filter((d) => withinDays(d, period)),
+    [scopedDeals, period]
+  );
+
+  // Showing one department? Then only that card is relevant.
+  const shownDepartments = useMemo(
+    () => (scope.type === "dept" ? departments.filter((d) => d.id === scope.deptId) : departments),
+    [departments, scope]
+  );
 
   const rows = useMemo(
-    () => departmentsAgg(periodDeals, deals, departments, stageMaps.open),
-    [periodDeals, deals, departments, stageMaps.open]
+    () => departmentsAgg(periodDeals, scopedDeals, shownDepartments, stageMaps.open),
+    [periodDeals, scopedDeals, shownDepartments, stageMaps.open]
   );
 
   const ranked = useMemo(() => {
@@ -94,7 +103,11 @@ export default function AvdelingerPage() {
         <div>
           <h2 style={{ fontSize: 26, marginBottom: 4 }}>Avdelinger</h2>
           <span style={{ fontSize: 13, color: "var(--muted)" }}>
-            Hva hver avdeling har solgt, margin, pipeline og vinnrate
+            {scope.type === "dept"
+              ? `Tall for ${rows[0]?.name ?? "valgt avdeling"} — velg «Alle avdelinger» øverst for å sammenligne`
+              : scope.type === "mine"
+                ? "Dine salg fordelt på avdeling"
+                : "Hva hver avdeling har solgt, margin, pipeline og vinnrate"}
           </span>
         </div>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
