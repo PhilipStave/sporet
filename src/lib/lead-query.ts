@@ -193,6 +193,55 @@ function formNavn(former: string[]) {
   return "aksjeselskap";
 }
 
+
+/**
+ * Naming the customer directly — "IT-tjenester til advokater", "entreprenører
+ * med over 20 ansatte". KJOPERE maps a product to its buyers; this maps a
+ * buyer type straight to its codes, for when the user already knows who they
+ * are after. Checked after KJOPERE, so a product word still wins.
+ */
+const KUNDETYPER: { ord: string[]; koder: string[]; hva: string; former?: string[] }[] = [
+  { ord: ["entreprenør", "entreprenor", "grunnarbeid", "anleggsfirma", "anleggsbransjen"],
+    koder: ["43.120", "42.110", "41.000"], hva: "entreprenører og byggefirma" },
+  { ord: ["byggefirma", "byggmester", "tømrer", "snekker", "byggebransjen"],
+    koder: ["41.000", "43.910", "43.320"], hva: "byggefirma og tømrere" },
+  { ord: ["advokat", "jurist", "advokatfirma"],
+    koder: ["69.100"], hva: "advokater og juridiske tjenester" },
+  { ord: ["regnskapsfører", "regnskapsbyrå", "revisor", "regnskapskontor"],
+    koder: ["69.202", "69.201"], hva: "regnskapsførere og revisorer" },
+  { ord: ["rørlegger", "elektriker", "vvs", "elektrofirma", "håndverker"],
+    koder: ["43.221", "43.210", "43.223"], hva: "rørleggere og elektrikere" },
+  { ord: ["transportfirma", "transportør", "lastebileier", "speditør"],
+    koder: ["49.410", "52.211"], hva: "transportfirma" },
+  { ord: ["hotell", "overnatting", "campingplass"],
+    koder: ["55.100", "55.900", "55.300"], hva: "hoteller og overnattingssteder" },
+  { ord: ["restaurant", "kafé", "kafe", "serveringssted", "spisested"],
+    koder: ["56.110", "56.210", "56.220"], hva: "restauranter og serveringssteder" },
+  { ord: ["gårdsbruk", "bonde", "bønder", "landbruket", "skogbruk"],
+    koder: ["01.110", "01.500", "02.200"], hva: "gårdsbruk og skogbruk" },
+  { ord: ["tannlege", "legekontor", "lege", "helsetjeneste", "fysioterapi"],
+    koder: ["86.230", "86.210", "86.221"], hva: "leger og tannleger" },
+  { ord: ["barnehage", "skole", "grunnskole", "undervisning"],
+    koder: ["85.100", "85.201", "85.310"], hva: "barnehager og skoler" },
+  { ord: ["eiendomsselskap", "gårdeier", "utleier", "eiendomsforvalt", "borettslag"],
+    koder: ["68.200", "68.320", "68.110"], hva: "eiendomsselskaper og forvaltere" },
+  { ord: ["renhold", "renholdsbyrå", "vaskehjelp", "renholdstjeneste"],
+    koder: ["68.200", "69.202", "70.200"], hva: "eiendomsselskaper og kontorbedrifter" },
+  { ord: ["rådgiv", "konsulent", "arkitekt", "ingeniør"],
+    koder: ["70.200", "71.110", "71.129"], hva: "rådgivere og ingeniører" },
+  { ord: ["frisør", "skjønnhetssalong", "salong"],
+    koder: ["96.210", "96.220"], hva: "frisører og skjønnhetspleie" },
+];
+
+/** Direct hit on a named customer type. */
+function matchKundetype(tekst: string) {
+  const lav = normaliser(tekst);
+  for (const rad of KUNDETYPER) {
+    for (const o of rad.ord) if (lav.includes(o)) return rad;
+  }
+  return null;
+}
+
 /** Direct hit on the buyer table, before any word scoring. */
 function matchKjopere(tekst: string) {
   const lav = normaliser(tekst);
@@ -298,7 +347,7 @@ export function matchLocally(tekst: string): Interpretation | null {
   const ansatte = finnAnsatte(tekst);
 
   // Who buys this? Beats word-matching, which would find competitors instead.
-  const kjoper = matchKjopere(tekst);
+  const kjoper = matchKjopere(tekst) ?? matchKundetype(tekst);
   const koder = kjoper
     ? kjoper.koder.map((k) => KODER.find((x) => x.k === k)).filter(Boolean as unknown as (v: Kode | undefined) => v is Kode)
     : matchKoder(tekst);
