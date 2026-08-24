@@ -2,6 +2,9 @@ import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/site";
 import { BLOG_POSTS } from "@/lib/blog";
 
+// Refresh hourly so scheduled posts enter the sitemap on their publish date.
+export const revalidate = 3600;
+
 // Only real, indexable pages (no in-page anchors — search engines ignore/flag them).
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();

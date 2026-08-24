@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   title: post.title,
   description: post.description,
   alternates: { canonical: `/blogg/${post.slug}` },
-  openGraph: { title: post.title, description: post.description, type: "article", images: [post.image] },
+  openGraph: { title: post.title, description: post.description, type: "article", images: post.image ? [post.image] : undefined },
 };
 
 const stages = [

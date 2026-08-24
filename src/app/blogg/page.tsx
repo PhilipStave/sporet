@@ -3,6 +3,9 @@ import Link from "next/link";
 import { BLOG_POSTS } from "@/lib/blog";
 import { ArticleLayout, articleStyles as s } from "@/components/ArticleLayout";
 
+// Re-render hourly so scheduled posts show up on their publish date.
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
   title: "Blogg — CRM, salgsoppfølging og pipeline for norske bedrifter",
   description:
@@ -41,12 +44,14 @@ export default function BlogIndex() {
               color: "var(--text)",
             }}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={post.image}
-              alt={post.imageAlt}
-              style={{ width: "calc(100% + 48px)", margin: "-22px -24px 14px", display: "block" }}
-            />
+            {post.image && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={post.image}
+                alt={post.imageAlt ?? ""}
+                style={{ width: "calc(100% + 48px)", margin: "-22px -24px 14px", display: "block" }}
+              />
+            )}
             <div style={{ fontSize: 13, color: "var(--muted)", marginBottom: 6 }}>
               {new Date(post.datePublished).toLocaleDateString("nb-NO", { day: "numeric", month: "long", year: "numeric" })}
               {" · "}
