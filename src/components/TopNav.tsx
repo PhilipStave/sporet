@@ -17,6 +17,8 @@ interface Tab {
   label: string;
   icon: string;
   feature?: FeatureKey;
+  /** Not launched yet: hidden unless the flag is explicitly switched on. */
+  unlaunched?: boolean;
 }
 
 const TABS: Tab[] = [
@@ -28,6 +30,7 @@ const TABS: Tab[] = [
   { id: "avdelinger", label: "Avdelinger", icon: "building", feature: "avdelinger" },
   { id: "kunder", label: "Kunder", icon: "building", feature: "kunder" },
   { id: "aktivitet", label: "Aktivitet", icon: "activity", feature: "aktivitet" },
+  { id: "finn-kunder", label: "Finn kunder", icon: "search", feature: "finnkunder", unlaunched: true },
 ];
 
 export function TopNav() {
@@ -48,10 +51,14 @@ export function TopNav() {
   const menuRef = useRef<HTMLDivElement>(null);
   const supabase = useMemo(() => createClient(), []);
 
-  // Orgs created before a feature existed have no flag for it — treat missing as enabled.
-  const tabs = TABS.filter(
-    (t) => !t.feature || org.features[t.feature] !== false
-  );
+  // Orgs created before a feature existed have no flag for it — treat missing as
+  // enabled. Unlaunched features are the other way round: hidden until opted in.
+  const tabs = TABS.filter((t) => {
+    if (!t.feature) return true;
+    return t.unlaunched
+      ? org.features[t.feature] === true
+      : org.features[t.feature] !== false;
+  });
 
   const scopeOptions = useMemo(
     () => [

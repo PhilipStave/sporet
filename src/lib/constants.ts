@@ -20,7 +20,8 @@ export type FeatureKey =
   | "selgere"
   | "avdelinger"
   | "kunder"
-  | "aktivitet";
+  | "aktivitet"
+  | "finnkunder";
 
 /** Fixed stage order used across board and lists. */
 export const STAGE_ORDER: Stage[] = [
@@ -108,6 +109,8 @@ export const DEFAULT_FEATURES: Record<FeatureKey, boolean> = {
   avdelinger: true,
   kunder: true,
   aktivitet: true,
+  // Not launched. Off unless explicitly switched on for an org.
+  finnkunder: false,
 };
 
 export const FEATURE_LABELS: Record<FeatureKey, string> = {
@@ -117,6 +120,7 @@ export const FEATURE_LABELS: Record<FeatureKey, string> = {
   avdelinger: "Avdelinger",
   kunder: "Kunder",
   aktivitet: "Aktivitet",
+  finnkunder: "Finn kunder",
 };
 
 export const FEATURE_ORDER: FeatureKey[] = [
