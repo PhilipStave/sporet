@@ -3,6 +3,10 @@ import { SITE_URL } from "@/lib/site";
 
 // Shared shell for content pages (/hvorfor-altiv, /blogg/*): header, article JSON-LD, CTA, footer.
 
+// A named human author is a stronger trust signal to search engines than an
+// organisation byline, and it is simply true: Philip writes these.
+const AUTHOR = { name: "Philip Stave", role: "Grunnlegger av Altiv" };
+
 const wrap: React.CSSProperties = { maxWidth: 820, margin: "0 auto" };
 
 export const articleStyles = {
@@ -19,6 +23,17 @@ export const articleStyles = {
   lead: { margin: "0 0 14px", fontSize: 19, lineHeight: 1.65, color: "var(--muted)" } as React.CSSProperties,
 };
 
+
+const MONTHS = [
+  "januar", "februar", "mars", "april", "mai", "juni",
+  "juli", "august", "september", "oktober", "november", "desember",
+];
+
+function formatDate(iso: string) {
+  const [y, m, d] = iso.split("-").map(Number);
+  return `${d}. ${MONTHS[m - 1]} ${y}`;
+}
+
 export type ArticleMeta = {
   slug: string; // path without leading slash, e.g. "blogg/hva-er-crm"
   kicker: string;
@@ -26,6 +41,7 @@ export type ArticleMeta = {
   description: string;
   datePublished: string;
   dateModified?: string;
+  readMinutes?: number;
   image?: string;
   imageAlt?: string;
 };
@@ -46,7 +62,12 @@ export function ArticleLayout({
     headline: meta.title,
     description: meta.description,
     inLanguage: "nb-NO",
-    author: { "@type": "Organization", name: "Altiv" },
+    author: {
+      "@type": "Person",
+      name: AUTHOR.name,
+      jobTitle: AUTHOR.role,
+      url: `${SITE_URL}/hvorfor-altiv`,
+    },
     publisher: { "@type": "Organization", name: "Altiv", url: SITE_URL },
     mainEntityOfPage: url,
     ...(meta.image ? { image: `${SITE_URL}${meta.image}` } : {}),
@@ -126,6 +147,30 @@ export function ArticleLayout({
         >
           {meta.title}
         </h1>
+
+        <p
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            gap: 8,
+            fontSize: 14,
+            color: "var(--muted)",
+            margin: "0 0 22px",
+          }}
+        >
+          <span style={{ color: "var(--text)", fontWeight: 600 }}>{AUTHOR.name}</span>
+          <span aria-hidden>·</span>
+          <span>{AUTHOR.role}</span>
+          <span aria-hidden>·</span>
+          <time dateTime={meta.datePublished}>{formatDate(meta.datePublished)}</time>
+          {meta.readMinutes ? (
+            <>
+              <span aria-hidden>·</span>
+              <span>{meta.readMinutes} min lesing</span>
+            </>
+          ) : null}
+        </p>
 
         {meta.image && (
           // eslint-disable-next-line @next/next/no-img-element
