@@ -54,19 +54,32 @@ export function TopNav() {
   // Orgs created before a feature existed have no flag for it — treat missing as enabled.
   const tabs = TABS.filter((t) => !t.feature || org.features[t.feature] !== false);
 
-  // Labels collapse to icons only when they genuinely do not fit. The width the
-  // full labels need is measured once and cached, so toggling the class can never
-  // feed back into the measurement and oscillate.
+  // Labels collapse to icons only when they genuinely do not fit.
+  //
+  // Two traps here, both hit on the first attempt:
+  //   scrollWidth is never smaller than clientWidth, so a comfortably fitting
+  //   row measured as "exactly full" and collapsed itself; the children are
+  //   summed instead. And the measurement must happen in the labelled state, so
+  //   the class is lifted for the measure and restored before paint.
   useLayoutEffect(() => {
     const el = navRef.current;
     if (!el) return;
 
+    const maalBehov = () => {
+      const varKompakt = el.classList.contains("nav-kompakt");
+      if (varKompakt) el.classList.remove("nav-kompakt");
+      const barn = Array.from(el.children) as HTMLElement[];
+      const bredde =
+        barn.reduce((n, b) => n + b.offsetWidth, 0) + 3 * Math.max(0, barn.length - 1);
+      if (varKompakt) el.classList.add("nav-kompakt");
+      return bredde;
+    };
+
     const vurder = () => {
-      // Only the labelled state gives a meaningful width, so re-measure whenever
-      // the labels happen to be showing and keep the last good value otherwise.
-      if (!el.classList.contains("nav-kompakt")) behovRef.current = el.scrollWidth;
-      if (!behovRef.current) return;
-      setKompakt(el.clientWidth < behovRef.current + 4);
+      const behov = maalBehov();
+      if (!behov) return;
+      behovRef.current = behov;
+      setKompakt(el.clientWidth < behov);
     };
     vurder();
 
@@ -137,6 +150,7 @@ export function TopNav() {
             gap: 3,
             overflowX: "auto",
             flex: 1,
+            minWidth: 0,
             marginLeft: 6,
           }}
         >
