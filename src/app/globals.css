@@ -616,15 +616,18 @@ a {
     width: 160px !important;
   }
 }
-/* Set by TopNav when the labels genuinely do not fit — measured, not guessed. */
-.nav-kompakt .nav-tab .nav-tab-label {
-  display: none;
-}
-.nav-kompakt .nav-tab[data-active="true"] .nav-tab-label {
-  display: inline;
-}
-.nav-kompakt .nav-tab {
-  padding: 8px 10px !important;
+/* Measured in production: the tabs need 832px and the rest of the bar 531px,
+   so the labels stop fitting just below 1363px. Above that they always show. */
+@media (max-width: 1362px) {
+  .nav-tab .nav-tab-label {
+    display: none;
+  }
+  .nav-tab[data-active="true"] .nav-tab-label {
+    display: inline;
+  }
+  .nav-tab {
+    padding: 8px 10px !important;
+  }
 }
 @media (max-width: 1200px) {
   .top-search input {
