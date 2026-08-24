@@ -42,7 +42,9 @@ export async function POST(req: Request) {
     });
   }
 
-  const { leads, total } = await searchCompanies(tolkning.filter, 40);
+  // The model may have picked up a number from the query ("finn 13 kunder").
+  const grense = Math.min(Math.max(tolkning.antall ?? 40, 1), 100);
+  const { leads, total } = await searchCompanies(tolkning.filter, grense);
 
   return NextResponse.json({
     leads,

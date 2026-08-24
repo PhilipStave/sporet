@@ -1,4 +1,5 @@
 import NAERINGSKODER from "@/data/naeringskoder.json";
+import KOMMUNEDATA from "@/data/kommuner.json";
 import type { LeadFilter } from "./brreg";
 
 // Turns "jeg selger betongelementer til boligprosjekt i Bergen" into a register query.
@@ -11,12 +12,19 @@ import type { LeadFilter } from "./brreg";
 type Kode = { k: string; n: string; s: string };
 const KODER = NAERINGSKODER as Kode[];
 
+// All 358 municipalities with their county, so the model can resolve "Bergens-
+// området" or "Vestland" itself instead of relying on a hand-written shortlist.
+const KOMMUNER = (KOMMUNEDATA as { kommuner: { k: string; n: string; f: string }[] }).kommuner;
+const FYLKE = (KOMMUNEDATA as { fylke: Record<string, string> }).fylke;
+
 export type Interpretation = {
   filter: LeadFilter;
   /** Human-readable account of what we searched for, shown above the results. */
   forklaring: string;
   /** Which path produced this — surfaced in the UI so it is never a mystery. */
   kilde: "lokal" | "ai";
+  /** How many results the user asked for, when they said a number. */
+  antall?: number;
 };
 
 // Municipality numbers for the places people actually type. Not exhaustive by
@@ -344,38 +352,62 @@ export async function interpret(tekst: string): Promise<Interpretation | null> {
  * codes that already exist in naeringskoder.json — the model cannot invent one,
  * and it never produces company names. Those come from the register alone.
  */
+/**
+ * The paid path. Dormant until ANTHROPIC_API_KEY is set.
+ *
+ * The model reads the whole query and fills in one search: industry codes,
+ * municipalities, company size and how many results to return. It picks only
+ * from lists it is handed — 738 industry codes and 358 municipalities — so it
+ * can neither invent a code nor a place, and it never produces company names.
+ * Those come from the register alone.
+ */
 async function interpretWithAi(tekst: string): Promise<Interpretation | null> {
   const key = process.env.ANTHROPIC_API_KEY?.trim();
   if (!key) return null;
 
-  // Narrow locally first to keep the prompt small. When word-matching finds
-  // nothing — a bare brand name like "Swepac" — hand over the whole list
-  // instead. That is the case the model is here for, so bailing out would
-  // defeat the point. The full list is ~10k tokens, which Haiku handles for a
-  // fraction of an øre.
-  const smalt = matchKoder(tekst, 40);
-  const kandidater = smalt.length > 0 ? smalt : KODER;
-
   const verktoy = {
     name: "sett_sokefilter",
-    description: "Velg bransjekoder og filtre som passer det brukeren vil selge.",
+    description:
+      "Sett opp søket i Enhetsregisteret som finner bedriftene brukeren kan selge til.",
     input_schema: {
       type: "object" as const,
       properties: {
         naeringskoder: {
           type: "array",
           items: { type: "string" },
-          description: "1–4 koder, valgt KUN fra listen du fikk.",
+          description:
+            "1–4 bransjekoder for hvem som KJØPER dette, valgt kun fra kodelisten.",
         },
-        fraAntallAnsatte: { type: "number" },
-        tilAntallAnsatte: { type: "number" },
-        begrunnelse: { type: "string", description: "Én kort setning på norsk." },
+        kommunenummer: {
+          type: "array",
+          items: { type: "string" },
+          description:
+            "Kommunenumre fra kommunelisten. Tom hvis brukeren ikke nevner sted. " +
+            "Nevner de et område eller fylke, ta med alle kommunene som hører til.",
+        },
+        fraAntallAnsatte: { type: "number", description: "Utelat hvis ikke nevnt." },
+        tilAntallAnsatte: { type: "number", description: "Utelat hvis ikke nevnt." },
+        antall: {
+          type: "number",
+          description: "Hvor mange treff brukeren ba om. Utelat hvis de ikke sa et tall.",
+        },
+        offentlig: {
+          type: "boolean",
+          description:
+            "True hvis kjøperne er kommuner, fylker eller offentlig sektor. " +
+            "De er ikke aksjeselskap og må søkes opp som KOMM og FYLK.",
+        },
+        begrunnelse: {
+          type: "string",
+          description: "Én kort setning på norsk om hvem du søkte etter og hvorfor.",
+        },
       },
       required: ["naeringskoder", "begrunnelse"],
     },
   };
 
-  const liste = kandidater.map((k) => `${k.k} ${k.n}`).join("\n");
+  const kodeliste = KODER.map((k) => `${k.k} ${k.n}`).join("\n");
+  const kommuneliste = KOMMUNER.map((k) => `${k.k} ${k.n} (${FYLKE[k.f] ?? ""})`).join("\n");
 
   try {
     const res = await fetch("https://api.anthropic.com/v1/messages", {
@@ -387,30 +419,32 @@ async function interpretWithAi(tekst: string): Promise<Interpretation | null> {
       },
       body: JSON.stringify({
         model: "claude-haiku-4-5-20251001",
-        max_tokens: 512,
+        max_tokens: 1024,
         tools: [verktoy],
         tool_choice: { type: "tool", name: "sett_sokefilter" },
         messages: [
           {
             role: "user",
             content: [
-              // The code list is identical on every call, so cache it. Repeat
-              // searches then pay for the query alone rather than for 10k
-              // tokens of industry codes.
+              // Both lists are identical on every call, so cache them. After the
+              // first search the cost is the query alone, not 12k tokens of
+              // reference data.
               {
                 type: "text",
-                text: `Bransjekoder du kan velge blant:\n${liste}`,
+                text:
+                  `BRANSJEKODER (SN2025):\n${kodeliste}\n\n` +
+                  `KOMMUNER:\n${kommuneliste}`,
                 cache_control: { type: "ephemeral" },
               },
               {
                 type: "text",
                 text:
-                  `Brukeren selger: "${tekst}"\n\n` +
-                  `Velg de mest relevante kodene for hvem som ville KJØPT dette — ` +
-                  `altså kundene, ikke andre som selger det samme. ` +
-                  `Er teksten et merke- eller modellnavn, finn først ut hva slags ` +
-                  `produkt det er, og deretter hvilken bransje som kjøper det. ` +
-                  `Bruk kun koder fra listen over.`,
+                  `Brukeren skrev: "${tekst}"\n\n` +
+                  `Sett opp søket som finner bedriftene de kan selge TIL — kundene, ` +
+                  `ikke andre som selger det samme. Er teksten et merke- eller ` +
+                  `modellnavn, finn først ut hva slags produkt det er, og deretter ` +
+                  `hvilken bransje som kjøper det.\n` +
+                  `Bruk kun koder og kommunenumre fra listene over.`,
               },
             ],
           },
@@ -420,29 +454,49 @@ async function interpretWithAi(tekst: string): Promise<Interpretation | null> {
     if (!res.ok) return null;
 
     const json = await res.json();
-    const bruk = (json?.content ?? []).find(
-      (c: { type?: string }) => c?.type === "tool_use"
-    );
+    const bruk = (json?.content ?? []).find((c: { type?: string }) => c?.type === "tool_use");
     if (!bruk?.input) return null;
 
-    const gyldige = new Set(kandidater.map((k) => k.k));
-    const koder: string[] = (bruk.input.naeringskoder ?? []).filter((k: string) =>
-      gyldige.has(k)
-    );
+    // Whatever the model returns is checked against the real lists before use.
+    const gyldigeKoder = new Set(KODER.map((k) => k.k));
+    const koder: string[] = (bruk.input.naeringskoder ?? [])
+      .map(String)
+      .filter((k: string) => gyldigeKoder.has(k))
+      .slice(0, 4);
     if (koder.length === 0) return null;
 
-    const sted = finnSteder(tekst);
-    const ansatte = finnAnsatte(tekst);
+    const gyldigeKommuner = new Set(KOMMUNER.map((k) => k.k));
+    const kommuner: string[] = (bruk.input.kommunenummer ?? [])
+      .map(String)
+      .filter((k: string) => gyldigeKommuner.has(k))
+      .slice(0, 40);
+
+    const antall = Number(bruk.input.antall);
+    const former = bruk.input.offentlig === true ? ["AS", "KOMM", "FYLK"] : formerFor(koder);
+
+    const navn = kommuner
+      .map((k) => KOMMUNER.find((x) => x.k === k)?.n)
+      .filter(Boolean);
+    const deler = [String(bruk.input.begrunnelse ?? "").slice(0, 200)];
+    if (navn.length) {
+      deler.push(
+        navn.length <= 4
+          ? `sted: ${navn.join(", ")}`
+          : `sted: ${navn.slice(0, 3).join(", ")} +${navn.length - 3} kommuner`
+      );
+    }
+    if (Number.isFinite(antall) && antall > 0) deler.push(`inntil ${Math.min(antall, 100)}`);
 
     return {
       filter: {
-        naeringskoder: koder.slice(0, 4),
-        kommunenummer: sted.numre.length ? sted.numre : undefined,
-        fraAntallAnsatte: ansatte.fra ?? bruk.input.fraAntallAnsatte,
-        tilAntallAnsatte: ansatte.til ?? bruk.input.tilAntallAnsatte,
-        organisasjonsformer: formerFor(koder),
+        naeringskoder: koder,
+        kommunenummer: kommuner.length ? kommuner : undefined,
+        fraAntallAnsatte: Number(bruk.input.fraAntallAnsatte) || undefined,
+        tilAntallAnsatte: Number(bruk.input.tilAntallAnsatte) || undefined,
+        organisasjonsformer: former,
       },
-      forklaring: String(bruk.input.begrunnelse ?? "").slice(0, 300),
+      antall: Number.isFinite(antall) && antall > 0 ? Math.min(antall, 100) : undefined,
+      forklaring: deler.join(" · "),
       kilde: "ai",
     };
   } catch {
