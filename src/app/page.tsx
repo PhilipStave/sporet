@@ -921,6 +921,7 @@ export default function LandingPage() {
             <a href="#priser" style={{ color: "var(--muted)" }}>Priser</a>
             <a href="#faq" style={{ color: "var(--muted)" }}>Spørsmål</a>
             <Link href="/hvorfor-altiv" style={{ color: "var(--muted)" }}>Hvorfor Altiv</Link>
+            <Link href="/salgsoppfolging" style={{ color: "var(--muted)" }}>Salgsoppfølging</Link>
             <Link href="/blogg" style={{ color: "var(--muted)" }}>Blogg</Link>
             <Link href="/bli-med" style={{ color: "var(--muted)" }}>Bli med</Link>
             <Link href="/login" style={{ color: "var(--muted)" }}>Logg inn</Link>

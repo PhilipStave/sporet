@@ -246,6 +246,7 @@ export function ArticleLayout({
         <div style={{ ...wrap, padding: "22px 24px", display: "flex", gap: 18, flexWrap: "wrap", fontSize: 14, color: "var(--muted)" }}>
           <Link href="/" style={{ color: "var(--muted)" }}>Forside</Link>
           <Link href="/hvorfor-altiv" style={{ color: "var(--muted)" }}>Hvorfor Altiv</Link>
+          <Link href="/salgsoppfolging" style={{ color: "var(--muted)" }}>Salgsoppfølging</Link>
           <Link href="/blogg" style={{ color: "var(--muted)" }}>Blogg</Link>
           <Link href="/vilkar" style={{ color: "var(--muted)" }}>Vilkår</Link>
           <Link href="/personvern" style={{ color: "var(--muted)" }}>Personvern</Link>
