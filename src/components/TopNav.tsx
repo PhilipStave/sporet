@@ -102,8 +102,7 @@ export function TopNav() {
 
         {/* Tabs */}
         <nav
-          className="scrollbar-thin"
-          className="nav-tabs"
+          className="scrollbar-thin nav-tabs"
           style={{
             display: "flex",
             gap: 3,
