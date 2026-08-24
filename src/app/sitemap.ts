@@ -12,6 +12,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE_URL}/`, lastModified: now, changeFrequency: "weekly", priority: 1 },
     { url: `${SITE_URL}/hvorfor-altiv`, lastModified: now, changeFrequency: "monthly", priority: 0.9 },
     { url: `${SITE_URL}/salgsoppfolging`, lastModified: now, changeFrequency: "monthly", priority: 0.9 },
+    { url: `${SITE_URL}/salgsverktoy`, lastModified: now, changeFrequency: "monthly", priority: 0.9 },
     { url: `${SITE_URL}/blogg`, lastModified: now, changeFrequency: "weekly", priority: 0.8 },
     ...BLOG_POSTS.map((p) => ({
       url: `${SITE_URL}/blogg/${p.slug}`,

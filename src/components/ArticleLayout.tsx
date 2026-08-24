@@ -247,6 +247,7 @@ export function ArticleLayout({
           <Link href="/" style={{ color: "var(--muted)" }}>Forside</Link>
           <Link href="/hvorfor-altiv" style={{ color: "var(--muted)" }}>Hvorfor Altiv</Link>
           <Link href="/salgsoppfolging" style={{ color: "var(--muted)" }}>Salgsoppfølging</Link>
+            <Link href="/salgsverktoy" style={{ color: "var(--muted)" }}>Salgsverktøy</Link>
           <Link href="/blogg" style={{ color: "var(--muted)" }}>Blogg</Link>
           <Link href="/vilkar" style={{ color: "var(--muted)" }}>Vilkår</Link>
           <Link href="/personvern" style={{ color: "var(--muted)" }}>Personvern</Link>

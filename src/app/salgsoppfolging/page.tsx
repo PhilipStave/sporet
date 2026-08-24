@@ -71,7 +71,7 @@ export default function SalgsoppfolgingPage() {
         related={[
           { href: "/blogg/hva-koster-crm", label: "Hva koster et CRM-system i Norge?" },
           { href: "/blogg/excel-vs-crm", label: "Excel eller CRM?" },
-          { href: "/hvorfor-altiv", label: "Hvorfor Altiv" },
+          { href: "/salgsverktoy", label: "Hvilke salgsverktøy trenger du?" },
         ]}
       >
         <p style={s.lead}>
