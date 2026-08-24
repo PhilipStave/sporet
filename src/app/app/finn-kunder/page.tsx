@@ -16,6 +16,9 @@ type Svar = {
   forklaring: string | null;
   kilde: "lokal" | "ai";
   melding: string | null;
+  /** Null when the AI path is off — then nothing is metered. */
+  kvoteBrukt: number | null;
+  kvote: number | null;
 };
 
 const EKSEMPLER = [
@@ -247,6 +250,9 @@ export default function FinnKunderPage() {
               }}
             >
               {svar.kilde === "ai" ? "AI-tolkning" : "Lokalt søk"}
+              {svar.kvote != null && svar.kvoteBrukt != null && (
+                <> · {svar.kvoteBrukt} / {svar.kvote}</>
+              )}
             </span>
           </div>
 

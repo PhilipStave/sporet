@@ -179,6 +179,12 @@ export type Database = {
       seed_default_stages: { Args: { p_org: string }; Returns: undefined };
       rotate_calendar_token: { Args: Record<PropertyKey, never>; Returns: string };
       rotate_inbound_key: { Args: Record<PropertyKey, never>; Returns: string };
+      /** Claims one AI search for the caller org, or reports the quota spent. */
+      ai_bruk_ett: {
+        Args: Record<PropertyKey, never>;
+        Returns: { tillatt: boolean; brukt: number; kvote: number }[];
+      };
+      ai_kvote: { Args: { p_plan: string }; Returns: number };
     };
     Enums: { [_ in never]: never };
     CompositeTypes: { [_ in never]: never };

@@ -17,6 +17,9 @@ type Svar = {
   forklaring: string | null;
   kilde: "lokal" | "ai";
   melding: string | null;
+  /** Null when the AI path is off — then nothing is metered. */
+  kvoteBrukt: number | null;
+  kvote: number | null;
 };
 
 const EKSEMPLER = [
@@ -259,6 +262,17 @@ export function FinnKunderDialog({ onClose }: { onClose: () => void }) {
                   svar.melding
                 )}
               </p>
+
+              {(svar.kvote != null || (svar.melding && svar.forklaring)) && (
+                <p style={{ fontSize: 11.5, color: "var(--muted)", margin: "-6px 0 12px" }}>
+                  {svar.melding && svar.forklaring ? svar.melding + " " : ""}
+                  {svar.kvote != null && svar.kvoteBrukt != null && (
+                    <>
+                      {svar.kvoteBrukt} av {svar.kvote} AI-søk brukt denne måneden.
+                    </>
+                  )}
+                </p>
+              )}
 
               <div style={{ display: "grid", gap: 8 }}>
                 {svar.leads.map((l) => {
