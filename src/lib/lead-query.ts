@@ -89,19 +89,25 @@ function stamme(w: string) {
  */
 const KJOPERE: { ord: string[]; koder: string[]; hva: string; former?: string[] }[] = [
   {
-    ord: ["feiemaskin", "feiing", "gatefeiing", "sopemaskin", "spylebil", "kostebil"],
+    ord: ["feiemaskin", "feiing", "gatefeiing", "sopemaskin", "spylebil", "kostebil",
+          // Sweeper brands — a model name alone should be enough to search.
+          "bucher", "schmidt", "ravo", "dulevo", "johnston", "boschung"],
     koder: ["84.110", "42.110", "81.230"],
     hva: "kommuner, veientreprenører og renholdsfirma",
     former: ["AS", "KOMM", "FYLK"],
   },
   {
     ord: ["gravemaskin", "hjullaster", "anleggsmaskin", "dumper", "beltemaskin",
-          "minigraver", "gravemaskiner", "entreprenørmaskin"],
+          "minigraver", "entreprenørmaskin", "gravelaster",
+          // Machine brands.
+          "caterpillar", "komatsu", "hitachi", "doosan", "hyundai", "kubota",
+          "bobcat", "wacker neuson", "takeuchi", "liebherr", "sennebogen"],
     koder: ["43.120", "42.110", "41.000"],
     hva: "grunnentreprenører, veibyggere og byggefirma",
   },
   {
-    ord: ["snøbrøyting", "brøyteutstyr", "snøfreser", "strøapparat", "snømåking"],
+    ord: ["snøbrøyting", "brøyteutstyr", "snøfreser", "strøapparat", "snømåking",
+          "brøyteskjær", "wille", "holder", "multihog"],
     koder: ["84.110", "42.110", "81.230"],
     hva: "kommuner, veientreprenører og driftsselskap",
     former: ["AS", "KOMM", "FYLK"],
@@ -112,17 +118,20 @@ const KJOPERE: { ord: string[]; koder: string[]; hva: string; former?: string[] 
     hva: "transportfirma og entreprenører",
   },
   {
-    ord: ["traktor", "landbruksmaskin", "skurtresker", "gjødselspreder"],
+    ord: ["traktor", "landbruksmaskin", "skurtresker", "gjødselspreder",
+          "john deere", "massey ferguson", "claas", "fendt", "valtra"],
     koder: ["01.110", "01.500", "02.200"],
     hva: "gårdsbruk og skogbruk",
   },
   {
-    ord: ["truck", "gaffeltruck", "lagerreol", "lagertruck", "pallereol"],
+    ord: ["truck", "gaffeltruck", "lagerreol", "lagertruck", "pallereol",
+          "linde", "jungheinrich", "toyota truck", "still"],
     koder: ["52.100", "46.900", "10.890"],
     hva: "lager, grossister og industri",
   },
   {
-    ord: ["kranutstyr", "lift", "personløfter", "stillas", "byggeheis"],
+    ord: ["kranutstyr", "lift", "personløfter", "stillas", "byggeheis",
+          "teleskoplaster", "manitou", "merlo", "avant", "genie", "haulotte"],
     koder: ["43.120", "41.000", "43.910"],
     hva: "entreprenører og byggefirma",
   },

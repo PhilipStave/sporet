@@ -8,13 +8,14 @@ import { Autocomplete } from "@/components/Autocomplete";
 import { Board } from "@/components/pipeline/Board";
 import { Table } from "@/components/pipeline/Table";
 import { NewCustomerDialog } from "@/components/pipeline/NewCustomerDialog";
+import { FinnKunderDialog } from "@/components/pipeline/FinnKunderDialog";
 
 import { fmtKr, withinPeriod, type Period } from "@/lib/format";
 
 type FilterKind = "alle" | "apne" | "vunnet" | "tapt";
 
 export default function PipelinePage() {
-  const { scopedDeals, departments, sellerNames, canWrite, stageMaps } = useStore();
+  const { scopedDeals, departments, sellerNames, canWrite, stageMaps, org } = useStore();
 
   const [mode, setMode] = useState<"tavle" | "tabell">("tavle");
   const [query, setQuery] = useState("");
@@ -24,6 +25,9 @@ export default function PipelinePage() {
   // Empty = all departments; otherwise selected department ids (multi-select).
   const [deptFilter, setDeptFilter] = useState<string[]>([]);
   const [newOpen, setNewOpen] = useState(false);
+  const [finnOpen, setFinnOpen] = useState(false);
+  // Unlaunched: only orgs that opted in ever see the button.
+  const finnKunder = org.features.finnkunder === true;
 
   const toggleDept = (id: string) =>
     setDeptFilter((cur) =>
@@ -95,6 +99,16 @@ export default function PipelinePage() {
               </span>
             </button>
           </div>
+          {finnKunder && (
+            <button
+              className="btn"
+              onClick={() => setFinnOpen(true)}
+              disabled={!canWrite}
+              title="Finn potensielle kunder i Enhetsregisteret"
+            >
+              <Icon name="search" size={16} /> Finn kunder
+            </button>
+          )}
           <button
             className="btn btn-primary"
             onClick={() => setNewOpen(true)}
@@ -231,6 +245,8 @@ export default function PipelinePage() {
         onClose={() => setNewOpen(false)}
         defaultDeptId={deptFilter.length === 1 ? deptFilter[0] : null}
       />
+
+      {finnOpen && <FinnKunderDialog onClose={() => setFinnOpen(false)} />}
     </div>
   );
 }

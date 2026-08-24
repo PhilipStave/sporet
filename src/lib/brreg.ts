@@ -45,6 +45,8 @@ type BrregEnhet = {
   forretningsadresse?: {
     poststed?: string;
     kommune?: string;
+    kommunenummer?: string;
+    postnummer?: string;
     adresse?: string[];
   };
 };
@@ -71,6 +73,9 @@ function buildUrl(filter: LeadFilter, kode: string, size: number) {
   const former = filter.organisasjonsformer?.length ? filter.organisasjonsformer : ["AS"];
   former.forEach((f) => p.append("organisasjonsform", f));
   p.set("size", String(size));
+  // Biggest first. Without this the register returns alphabetically, which means
+  // the same handful of "123 …" companies for every single search.
+  p.set("sort", "antallAnsatte,DESC");
   if (filter.fraAntallAnsatte != null) p.set("fraAntallAnsatte", String(filter.fraAntallAnsatte));
   if (filter.tilAntallAnsatte != null) p.set("tilAntallAnsatte", String(filter.tilAntallAnsatte));
   (filter.kommunenummer ?? []).forEach((k) => p.append("kommunenummer", k));
@@ -127,4 +132,45 @@ export async function searchCompanies(
     leads: leads.slice(0, limit),
     total: results.reduce((n, r) => n + r.total, 0),
   };
+}
+
+export type LeadDetail = Lead & {
+  stiftet: string | null;
+  formaal: string;
+  aktivitet: string;
+  postnummer: string;
+  kommunenummer: string;
+  konsern: boolean;
+};
+
+/**
+ * Full record for one company, fetched when the user actually picks it. The
+ * register holds no e-mail, phone or website — those fields stay empty rather
+ * than being guessed at.
+ */
+export async function fetchCompany(orgnr: string): Promise<LeadDetail | null> {
+  try {
+    const res = await fetch(`${BASE}/${encodeURIComponent(orgnr)}`, {
+      headers: { Accept: "application/json" },
+      next: { revalidate: 86400 },
+    });
+    if (!res.ok) return null;
+    const e = (await res.json()) as BrregEnhet & {
+      stiftelsesdato?: string;
+      vedtektsfestetFormaal?: string[];
+      aktivitet?: string[];
+      erIKonsern?: boolean;
+    };
+    return {
+      ...toLead(e),
+      stiftet: e.stiftelsesdato ?? null,
+      formaal: (e.vedtektsfestetFormaal ?? []).join(" ").trim(),
+      aktivitet: (e.aktivitet ?? []).join(" ").trim(),
+      postnummer: e.forretningsadresse?.postnummer ?? "",
+      kommunenummer: e.forretningsadresse?.kommunenummer ?? "",
+      konsern: e.erIKonsern === true,
+    };
+  } catch {
+    return null;
+  }
 }
