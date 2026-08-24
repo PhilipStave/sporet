@@ -61,6 +61,8 @@ export const ALL_POSTS: BlogPost[] = [
     description: p.description,
     datePublished: p.datePublished,
     readMinutes: p.readMinutes,
+    image: p.image,
+    imageAlt: p.imageAlt,
   })),
 ].sort((a, b) => b.datePublished.localeCompare(a.datePublished));
 

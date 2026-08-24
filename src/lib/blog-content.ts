@@ -18,6 +18,8 @@ export type ContentPost = {
   datePublished: string;
   readMinutes: number;
   kicker: string;
+  image?: string;
+  imageAlt?: string;
   lead: string;
   sections: Section[];
   related: { href: string; label: string }[];
@@ -29,7 +31,7 @@ export const CONTENT_POSTS: ContentPost[] = [
     title: "Hva koster et CRM-system i Norge? Priser og skjulte kostnader",
     description:
       "Prisene på CRM spenner fra noen hundrelapper til titusener i måneden. Her er hva de vanlige systemene faktisk koster i Norge, og hvilke kostnader som ikke står i prislisten.",
-    datePublished: "2026-08-31",
+    datePublished: "2026-08-22",
     readMinutes: 6,
     kicker: "Blogg · Pris",
     lead: "Det korte svaret: mellom 500 og 15 000 kroner i måneden for en bedrift med ti selgere — avhengig av hvilket system du velger. Det lange svaret handler om alt som ikke står i prislisten.",

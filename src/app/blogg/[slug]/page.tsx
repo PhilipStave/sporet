@@ -25,7 +25,12 @@ export async function generateMetadata({
     title: post.title,
     description: post.description,
     alternates: { canonical: `/blogg/${post.slug}` },
-    openGraph: { title: post.title, description: post.description, type: "article" },
+    openGraph: {
+      title: post.title,
+      description: post.description,
+      type: "article",
+      images: post.image ? [post.image] : undefined,
+    },
   };
 }
 
@@ -42,6 +47,8 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
         title: post.title,
         description: post.description,
         datePublished: post.datePublished,
+        image: post.image,
+        imageAlt: post.imageAlt,
       }}
       related={post.related}
     >
