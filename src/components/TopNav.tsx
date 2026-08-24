@@ -166,6 +166,10 @@ export function TopNav() {
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
+                  // Tabs must keep their natural width. As shrinkable flex items
+                  // they squeezed to fit and clipped their own text, and the
+                  // measurement could never see that the row was too wide.
+                  flexShrink: 0,
                   gap: 7,
                   padding: "8px 12px",
                   borderRadius: 999,
