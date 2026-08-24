@@ -34,6 +34,8 @@ export const CONTENT_POSTS: ContentPost[] = [
     datePublished: "2026-08-22",
     readMinutes: 6,
     kicker: "Blogg · Pris",
+    image: "/blog/hva-koster-crm.jpg",
+    imageAlt: "Skrivebord med bærbar PC, notatbok, kalkulator og kaffekopp i dagslys",
     lead: "Det korte svaret: mellom 500 og 15 000 kroner i måneden for en bedrift med ti selgere — avhengig av hvilket system du velger. Det lange svaret handler om alt som ikke står i prislisten.",
     sections: [
       {
@@ -172,6 +174,8 @@ export const CONTENT_POSTS: ContentPost[] = [
     datePublished: "2026-09-20",
     readMinutes: 6,
     kicker: "Blogg · Bransje",
+    image: "/blog/crm-entreprenor-maskin.jpg",
+    imageAlt: "Anleggsplass med gravemaskin og betongelementer ved en norsk fjord",
     lead: "Selger du maskiner, entreprenørtjenester eller utstyr til bygg og anlegg, ser salgsprosessen helt annerledes ut enn i et programvareselskap. Færre kunder, større beløp, lengre løp — og en befaring i midten.",
     sections: [
       {
