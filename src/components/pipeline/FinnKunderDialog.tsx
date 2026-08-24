@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import { useStore } from "@/store/Store";
 import { Icon } from "@/components/Icon";
 import type { Lead, LeadDetail } from "@/lib/brreg";
+import type { Kontakt } from "@/lib/kontakt";
+
+type Detalj = LeadDetail & { kontakt: Kontakt };
 
 // Lead search, opened from the pipeline. Every company shown comes from
 // Enhetsregisteret; nothing here is generated.
@@ -24,7 +27,7 @@ const EKSEMPLER = [
 ];
 
 /** Everything the register knows, laid out for the customer's note field. */
-function tilNotat(d: LeadDetail) {
+function tilNotat(d: Detalj) {
   const linjer = [
     `Org.nr. ${d.orgnr}`,
     d.naering && `Bransje: ${d.naering} (${d.naeringskode})`,
@@ -37,7 +40,11 @@ function tilNotat(d: LeadDetail) {
     d.mva && "Registrert i MVA-registeret",
     d.konsern && "Del av konsern",
     (d.aktivitet || d.formaal) && `\nFormål: ${(d.aktivitet || d.formaal).slice(0, 400)}`,
-    `\nHentet fra Enhetsregisteret. E-post og telefon finnes ikke der — fyll inn selv.`,
+    d.kontakt.domene && `Nettside: ${d.kontakt.domene}`,
+    `\nBedriftsdata fra Enhetsregisteret.` +
+      (d.kontakt.epost || d.kontakt.telefon
+        ? ` Kontaktinfo hentet fra ${d.kontakt.domene}.`
+        : ` Fant ingen fellesadresse på nett — fyll inn e-post og telefon selv.`),
   ];
   return linjer.filter(Boolean).join("\n");
 }
@@ -84,7 +91,7 @@ export function FinnKunderDialog({ onClose }: { onClose: () => void }) {
   const leggTil = async (lead: Lead) => {
     if (!canWrite || lagtInn.has(lead.orgnr)) return;
     setJobber(lead.orgnr);
-    let detalj: LeadDetail | null = null;
+    let detalj: Detalj | null = null;
     try {
       const res = await fetch("/api/kundesok/detalj", {
         method: "POST",
@@ -99,6 +106,9 @@ export function FinnKunderDialog({ onClose }: { onClose: () => void }) {
     const id = await createDeal({
       company: lead.navn,
       product: lead.naering,
+      // Only ever a general company mailbox, never a named person.
+      email: detalj?.kontakt.epost ?? "",
+      phone: detalj?.kontakt.telefon ?? "",
       notes: detalj
         ? tilNotat(detalj)
         : `Org.nr. ${lead.orgnr}\n${lead.naering}\n${lead.poststed}`,
@@ -316,8 +326,9 @@ export function FinnKunderDialog({ onClose }: { onClose: () => void }) {
 
               {svar.leads.length > 0 && (
                 <p style={{ marginTop: 14, fontSize: 11.5, color: "var(--muted)" }}>
-                  Navn, org.nr., adresse, bransje og ansatte hentes fra registeret. E-post og
-                  telefon står ikke der, så de må fylles inn manuelt.
+                  Bedriftsdata kommer fra Enhetsregisteret. E-post og telefon hentes fra
+                  bedriftens egen nettside når vi finner den — kun fellesadresser som
+                  post@ og firmapost@, aldri navngitte personer.
                 </p>
               )}
             </>

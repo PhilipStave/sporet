@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { fetchCompany } from "@/lib/brreg";
+import { finnKontakt } from "@/lib/kontakt";
 
 // Full record for the companies a user actually picks, so imported customers
 // carry as much real detail as the register holds.
@@ -25,5 +26,14 @@ export async function POST(req: Request) {
   if (orgnr.length === 0) return NextResponse.json({ detaljer: [] });
 
   const detaljer = (await Promise.all(orgnr.map((o) => fetchCompany(o)))).filter(Boolean);
-  return NextResponse.json({ detaljer });
+
+  // Public contact details from the company website, where we can verify it.
+  const medKontakt = await Promise.all(
+    detaljer.map(async (d) => ({
+      ...d!,
+      kontakt: await finnKontakt(d!.navn, d!.orgnr),
+    }))
+  );
+
+  return NextResponse.json({ detaljer: medKontakt });
 }

@@ -3,7 +3,10 @@
 import { useState } from "react";
 import { useStore } from "@/store/Store";
 import { Icon } from "@/components/Icon";
-import type { Lead } from "@/lib/brreg";
+import type { Lead, LeadDetail } from "@/lib/brreg";
+import type { Kontakt } from "@/lib/kontakt";
+
+type Detalj = LeadDetail & { kontakt: Kontakt };
 
 // Not launched. Reachable only for orgs with the "finnkunder" flag switched on.
 
@@ -71,10 +74,31 @@ export default function FinnKunderPage() {
   const importer = async () => {
     if (!svar || valgte.size === 0) return;
     setImporterer(true);
+    const utvalg = svar.leads.filter((l) => valgte.has(l.orgnr));
+
+    // One round trip for the whole selection: full register record plus any
+    // public contact details we can verify.
+    let detaljer: Detalj[] = [];
+    try {
+      const res = await fetch("/api/kundesok/detalj", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ orgnr: utvalg.map((l) => l.orgnr) }),
+      });
+      if (res.ok) detaljer = (await res.json())?.detaljer ?? [];
+    } catch {
+      // Fall back to what the search already gave us.
+    }
+
     let antall = 0;
-    for (const lead of svar.leads.filter((l) => valgte.has(l.orgnr))) {
+    for (const lead of utvalg) {
+      const d = detaljer.find((x) => x.orgnr === lead.orgnr);
       const id = await createDeal({
         company: lead.navn,
+        product: lead.naering,
+        // General company mailbox only, never a named person.
+        email: d?.kontakt.epost ?? "",
+        phone: d?.kontakt.telefon ?? "",
         notes:
           `Org.nr. ${lead.orgnr}` +
           (lead.naering ? ` · ${lead.naering}` : "") +
@@ -82,6 +106,7 @@ export default function FinnKunderPage() {
           (lead.adresse || lead.poststed
             ? `\n${[lead.adresse, lead.poststed].filter(Boolean).join(", ")}`
             : "") +
+          (d?.kontakt.domene ? `\nNettside: ${d.kontakt.domene}` : "") +
           `\n\nHentet fra Enhetsregisteret.`,
         tags: ["Fra kundesøk"],
       });
