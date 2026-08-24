@@ -49,6 +49,13 @@ export const ICON_PATHS: Record<string, string[]> = {
   ],
   edit: ["M12 20h9", "M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"],
   logout: ["M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4", "M16 17l5-5-5-5", "M21 12H9"],
+  org: [
+    "M9 2h6v5H9z",
+    "M2 17h6v5H2z",
+    "M16 17h6v5h-6z",
+    "M12 7v7",
+    "M5 17v-3h14v3",
+  ],
   building: [
     "M4 22V4a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v18",
     "M15 9h4a1 1 0 0 1 1 1v12",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Logo } from "./Logo";
@@ -25,7 +25,7 @@ const TABS: Tab[] = [
   { id: "kalender", label: "Kalender", icon: "calendar", feature: "kalender" },
   { id: "statistikk", label: "Statistikk", icon: "chart", feature: "statistikk" },
   { id: "selgere", label: "Selgere", icon: "users", feature: "selgere" },
-  { id: "avdelinger", label: "Avdelinger", icon: "building", feature: "avdelinger" },
+  { id: "avdelinger", label: "Avdelinger", icon: "org", feature: "avdelinger" },
   { id: "kunder", label: "Kunder", icon: "building", feature: "kunder" },
   { id: "aktivitet", label: "Aktivitet", icon: "activity", feature: "aktivitet" },
 ];
@@ -46,10 +46,38 @@ export function TopNav() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const navRef = useRef<HTMLElement>(null);
+  const behovRef = useRef(0);
+  const [kompakt, setKompakt] = useState(false);
   const supabase = useMemo(() => createClient(), []);
 
   // Orgs created before a feature existed have no flag for it — treat missing as enabled.
   const tabs = TABS.filter((t) => !t.feature || org.features[t.feature] !== false);
+
+  // Labels collapse to icons only when they genuinely do not fit. The width the
+  // full labels need is measured once and cached, so toggling the class can never
+  // feed back into the measurement and oscillate.
+  useLayoutEffect(() => {
+    const el = navRef.current;
+    if (!el) return;
+
+    const vurder = () => {
+      // Only the labelled state gives a meaningful width, so re-measure whenever
+      // the labels happen to be showing and keep the last good value otherwise.
+      if (!el.classList.contains("nav-kompakt")) behovRef.current = el.scrollWidth;
+      if (!behovRef.current) return;
+      setKompakt(el.clientWidth < behovRef.current + 4);
+    };
+    vurder();
+
+    // Web fonts land after first paint and change every label's width.
+    document.fonts?.ready.then(vurder);
+
+    const ro = new ResizeObserver(vurder);
+    ro.observe(el);
+    return () => ro.disconnect();
+    // Tab count changes when features are toggled, so re-measure from scratch.
+  }, [tabs.length]);
 
   const scopeOptions = useMemo(
     () => [
@@ -102,7 +130,8 @@ export function TopNav() {
 
         {/* Tabs */}
         <nav
-          className="scrollbar-thin nav-tabs"
+          ref={navRef}
+          className={"scrollbar-thin nav-tabs" + (kompakt ? " nav-kompakt" : "")}
           style={{
             display: "flex",
             gap: 3,
