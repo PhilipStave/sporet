@@ -341,6 +341,7 @@ export function StoreProvider({
         owner_id: partial?.owner_id ?? profile.id,
         owner_name: partial?.owner_name ?? profile.full_name,
         company: partial?.company ?? "",
+        org_nr: partial?.org_nr ?? null,
         contact: partial?.contact ?? "",
         contact_role: partial?.contact_role ?? "",
         email: partial?.email ?? "",

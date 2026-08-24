@@ -93,6 +93,8 @@ export type DealRow = {
   owner_id: string | null;
   owner_name: string;
   company: string;
+  /** Organisation number, when the customer came from the register. */
+  org_nr: string | null;
   contact: string;
   contact_role: string;
   email: string;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useStore } from "@/store/Store";
 import { Icon } from "@/components/Icon";
 import type { Lead, LeadDetail } from "@/lib/brreg";
@@ -52,20 +52,65 @@ function tilNotat(d: Detalj) {
   return linjer.filter(Boolean).join("\n");
 }
 
+type Utvalg = "alle" | "nye" | "kunder";
+
+const UTVALG: { id: Utvalg; label: string }[] = [
+  { id: "alle", label: "Alle" },
+  { id: "nye", label: "Bare nye" },
+  { id: "kunder", label: "Bare kunder" },
+];
+
+/** Company names differ in punctuation and casing far more than in substance. */
+function navnNokkel(navn: string) {
+  return navn
+    .toLowerCase()
+    .replace(/(as|asa|ans|da|nuf)/g, "")
+    .replace(/[^a-z0-9æøå]/g, "");
+}
+
 export function FinnKunderDialog({ onClose }: { onClose: () => void }) {
-  const { createDeal, canWrite } = useStore();
+  const { createDeal, canWrite, deals } = useStore();
   const [tekst, setTekst] = useState("");
   const [laster, setLaster] = useState(false);
   const [svar, setSvar] = useState<Svar | null>(null);
   const [feil, setFeil] = useState<string | null>(null);
   const [lagtInn, setLagtInn] = useState<Set<string>>(new Set());
   const [jobber, setJobber] = useState<string | null>(null);
+  const [vis, setVis] = useState<Utvalg>("alle");
+
+  // Org number is exact; the name key is the fallback for customers added by
+  // hand, who never had one.
+  const eksisterende = useMemo(() => {
+    const orgnr = new Set<string>();
+    const navn = new Set<string>();
+    for (const d of deals) {
+      if (d.org_nr) orgnr.add(d.org_nr);
+      if (d.company) navn.add(navnNokkel(d.company));
+    }
+    return { orgnr, navn };
+  }, [deals]);
+
+  const erKunde = (l: Lead) =>
+    eksisterende.orgnr.has(l.orgnr) || eksisterende.navn.has(navnNokkel(l.navn));
 
   useEffect(() => {
     const esc = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", esc);
     return () => window.removeEventListener("keydown", esc);
   }, [onClose]);
+
+  const synlige = useMemo(() => {
+    const alle = svar?.leads ?? [];
+    if (vis === "nye") return alle.filter((l) => !erKunde(l));
+    if (vis === "kunder") return alle.filter((l) => erKunde(l));
+    return alle;
+    // erKunde reads eksisterende, which is itself memoised on deals.
+  }, [svar, vis, eksisterende]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const antallKunder = useMemo(
+    () => (svar?.leads ?? []).filter((l) => erKunde(l)).length,
+    [svar, eksisterende] // eslint-disable-line react-hooks/exhaustive-deps
+  );
 
   const sok = async (q?: string) => {
     const spørring = (q ?? tekst).trim();
@@ -108,6 +153,7 @@ export function FinnKunderDialog({ onClose }: { onClose: () => void }) {
 
     const id = await createDeal({
       company: lead.navn,
+      org_nr: lead.orgnr,
       product: lead.naering,
       // Only ever a general company mailbox, never a named person.
       email: detalj?.kontakt.epost ?? "",
@@ -236,6 +282,17 @@ export function FinnKunderDialog({ onClose }: { onClose: () => void }) {
               </button>
             ))}
           </div>
+
+          <div style={{ marginTop: 10, display: "flex", gap: 7, alignItems: "center", flexWrap: "wrap" }}>
+            <span style={{ fontSize: 11.5, color: "var(--muted)" }}>Vis:</span>
+            <div className="pillgroup">
+              {UTVALG.map((u) => (
+                <button key={u.id} data-active={vis === u.id} onClick={() => setVis(u.id)}>
+                  {u.label}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Results */}
@@ -274,9 +331,24 @@ export function FinnKunderDialog({ onClose }: { onClose: () => void }) {
                 </p>
               )}
 
+              {antallKunder > 0 && (
+                <p style={{ fontSize: 11.5, color: "var(--muted)", margin: "-6px 0 10px" }}>
+                  {antallKunder} av {svar.leads.length} er allerede kunder hos dere.
+                </p>
+              )}
+
+              {synlige.length === 0 && (
+                <p style={{ fontSize: 13.5, color: "var(--muted)" }}>
+                  {vis === "nye"
+                    ? "Alle treffene er allerede kunder hos dere."
+                    : "Ingen av treffene er kunder hos dere ennå."}
+                </p>
+              )}
+
               <div style={{ display: "grid", gap: 8 }}>
-                {svar.leads.map((l) => {
+                {synlige.map((l) => {
                   const inne = lagtInn.has(l.orgnr);
+                  const kunde = erKunde(l);
                   return (
                     <div
                       key={l.orgnr}
@@ -291,7 +363,26 @@ export function FinnKunderDialog({ onClose }: { onClose: () => void }) {
                       }}
                     >
                       <div style={{ minWidth: 0, flex: 1 }}>
-                        <div style={{ fontWeight: 600, fontSize: 14.5 }}>{l.navn}</div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap" }}>
+                          <span style={{ fontWeight: 600, fontSize: 14.5 }}>{l.navn}</span>
+                          {kunde && (
+                            <span
+                              title="Ligger allerede i kundelisten"
+                              style={{
+                                fontSize: 10.5,
+                                fontWeight: 700,
+                                textTransform: "uppercase",
+                                letterSpacing: ".04em",
+                                padding: "2px 7px",
+                                borderRadius: 999,
+                                background: "var(--primary-050)",
+                                color: "var(--primary)",
+                              }}
+                            >
+                              Kunde
+                            </span>
+                          )}
+                        </div>
                         <div style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 1 }}>
                           {l.naering}
                         </div>
@@ -314,18 +405,20 @@ export function FinnKunderDialog({ onClose }: { onClose: () => void }) {
                       <button
                         type="button"
                         onClick={() => leggTil(l)}
-                        disabled={inne || jobber === l.orgnr || !canWrite}
+                        disabled={inne || kunde || jobber === l.orgnr || !canWrite}
                         title={
-                          inne
-                            ? "Allerede lagt til"
-                            : canWrite
-                              ? "Legg til i pipelinen"
-                              : "Abonnementet må være aktivt"
+                          kunde
+                            ? "Ligger allerede i kundelisten"
+                            : inne
+                              ? "Allerede lagt til"
+                              : canWrite
+                                ? "Legg til i pipelinen"
+                                : "Abonnementet må være aktivt"
                         }
-                        className={inne ? "btn" : "btn btn-primary"}
+                        className={inne || kunde ? "btn" : "btn btn-primary"}
                         style={{ flexShrink: 0, padding: "8px 12px" }}
                       >
-                        {inne ? (
+                        {inne || kunde ? (
                           <Icon name="check" size={15} />
                         ) : jobber === l.orgnr ? (
                           "…"
