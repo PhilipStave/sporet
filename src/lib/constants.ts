@@ -18,6 +18,7 @@ export type FeatureKey =
   | "kalender"
   | "statistikk"
   | "selgere"
+  | "avdelinger"
   | "kunder"
   | "aktivitet";
 
@@ -104,6 +105,7 @@ export const DEFAULT_FEATURES: Record<FeatureKey, boolean> = {
   kalender: true,
   statistikk: true,
   selgere: true,
+  avdelinger: true,
   kunder: true,
   aktivitet: true,
 };
@@ -112,6 +114,7 @@ export const FEATURE_LABELS: Record<FeatureKey, string> = {
   kalender: "Kalender",
   statistikk: "Statistikk",
   selgere: "Selgere",
+  avdelinger: "Avdelinger",
   kunder: "Kunder",
   aktivitet: "Aktivitet",
 };
@@ -120,6 +123,7 @@ export const FEATURE_ORDER: FeatureKey[] = [
   "kalender",
   "statistikk",
   "selgere",
+  "avdelinger",
   "kunder",
   "aktivitet",
 ];

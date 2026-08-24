@@ -138,3 +138,107 @@ export function sellersFromWon(
 
 export const stageCount = (deals: Deal[], stage: Stage) =>
   deals.filter((d) => d.stage === stage).length;
+
+export interface DeptAgg {
+  id: string;
+  name: string;
+  /** Won deals in the period. */
+  count: number;
+  total: number;
+  margin: number;
+  marginPct: number;
+  /** Open pipeline right now (not period-filtered stages). */
+  openCount: number;
+  openValue: number;
+  /** Lost deals in the period + win rate. */
+  lostCount: number;
+  winRate: number;
+  avgValue: number;
+  /** Distinct sellers with a won deal, and the best of them. */
+  sellerCount: number;
+  topSeller: string | null;
+  topSellerTotal: number;
+}
+
+/**
+ * Aggregate per department: won revenue/margin in the period, plus the currently
+ * open pipeline. `openDeals` is unfiltered by period so "in pipeline" stays truthful.
+ */
+export function departmentsAgg(
+  periodDeals: Deal[],
+  openDeals: Deal[],
+  departments: { id: string; name: string }[],
+  openKeys: string[]
+): DeptAgg[] {
+  const blank = (id: string, name: string): DeptAgg => ({
+    id,
+    name,
+    count: 0,
+    total: 0,
+    margin: 0,
+    marginPct: 0,
+    openCount: 0,
+    openValue: 0,
+    lostCount: 0,
+    winRate: 0,
+    avgValue: 0,
+    sellerCount: 0,
+    topSeller: null,
+    topSellerTotal: 0,
+  });
+
+  const by: Record<string, DeptAgg> = {};
+  departments.forEach((d) => (by[d.id] = blank(d.id, d.name)));
+  const UNASSIGNED = "__none";
+  const get = (id: string | null) => {
+    const key = id ?? UNASSIGNED;
+    if (!by[key]) by[key] = blank(key, key === UNASSIGNED ? "Uten avdeling" : "Ukjent");
+    return by[key];
+  };
+
+  // Per-department seller totals, to find the top performer.
+  const sellerTotals: Record<string, Record<string, number>> = {};
+
+  periodDeals.forEach((d) => {
+    const agg = get(d.department_id);
+    if (d.stage === WON_KEY) {
+      agg.count++;
+      agg.total += d.value || 0;
+      agg.margin += (d.value || 0) * ((d.margin_pct || 0) / 100);
+      const seller = (d.owner_name || "").trim() || "Ukjent";
+      const t = (sellerTotals[agg.id] = sellerTotals[agg.id] || {});
+      t[seller] = (t[seller] || 0) + (d.value || 0);
+    } else if (d.stage === LOST_KEY) {
+      agg.lostCount++;
+    }
+  });
+
+  openDeals.forEach((d) => {
+    if (!openKeys.includes(d.stage)) return;
+    const agg = get(d.department_id);
+    agg.openCount++;
+    agg.openValue += d.value || 0;
+  });
+
+  return Object.values(by)
+    .map((a) => {
+      const sellers = sellerTotals[a.id] || {};
+      const top = Object.entries(sellers).sort((x, y) => y[1] - x[1])[0];
+      const decided = a.count + a.lostCount;
+      return {
+        ...a,
+        marginPct: a.total > 0 ? Math.round((a.margin / a.total) * 100) : 0,
+        avgValue: a.count > 0 ? Math.round(a.total / a.count) : 0,
+        winRate: decided > 0 ? Math.round((a.count / decided) * 100) : 0,
+        sellerCount: Object.keys(sellers).length,
+        topSeller: top ? top[0] : null,
+        topSellerTotal: top ? top[1] : 0,
+      };
+    })
+    .sort(
+      (a, b) =>
+        Number(b.count > 0) - Number(a.count > 0) ||
+        b.total - a.total ||
+        a.name.localeCompare(b.name, "nb")
+    );
+}

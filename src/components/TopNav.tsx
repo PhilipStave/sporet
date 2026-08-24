@@ -25,6 +25,7 @@ const TABS: Tab[] = [
   { id: "kalender", label: "Kalender", icon: "calendar", feature: "kalender" },
   { id: "statistikk", label: "Statistikk", icon: "chart", feature: "statistikk" },
   { id: "selgere", label: "Selgere", icon: "users", feature: "selgere" },
+  { id: "avdelinger", label: "Avdelinger", icon: "building", feature: "avdelinger" },
   { id: "kunder", label: "Kunder", icon: "building", feature: "kunder" },
   { id: "aktivitet", label: "Aktivitet", icon: "activity", feature: "aktivitet" },
 ];
@@ -47,8 +48,9 @@ export function TopNav() {
   const menuRef = useRef<HTMLDivElement>(null);
   const supabase = useMemo(() => createClient(), []);
 
+  // Orgs created before a feature existed have no flag for it — treat missing as enabled.
   const tabs = TABS.filter(
-    (t) => !t.feature || org.features[t.feature]
+    (t) => !t.feature || org.features[t.feature] !== false
   );
 
   const scopeOptions = useMemo(

@@ -28,6 +28,7 @@ export default function SetupPage() {
     kalender: true,
     statistikk: true,
     selgere: true,
+    avdelinger: true,
     kunder: true,
     aktivitet: true,
   });

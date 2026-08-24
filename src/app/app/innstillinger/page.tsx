@@ -33,7 +33,14 @@ export default function InnstillingerPage() {
   const isAdmin = profile.role === "admin";
 
   const [companyName, setCompanyName] = useState(org.name);
-  const [features, setFeatures] = useState(org.features);
+  // Missing flags (features added after the org was created) count as enabled.
+  const [features, setFeatures] = useState<Record<FeatureKey, boolean>>(() => {
+    const f = { ...org.features } as Record<FeatureKey, boolean>;
+    FEATURE_ORDER.forEach((k) => {
+      if (f[k] === undefined) f[k] = true;
+    });
+    return f;
+  });
   const [newDept, setNewDept] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<"seller" | "admin">("seller");
