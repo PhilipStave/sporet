@@ -89,13 +89,13 @@ export function TopNav() {
     >
       <div
         style={{
-          maxWidth: 1320,
+          maxWidth: 1600,
           margin: "0 auto",
           height: "100%",
           padding: "0 20px",
           display: "flex",
           alignItems: "center",
-          gap: 14,
+          gap: 12,
         }}
       >
         <Link href="/app/oversikt" style={{ flexShrink: 0 }}>
@@ -121,6 +121,7 @@ export function TopNav() {
                 href={`/app/${t.id}`}
                 className="nav-tab"
                 data-active={active}
+                title={t.label}
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
@@ -135,7 +136,7 @@ export function TopNav() {
                 }}
               >
                 <Icon name={t.icon} size={16} />
-                {t.label}
+                <span className="nav-tab-label">{t.label}</span>
               </Link>
             );
           })}
@@ -444,7 +445,7 @@ function GlobalSearch({
   }, [q, deals, sellerNames, departments, features, onCustomer, onNavigate]);
 
   return (
-    <div ref={ref} style={{ position: "relative" }} className="hide-sm">
+    <div ref={ref} style={{ position: "relative" }} className="hide-sm top-search">
       <div style={{ position: "relative" }}>
         <span
           style={{
