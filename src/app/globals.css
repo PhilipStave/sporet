@@ -601,6 +601,14 @@ a {
   transform: translateX(2px);
 }
 
+.nav-tabs {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.nav-tabs::-webkit-scrollbar {
+  display: none;
+}
+
 /* Top bar: keep everything on one row as tabs are added.
    Narrow → tab labels collapse to icons (active tab keeps its label). */
 @media (max-width: 1500px) {
@@ -608,7 +616,7 @@ a {
     width: 160px !important;
   }
 }
-@media (max-width: 1400px) {
+@media (max-width: 1560px) {
   .nav-tab .nav-tab-label {
     display: none;
   }

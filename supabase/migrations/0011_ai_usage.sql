@@ -20,6 +20,11 @@ drop policy if exists ai_usage_select on public.ai_usage;
 create policy ai_usage_select on public.ai_usage
   for select using (org_id = public.current_org_id());
 
+-- Per-org override, for when a good customer genuinely needs more than the plan
+-- allows. Null means "use the plan quota".
+alter table public.organizations
+  add column if not exists ai_kvote_override integer;
+
 -- Quota by plan. Roughly five times normal use, so a working salesperson never
 -- meets it but a runaway script stops.
 create or replace function public.ai_kvote(p_plan text)
@@ -63,8 +68,15 @@ begin
     return;
   end if;
 
-  select o.plan into v_plan from public.organizations o where o.id = v_org;
-  v_kvote := public.ai_kvote(coalesce(v_plan, 'trial'));
+  select o.plan, o.ai_kvote_override
+    into v_plan, v_kvote
+    from public.organizations o
+   where o.id = v_org;
+
+  -- An override wins over the plan quota; 0 is valid and means "switched off".
+  if v_kvote is null then
+    v_kvote := public.ai_kvote(coalesce(v_plan, 'trial'));
+  end if;
 
   insert into public.ai_usage (org_id, maaned, antall)
   values (v_org, v_maaned, 0)
