@@ -330,6 +330,15 @@ export function matchLocally(tekst: string): Interpretation | null {
   };
 }
 
+/**
+ * Which model interprets the query. Haiku is the right default: picking codes
+ * from a fixed list is a narrow task, and it is roughly three times cheaper
+ * than Sonnet. Override with ANTHROPIC_MODEL to change it without a deploy.
+ */
+function modell() {
+  return process.env.ANTHROPIC_MODEL?.trim() || "claude-haiku-4-5-20251001";
+}
+
 /** True once an API key is configured — nothing calls Anthropic before that. */
 export function aiEnabled() {
   return Boolean(process.env.ANTHROPIC_API_KEY?.trim());
@@ -418,7 +427,7 @@ async function interpretWithAi(tekst: string): Promise<Interpretation | null> {
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "claude-haiku-4-5-20251001",
+        model: modell(),
         max_tokens: 1024,
         tools: [verktoy],
         tool_choice: { type: "tool", name: "sett_sokefilter" },
