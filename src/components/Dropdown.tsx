@@ -71,6 +71,8 @@ export function Dropdown({
             <button
               key={o.value}
               type="button"
+              className="dropdown-option"
+              data-selected={o.value === value}
               onClick={() => {
                 onChange(o.value);
                 setOpen(false);
