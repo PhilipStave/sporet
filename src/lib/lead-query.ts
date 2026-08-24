@@ -106,6 +106,13 @@ const KJOPERE: { ord: string[]; koder: string[]; hva: string; former?: string[] 
     hva: "grunnentreprenører, veibyggere og byggefirma",
   },
   {
+    ord: ["komprimering", "vibrasjonsplate", "vibroplate", "jordpakker", "valse",
+          "stampemaskin", "komprimator", "hoppetusse",
+          "swepac", "dynapac", "wacker", "bomag", "ammann", "weber mt"],
+    koder: ["43.120", "42.110", "41.000"],
+    hva: "grunnentreprenører, veibyggere og byggefirma",
+  },
+  {
     ord: ["snøbrøyting", "brøyteutstyr", "snøfreser", "strøapparat", "snømåking",
           "brøyteskjær", "wille", "holder", "multihog"],
     koder: ["84.110", "42.110", "81.230"],
@@ -341,9 +348,13 @@ async function interpretWithAi(tekst: string): Promise<Interpretation | null> {
   const key = process.env.ANTHROPIC_API_KEY?.trim();
   if (!key) return null;
 
-  // Narrow the 738 codes down locally first, so the prompt stays small and cheap.
-  const kandidater = matchKoder(tekst, 40);
-  if (kandidater.length === 0) return null;
+  // Narrow locally first to keep the prompt small. When word-matching finds
+  // nothing — a bare brand name like "Swepac" — hand over the whole list
+  // instead. That is the case the model is here for, so bailing out would
+  // defeat the point. The full list is ~10k tokens, which Haiku handles for a
+  // fraction of an øre.
+  const smalt = matchKoder(tekst, 40);
+  const kandidater = smalt.length > 0 ? smalt : KODER;
 
   const verktoy = {
     name: "sett_sokefilter",
@@ -382,10 +393,26 @@ async function interpretWithAi(tekst: string): Promise<Interpretation | null> {
         messages: [
           {
             role: "user",
-            content:
-              `Brukeren selger: "${tekst}"\n\n` +
-              `Velg de mest relevante bransjekodene for hvem som ville KJØPT dette. ` +
-              `Du kan bare velge blant disse kodene:\n${liste}`,
+            content: [
+              // The code list is identical on every call, so cache it. Repeat
+              // searches then pay for the query alone rather than for 10k
+              // tokens of industry codes.
+              {
+                type: "text",
+                text: `Bransjekoder du kan velge blant:\n${liste}`,
+                cache_control: { type: "ephemeral" },
+              },
+              {
+                type: "text",
+                text:
+                  `Brukeren selger: "${tekst}"\n\n` +
+                  `Velg de mest relevante kodene for hvem som ville KJØPT dette — ` +
+                  `altså kundene, ikke andre som selger det samme. ` +
+                  `Er teksten et merke- eller modellnavn, finn først ut hva slags ` +
+                  `produkt det er, og deretter hvilken bransje som kjøper det. ` +
+                  `Bruk kun koder fra listen over.`,
+              },
+            ],
           },
         ],
       }),
