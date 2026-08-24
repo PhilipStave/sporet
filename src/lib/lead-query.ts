@@ -403,8 +403,12 @@ async function interpretWithAi(tekst: string): Promise<Interpretation | null> {
         offentlig: {
           type: "boolean",
           description:
-            "True hvis kjøperne er kommuner, fylker eller offentlig sektor. " +
-            "De er ikke aksjeselskap og må søkes opp som KOMM og FYLK.",
+            "True hvis kjøperne er kommuner, fylker eller offentlig sektor — de er " +
+            "ikke aksjeselskap og må søkes opp som KOMM og FYLK. " +
+            "FALSE hvis brukeren uttrykkelig sier de IKKE vil ha offentlige, bare " +
+            "private bedrifter. Velg da bransjekoder for private selskaper i stedet " +
+            "for 84-kodene (offentlig administrasjon). Utelat feltet hvis de ikke " +
+            "sier noe om det.",
         },
         begrunnelse: {
           type: "string",
@@ -481,7 +485,19 @@ async function interpretWithAi(tekst: string): Promise<Interpretation | null> {
       .slice(0, 40);
 
     const antall = Number(bruk.input.antall);
-    const former = bruk.input.offentlig === true ? ["AS", "KOMM", "FYLK"] : formerFor(koder);
+
+    // "Kun private bedrifter" has to survive the whole path: without dropping
+    // the 84-codes here, formerFor would see them and put the municipalities
+    // straight back in.
+    const baPrivat = bruk.input.offentlig === false;
+    const brukteKoder = baPrivat ? koder.filter((k) => !k.startsWith("84.")) : koder;
+    if (brukteKoder.length === 0) return null;
+
+    const former = baPrivat
+      ? ["AS", "ASA"]
+      : bruk.input.offentlig === true
+        ? ["AS", "KOMM", "FYLK"]
+        : formerFor(brukteKoder);
 
     const navn = kommuner
       .map((k) => KOMMUNER.find((x) => x.k === k)?.n)
@@ -498,7 +514,7 @@ async function interpretWithAi(tekst: string): Promise<Interpretation | null> {
 
     return {
       filter: {
-        naeringskoder: koder,
+        naeringskoder: brukteKoder,
         kommunenummer: kommuner.length ? kommuner : undefined,
         fraAntallAnsatte: Number(bruk.input.fraAntallAnsatte) || undefined,
         tilAntallAnsatte: Number(bruk.input.tilAntallAnsatte) || undefined,
