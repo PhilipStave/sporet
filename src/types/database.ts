@@ -95,6 +95,21 @@ export type DealRow = {
   company: string;
   /** Organisation number, when the customer came from the register. */
   org_nr: string | null;
+  /** Public company facts from Brønnøysundregistrene. Null for hand-added customers. */
+  naeringskode: string | null;
+  naering: string | null;
+  ansatte: number | null;
+  adresse: string | null;
+  postnummer: string | null;
+  poststed: string | null;
+  kommune: string | null;
+  stiftet: string | null;
+  mva_registrert: boolean | null;
+  nettside: string | null;
+  omsetning: number | null;
+  driftsresultat: number | null;
+  aarsresultat: number | null;
+  regnskapsaar: number | null;
   contact: string;
   contact_role: string;
   email: string;

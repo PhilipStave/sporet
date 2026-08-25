@@ -174,3 +174,60 @@ export async function fetchCompany(orgnr: string): Promise<LeadDetail | null> {
     return null;
   }
 }
+
+export type Regnskap = {
+  aar: number;
+  omsetning: number | null;
+  driftsresultat: number | null;
+  aarsresultat: number | null;
+};
+
+type RegnskapRad = {
+  regnskapsperiode?: { fraDato?: string; tilDato?: string };
+  resultatregnskapResultat?: {
+    aarsresultat?: number;
+    driftsresultat?: {
+      driftsinntekter?: { sumDriftsinntekter?: number };
+      driftsresultat?: number;
+    };
+  };
+};
+
+/**
+ * Latest filed accounts from Regnskapsregisteret. Public company figures, and
+ * the fastest way for a seller to judge whether a lead is worth the trip.
+ * Small companies and fresh registrations often have nothing filed — that is
+ * normal, and returns null rather than an error.
+ */
+export async function fetchRegnskap(orgnr: string): Promise<Regnskap | null> {
+  try {
+    const res = await fetch(
+      `https://data.brreg.no/regnskapsregisteret/regnskap/${encodeURIComponent(orgnr)}`,
+      { headers: { Accept: "application/json" }, next: { revalidate: 604800 } }
+    );
+    if (!res.ok) return null;
+    const rader = (await res.json()) as RegnskapRad[];
+    if (!Array.isArray(rader) || rader.length === 0) return null;
+
+    // The register may return several filings; take the most recent period.
+    const nyeste = rader
+      .filter((r) => r.regnskapsperiode?.tilDato)
+      .sort((a, b) =>
+        (b.regnskapsperiode!.tilDato ?? "").localeCompare(a.regnskapsperiode!.tilDato ?? "")
+      )[0];
+    if (!nyeste) return null;
+
+    const r = nyeste.resultatregnskapResultat;
+    const aar = Number((nyeste.regnskapsperiode?.tilDato ?? "").slice(0, 4));
+    if (!Number.isFinite(aar)) return null;
+
+    return {
+      aar,
+      omsetning: r?.driftsresultat?.driftsinntekter?.sumDriftsinntekter ?? null,
+      driftsresultat: r?.driftsresultat?.driftsresultat ?? null,
+      aarsresultat: r?.aarsresultat ?? null,
+    };
+  } catch {
+    return null;
+  }
+}

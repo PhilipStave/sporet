@@ -3,10 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useStore } from "@/store/Store";
 import { Icon } from "@/components/Icon";
-import type { Lead, LeadDetail } from "@/lib/brreg";
+import type { Lead, LeadDetail, Regnskap } from "@/lib/brreg";
 import type { Kontakt } from "@/lib/kontakt";
 
-type Detalj = LeadDetail & { kontakt: Kontakt };
+type Detalj = LeadDetail & { kontakt: Kontakt; regnskap: Regnskap | null };
 
 // Lead search, opened from the pipeline. Every company shown comes from
 // Enhetsregisteret; nothing here is generated.
@@ -28,29 +28,6 @@ const EKSEMPLER = [
   "betongelementer til boligbygg",
   "regnskapstjenester i Oslo",
 ];
-
-/** Everything the register knows, laid out for the customer's note field. */
-function tilNotat(d: Detalj) {
-  const linjer = [
-    `Org.nr. ${d.orgnr}`,
-    d.naering && `Bransje: ${d.naering} (${d.naeringskode})`,
-    d.ansatte != null && `Ansatte: ${d.ansatte}`,
-    [d.adresse, [d.postnummer, d.poststed].filter(Boolean).join(" ")]
-      .filter(Boolean)
-      .join(", "),
-    d.kommune && `Kommune: ${d.kommune}`,
-    d.stiftet && `Stiftet: ${d.stiftet}`,
-    d.mva && "Registrert i MVA-registeret",
-    d.konsern && "Del av konsern",
-    (d.aktivitet || d.formaal) && `\nFormål: ${(d.aktivitet || d.formaal).slice(0, 400)}`,
-    d.kontakt.domene && `Nettside: ${d.kontakt.domene}`,
-    `\nBedriftsdata fra Enhetsregisteret.` +
-      (d.kontakt.epost || d.kontakt.telefon
-        ? ` Kontaktinfo hentet fra ${d.kontakt.domene}.`
-        : ` Fant ingen fellesadresse på nett — fyll inn e-post og telefon selv.`),
-  ];
-  return linjer.filter(Boolean).join("\n");
-}
 
 type Utvalg = "alle" | "nye" | "kunder";
 
@@ -154,13 +131,25 @@ export function FinnKunderDialog({ onClose }: { onClose: () => void }) {
     const id = await createDeal({
       company: lead.navn,
       org_nr: lead.orgnr,
-      product: lead.naering,
       // Only ever a general company mailbox, never a named person.
       email: detalj?.kontakt.epost ?? "",
       phone: detalj?.kontakt.telefon ?? "",
-      notes: detalj
-        ? tilNotat(detalj)
-        : `Org.nr. ${lead.orgnr}\n${lead.naering}\n${lead.poststed}`,
+      naeringskode: lead.naeringskode || null,
+      naering: lead.naering || null,
+      ansatte: lead.ansatte,
+      adresse: detalj?.adresse || lead.adresse || null,
+      postnummer: detalj?.postnummer || null,
+      poststed: lead.poststed || null,
+      kommune: lead.kommune || null,
+      stiftet: detalj?.stiftet ?? null,
+      mva_registrert: lead.mva,
+      nettside: detalj?.kontakt.domene ?? null,
+      omsetning: detalj?.regnskap?.omsetning ?? null,
+      driftsresultat: detalj?.regnskap?.driftsresultat ?? null,
+      aarsresultat: detalj?.regnskap?.aarsresultat ?? null,
+      regnskapsaar: detalj?.regnskap?.aar ?? null,
+      // Left empty on purpose — the note field belongs to the seller.
+      notes: "",
       tags: ["Fra kundesøk"],
     });
     setJobber(null);

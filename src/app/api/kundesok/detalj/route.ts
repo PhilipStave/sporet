@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { fetchCompany } from "@/lib/brreg";
+import { fetchCompany, fetchRegnskap } from "@/lib/brreg";
 import { finnKontakt } from "@/lib/kontakt";
 
 // Full record for the companies a user actually picks, so imported customers
@@ -27,13 +27,17 @@ export async function POST(req: Request) {
 
   const detaljer = (await Promise.all(orgnr.map((o) => fetchCompany(o)))).filter(Boolean);
 
-  // Public contact details from the company website, where we can verify it.
-  const medKontakt = await Promise.all(
-    detaljer.map(async (d) => ({
-      ...d!,
-      kontakt: await finnKontakt(d!.navn, d!.orgnr),
-    }))
+  // Contact details from the company's own site, plus the public accounts.
+  // Both are best-effort: a missing website or unfiled accounts is normal.
+  const berikede = await Promise.all(
+    detaljer.map(async (d) => {
+      const [kontakt, regnskap] = await Promise.all([
+        finnKontakt(d!.navn, d!.orgnr),
+        fetchRegnskap(d!.orgnr),
+      ]);
+      return { ...d!, kontakt, regnskap };
+    })
   );
 
-  return NextResponse.json({ detaljer: medKontakt });
+  return NextResponse.json({ detaljer: berikede });
 }

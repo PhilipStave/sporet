@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Firmadata } from "./Firmadata";
 import { useStore } from "@/store/Store";
 import { Icon } from "@/components/Icon";
 import { Autocomplete } from "@/components/Autocomplete";
@@ -208,6 +209,8 @@ function DrawerInner({ deal }: { deal: Deal }) {
           onBlur={() => updateDeal(deal.id, { product: f.product })}
           style={{ marginTop: 8 }}
         />
+
+        <Firmadata deal={deal} />
 
         {/* Value + margin */}
         <div style={{ display: "flex", gap: 8, alignItems: "flex-end", marginTop: 10 }}>
