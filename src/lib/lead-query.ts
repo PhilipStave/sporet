@@ -388,6 +388,27 @@ export function matchLocally(tekst: string): Interpretation | null {
   };
 }
 
+
+/**
+ * Rules that apply to every search, for every customer.
+ *
+ * This is guidance, not enforcement. Anything that MUST hold is checked in code
+ * after the model answers — codes and municipalities are validated against the
+ * real lists, and no company name ever comes from the model. Put judgement calls
+ * here; put guarantees in the code.
+ *
+ * Safe to edit without touching anything else.
+ */
+const REGLER = [
+  "Du hjelper norske B2B-selgere å finne bedrifter de kan selge til.",
+  "Velg alltid kjøperne, aldri andre som selger det samme. Den som selger gravemaskiner skal treffe entreprenører, ikke maskinforhandlere.",
+  "Sier brukeren uttrykkelig hvem kunden er, følger du det — også når produktet normalt selges til noen andre.",
+  "Er teksten et merke- eller modellnavn, finn først ut hva slags produkt det er, og deretter hvilken bransje som kjøper det.",
+  "Velg heller tre presise bransjekoder enn fire brede. Treffsikkerhet betyr mer enn antall.",
+  "Nevner brukeren ikke sted, la kommunelisten stå tom. Ikke gjett geografi.",
+  "Begrunnelsen skal være én kort setning på norsk, uten markedsføringsspråk.",
+];
+
 /**
  * Which model interprets the query. Haiku is the right default: picking codes
  * from a fixed list is a narrow task, and it is roughly three times cheaper
@@ -491,6 +512,7 @@ async function interpretWithAi(tekst: string): Promise<Interpretation | null> {
       body: JSON.stringify({
         model: modell(),
         max_tokens: 1024,
+        system: REGLER.join(String.fromCharCode(10)),
         tools: [verktoy],
         tool_choice: { type: "tool", name: "sett_sokefilter" },
         messages: [
