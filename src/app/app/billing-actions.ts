@@ -29,6 +29,20 @@ async function requireAdminOrg() {
   return { me, org, admin };
 }
 
+/** True only if the id points at a live, non-deleted customer in this account. */
+async function customerExists(
+  s: ReturnType<typeof stripe>,
+  id: string | null | undefined
+): Promise<boolean> {
+  if (!id) return false;
+  try {
+    const c = await s.customers.retrieve(id);
+    return !c.deleted;
+  } catch {
+    return false;
+  }
+}
+
 /** Starts a Stripe Checkout session for the chosen plan and redirects to it. */
 export async function startCheckout(planId: string): Promise<{ error?: string }> {
   if (!stripeConfigured())
@@ -44,7 +58,14 @@ export async function startCheckout(planId: string): Promise<{ error?: string }>
     const s = stripe();
 
     // Reuse or create the Stripe customer for this organisation.
-    let customerId = org.stripe_customer_id;
+    //
+    // The stored id is verified rather than trusted: an id created against a
+    // different Stripe account (sandbox, or a migrated account) stays in the
+    // row, and Stripe answers "No such customer" for it. Re-creating is safe —
+    // the row then holds an id that actually exists.
+    let customerId = (await customerExists(s, org.stripe_customer_id))
+      ? org.stripe_customer_id
+      : null;
     if (!customerId) {
       const customer = await s.customers.create({
         email: me.email || undefined,
@@ -106,10 +127,11 @@ export async function openPortal(): Promise<{ error?: string }> {
   let url: string | null = null;
   try {
     const { org } = await requireAdminOrg();
-    if (!org.stripe_customer_id)
+    const customerId = org.stripe_customer_id;
+    if (!customerId || !(await customerExists(stripe(), customerId)))
       return { error: "Ingen betalingskonto ennå — velg en pakke først." };
     const session = await stripe().billingPortal.sessions.create({
-      customer: org.stripe_customer_id,
+      customer: customerId,
       return_url: `${SITE_URL}/app/innstillinger`,
       locale: "nb",
     });
