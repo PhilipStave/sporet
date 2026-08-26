@@ -29,6 +29,12 @@ const EKSEMPLER = [
   "regnskapstjenester i Oslo",
 ];
 
+function kr(n: number) {
+  if (Math.abs(n) >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1).replace(".", ",")} mrd`;
+  if (Math.abs(n) >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace(".", ",")} mill`;
+  return n.toLocaleString("nb-NO");
+}
+
 type Utvalg = "alle" | "nye" | "kunder";
 
 const UTVALG: { id: Utvalg; label: string }[] = [
@@ -54,6 +60,8 @@ export function FinnKunderDialog({ onClose }: { onClose: () => void }) {
   const [lagtInn, setLagtInn] = useState<Set<string>>(new Set());
   const [jobber, setJobber] = useState<string | null>(null);
   const [vis, setVis] = useState<Utvalg>("alle");
+  const [regnskap, setRegnskap] = useState<Record<string, Regnskap>>({});
+  const [bulk, setBulk] = useState<{ ferdig: number; av: number } | null>(null);
 
   // Org number is exact; the name key is the fallback for customers added by
   // hand, who never had one.
@@ -84,6 +92,11 @@ export function FinnKunderDialog({ onClose }: { onClose: () => void }) {
     // erKunde reads eksisterende, which is itself memoised on deals.
   }, [svar, vis, eksisterende]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const nye = useMemo(
+    () => synlige.filter((l) => !erKunde(l) && !lagtInn.has(l.orgnr)).length,
+    [synlige, eksisterende, lagtInn] // eslint-disable-line react-hooks/exhaustive-deps
+  );
+
   const antallKunder = useMemo(
     () => (svar?.leads ?? []).filter((l) => erKunde(l)).length,
     [svar, eksisterende] // eslint-disable-line react-hooks/exhaustive-deps
@@ -103,13 +116,93 @@ export function FinnKunderDialog({ onClose }: { onClose: () => void }) {
         body: JSON.stringify({ tekst: spørring }),
       });
       const json = await res.json();
-      if (!res.ok) setFeil(json?.error ?? "Søket feilet");
-      else setSvar(json as Svar);
+      if (!res.ok) {
+        setFeil(json?.error ?? "Søket feilet");
+      } else {
+        const s = json as Svar;
+        setSvar(s);
+        hentRegnskap(s.leads.map((l) => l.orgnr));
+      }
     } catch {
       setFeil("Fikk ikke kontakt med søket. Prøv igjen.");
     } finally {
       setLaster(false);
     }
+  };
+
+  /** Turnover for the whole page, so size is visible before anyone is picked. */
+  const hentRegnskap = async (orgnr: string[]) => {
+    setRegnskap({});
+    if (orgnr.length === 0) return;
+    try {
+      const res = await fetch("/api/kundesok/regnskap", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ orgnr }),
+      });
+      if (res.ok) setRegnskap((await res.json())?.regnskap ?? {});
+    } catch {
+      // Turnover is a nice-to-have; the list works without it.
+    }
+  };
+
+  /** Everything we know about one company, ready for createDeal. */
+  const somKunde = (lead: Lead, detalj: Detalj | null) => ({
+    company: lead.navn,
+    org_nr: lead.orgnr,
+    // Only ever a general company mailbox, never a named person.
+    email: detalj?.kontakt.epost ?? "",
+    phone: detalj?.kontakt.telefon ?? "",
+    naeringskode: lead.naeringskode || null,
+    naering: lead.naering || null,
+    ansatte: lead.ansatte,
+    adresse: detalj?.adresse || lead.adresse || null,
+    postnummer: detalj?.postnummer || null,
+    poststed: lead.poststed || null,
+    kommune: lead.kommune || null,
+    stiftet: detalj?.stiftet ?? null,
+    mva_registrert: lead.mva,
+    nettside: detalj?.kontakt.domene ?? null,
+    omsetning: detalj?.regnskap?.omsetning ?? regnskap[lead.orgnr]?.omsetning ?? null,
+    driftsresultat: detalj?.regnskap?.driftsresultat ?? regnskap[lead.orgnr]?.driftsresultat ?? null,
+    aarsresultat: detalj?.regnskap?.aarsresultat ?? regnskap[lead.orgnr]?.aarsresultat ?? null,
+    regnskapsaar: detalj?.regnskap?.aar ?? regnskap[lead.orgnr]?.aar ?? null,
+    // Left empty on purpose — the note field belongs to the seller.
+    notes: "",
+    tags: ["Fra kundesøk"],
+  });
+
+  /**
+   * Import every hit that is not already a customer, in one go. The detail
+   * lookup visits each company's website, so this takes a while — hence the
+   * running count rather than a spinner.
+   */
+  const leggTilAlle = async () => {
+    if (!canWrite || bulk) return;
+    const kandidater = synlige.filter((l) => !erKunde(l) && !lagtInn.has(l.orgnr));
+    if (kandidater.length === 0) return;
+
+    setBulk({ ferdig: 0, av: kandidater.length });
+
+    let detaljer: Detalj[] = [];
+    try {
+      const res = await fetch("/api/kundesok/detalj", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ orgnr: kandidater.map((l) => l.orgnr) }),
+      });
+      if (res.ok) detaljer = (await res.json())?.detaljer ?? [];
+    } catch {
+      // Fall back to what the search already gave us.
+    }
+
+    for (const lead of kandidater) {
+      const d = detaljer.find((x) => x.orgnr === lead.orgnr) ?? null;
+      const id = await createDeal(somKunde(lead, d));
+      if (id) setLagtInn((s) => new Set(s).add(lead.orgnr));
+      setBulk((b) => (b ? { ...b, ferdig: b.ferdig + 1 } : b));
+    }
+    setBulk(null);
   };
 
   /** One click = one customer in the pipeline, with the full record attached. */
@@ -128,30 +221,7 @@ export function FinnKunderDialog({ onClose }: { onClose: () => void }) {
       // Fall back to what the search already gave us.
     }
 
-    const id = await createDeal({
-      company: lead.navn,
-      org_nr: lead.orgnr,
-      // Only ever a general company mailbox, never a named person.
-      email: detalj?.kontakt.epost ?? "",
-      phone: detalj?.kontakt.telefon ?? "",
-      naeringskode: lead.naeringskode || null,
-      naering: lead.naering || null,
-      ansatte: lead.ansatte,
-      adresse: detalj?.adresse || lead.adresse || null,
-      postnummer: detalj?.postnummer || null,
-      poststed: lead.poststed || null,
-      kommune: lead.kommune || null,
-      stiftet: detalj?.stiftet ?? null,
-      mva_registrert: lead.mva,
-      nettside: detalj?.kontakt.domene ?? null,
-      omsetning: detalj?.regnskap?.omsetning ?? null,
-      driftsresultat: detalj?.regnskap?.driftsresultat ?? null,
-      aarsresultat: detalj?.regnskap?.aarsresultat ?? null,
-      regnskapsaar: detalj?.regnskap?.aar ?? null,
-      // Left empty on purpose — the note field belongs to the seller.
-      notes: "",
-      tags: ["Fra kundesøk"],
-    });
+    const id = await createDeal(somKunde(lead, detalj));
     setJobber(null);
     if (id) setLagtInn((s) => new Set(s).add(lead.orgnr));
   };
@@ -320,11 +390,35 @@ export function FinnKunderDialog({ onClose }: { onClose: () => void }) {
                 </p>
               )}
 
-              {antallKunder > 0 && (
-                <p style={{ fontSize: 11.5, color: "var(--muted)", margin: "-6px 0 10px" }}>
-                  {antallKunder} av {svar.leads.length} er allerede kunder hos dere.
-                </p>
-              )}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 12,
+                  flexWrap: "wrap",
+                  margin: "-6px 0 10px",
+                }}
+              >
+                <span style={{ fontSize: 11.5, color: "var(--muted)" }}>
+                  {antallKunder > 0
+                    ? `${antallKunder} av ${svar.leads.length} er allerede kunder hos dere.`
+                    : ""}
+                </span>
+                {nye > 0 && (
+                  <button
+                    type="button"
+                    className="btn"
+                    onClick={leggTilAlle}
+                    disabled={!canWrite || bulk !== null}
+                    style={{ padding: "6px 13px", fontSize: 12.5 }}
+                  >
+                    {bulk
+                      ? `Legger til ${bulk.ferdig} av ${bulk.av} …`
+                      : `Legg til alle ${nye}`}
+                  </button>
+                )}
+              </div>
 
               {synlige.length === 0 && (
                 <p style={{ fontSize: 13.5, color: "var(--muted)" }}>
@@ -388,6 +482,11 @@ export function FinnKunderDialog({ onClose }: { onClose: () => void }) {
                           <span>Org.nr. {l.orgnr}</span>
                           {l.ansatte != null && <span>{l.ansatte} ansatte</span>}
                           {l.poststed && <span>{l.poststed}</span>}
+                          {regnskap[l.orgnr]?.omsetning != null && (
+                            <span style={{ fontWeight: 600, color: "var(--text)" }}>
+                              {kr(regnskap[l.orgnr].omsetning!)} kr
+                            </span>
+                          )}
                         </div>
                       </div>
 

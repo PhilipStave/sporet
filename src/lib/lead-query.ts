@@ -231,6 +231,12 @@ const KUNDETYPER: { ord: string[]; koder: string[]; hva: string; former?: string
     koder: ["70.200", "71.110", "71.129"], hva: "rådgivere og ingeniører" },
   { ord: ["frisør", "skjønnhetssalong", "salong"],
     koder: ["96.210", "96.220"], hva: "frisører og skjønnhetspleie" },
+  // Public sector as a named customer. Must live here too, not only in
+  // KJOPERE — otherwise "gravemaskiner til kommuner" lets the product word win
+  // and returns contractors, which is the opposite of what was asked for.
+  { ord: ["kommune", "fylke", "offentlig sektor", "det offentlige", "offentlige etater"],
+    koder: ["84.110", "84.120", "84.130"], hva: "kommuner og offentlig forvaltning",
+    former: ["KOMM", "FYLK"] },
 ];
 
 /** Direct hit on a named customer type. */
@@ -346,8 +352,11 @@ export function matchLocally(tekst: string): Interpretation | null {
   const sted = finnSteder(tekst);
   const ansatte = finnAnsatte(tekst);
 
-  // Who buys this? Beats word-matching, which would find competitors instead.
-  const kjoper = matchKjopere(tekst) ?? matchKundetype(tekst);
+  // Naming the customer wins over the product's default buyers: "gravemaskiner
+  // til kommuner" means kommuner, even though excavators normally go to
+  // contractors. Only when no customer is named do we fall back to who usually
+  // buys the product.
+  const kjoper = matchKundetype(tekst) ?? matchKjopere(tekst);
   const koder = kjoper
     ? kjoper.koder.map((k) => KODER.find((x) => x.k === k)).filter(Boolean as unknown as (v: Kode | undefined) => v is Kode)
     : matchKoder(tekst);
