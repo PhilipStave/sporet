@@ -2,7 +2,7 @@
 // have a lawyer with IT/privacy expertise review before large-scale sales.
 // Update LEGAL_VERSION when the terms change materially — users re-accept on next login.
 
-export const LEGAL_VERSION = "2026-08-25";
+export const LEGAL_VERSION = "2026-08-26";
 
 // Stave Software AS, registered in Foretaksregisteret 25 August 2026.
 export const COMPANY_LEGAL_NAME = "Stave Software AS";
@@ -54,6 +54,7 @@ export const TERMS: LegalSection[] = [
       "4.1 Kundedata. Kunden er ansvarlig for alt innhold og alle data som legges inn i Tjenesten («Kundedata»), og for at bruken skjer i samsvar med gjeldende rett. Kunden garanterer å ha rettslig grunnlag for å behandle personopplysninger som legges inn (f.eks. om kontaktpersoner hos Kundens kunder), og at Kunden oppfyller sin informasjonsplikt overfor de registrerte. Kunden er behandlingsansvarlig for Kundedata; Leverandøren er databehandler etter punkt 7.",
       "4.2 Kontoansvar. Kunden skal holde innloggingsopplysninger, bedriftskode og invitasjonslenker konfidensielle, og er ansvarlig for all aktivitet via Kundens brukerkontoer. Kunden skal straks varsle Leverandøren ved mistanke om uautorisert tilgang. Brukerkontoer er personlige og skal ikke deles. Kunden skal holde administrators kontaktopplysninger oppdatert i Innstillinger; varsler fra Leverandøren sendes dit.",
       "4.3 Forbudte handlinger. Kunden skal ikke (a) forsøke å omgå sikkerhetsmekanismer, teste sårbarheter uten skriftlig samtykke, eller få tilgang til andre kunders data, (b) belaste Tjenesten unormalt (f.eks. automatiserte masseoppslag), (c) videreselge, leie ut eller tilby Tjenesten til tredjeparter, (d) kopiere, dekompilere eller lage avledede verk av Tjenesten, eller (e) bruke Tjenesten til ulovlig eller krenkende formål. Brudd gir Leverandøren rett til umiddelbar stenging.",
+      "4.5 Kundesøk. Kundesøket henter foretaksopplysninger fra Enhetsregisteret og Regnskapsregisteret hos Brønnøysundregistrene, og kontaktopplysninger fra foretakenes egne offentlige nettsider. Fritekstsøket tolkes av en språkmodell, men bedriftene som vises kommer alltid fra registrene. Leverandøren garanterer ikke at treffene er fullstendige, oppdaterte eller relevante for Kundens formål — registrenes opplysninger er oppgitt av foretakene selv. Resultatene er forslag, ikke anbefalinger. Kunden er ansvarlig for egen kontakt med foretakene som finnes, herunder markedsføringsloven og personvernregelverket.",
       "4.4 Sikkerhetskopi. Kunden er selv ansvarlig for å ta sikkerhetskopi av Kundedata. Tjenesten tilbyr eksport til CSV for dette formålet, og Leverandøren anbefaler regelmessig eksport av kritiske data.",
     ],
   },
@@ -80,7 +81,7 @@ export const TERMS: LegalSection[] = [
     paragraphs: [
       "7.1 Roller og instruks. Leverandøren behandler Kundedata kun etter Kundens dokumenterte instruks, som utgjøres av denne Avtalen og Kundens bruk av Tjenesten. Dette punktet og Personvernerklæringen (altiv.no/personvern) utgjør sammen databehandleravtalen etter personvernforordningen artikkel 28. På forespørsel utsteder Leverandøren en signert databehandleravtale på eget dokument.",
       "7.2 Leverandørens plikter. Leverandøren skal (a) sikre at personer med tilgang er underlagt taushetsplikt, (b) iverksette egnede tekniske og organisatoriske sikkerhetstiltak, (c) bistå Kunden med å ivareta de registrertes rettigheter i den grad det er rimelig, (d) varsle Kunden som beskrevet i 7.4, (e) slette eller tilbakelevere Kundedata ved Avtalens opphør, og (f) gjøre tilgjengelig informasjon som er nødvendig for å påvise etterlevelse.",
-      "7.3 Underdatabehandlere. Kunden godkjenner at Leverandøren bruker følgende underdatabehandlere: Supabase (database og autentisering), Vercel (hosting) og Stripe (betaling). Leverandøren skal ha skriftlige databehandleravtaler med alle underdatabehandlere, sikre at overføring utenfor EØS kun skjer med gyldig overføringsgrunnlag, varsle Kunden minst 30 dager før planlagt endring eller tillegg av underdatabehandler, og gi Kunden rett til å protestere på saklig grunnlag.",
+      "7.3 Underdatabehandlere. Kunden godkjenner at Leverandøren bruker følgende underdatabehandlere: Supabase (database og autentisering), Vercel (hosting), Stripe (betaling), Resend (utsending og mottak av e-post, herunder e-postlogging til kundekortet) og Anthropic (språkmodell som tolker fritekstsøk i kundesøket). Leverandøren skal ha skriftlige databehandleravtaler med alle underdatabehandlere, sikre at overføring utenfor EØS kun skjer med gyldig overføringsgrunnlag, varsle Kunden minst 30 dager før planlagt endring eller tillegg av underdatabehandler, og gi Kunden rett til å protestere på saklig grunnlag.",
       "7.4 Varsling ved sikkerhetsbrudd. Leverandøren varsler Kunden uten ugrunnet opphold, og senest 48 timer etter at Leverandøren ble kjent med et brudd på personopplysningssikkerheten som berører Kundedata, med den informasjon Leverandøren har på varslingstidspunktet, slik at Kunden kan overholde sin egen 72-timersfrist overfor Datatilsynet. Varsel sendes til administrators registrerte e-postadresse. Kunden er selv ansvarlig for eventuell melding til Datatilsynet og de registrerte, med mindre annet er avtalt skriftlig.",
       "7.5 Lagringstid og sletting. Konto- og kundedata lagres så lenge Kunden har en aktiv bedriftskonto. Ved sletting av bedriftskonto fra Innstillinger slettes alle tilhørende data permanent. Ved oppsigelse eller opphør slettes Kundedata etter 30 dager, med mindre Kunden ber om tidligere sletting. Fakturagrunnlag oppbevares i 5 år etter bokføringsloven. Øvrig lovpålagt oppbevaring ivaretas.",
     ],
@@ -125,6 +126,7 @@ export const PRIVACY: LegalSection[] = [
       "Kundedata (på vegne av Kunden): selskapsnavn, kontaktpersoners navn, rolle, e-post og telefon, notater, verdier, steg i salgsprosessen, tags og aktivitetslogg — det Kunden selv velger å legge inn.",
       "Betalingsopplysninger behandles av Stripe. Vi mottar kun kunde-ID, abonnementsstatus og fakturagrunnlag (firmanavn, adresse, evt. mva-nummer) — aldri kortnummer.",
       "Tekniske data: IP-adresse, nettlesertype og tidspunkt i serverlogger, for drift, feilsøking og sikkerhet. Slettes automatisk etter maksimalt 90 dager.",
+      "Kundesøk: når Kunden bruker kundesøket, sendes søketeksten til Anthropic for å tolkes til et registersøk. Bedriftsopplysningene som vises og lagres — foretaksnavn, organisasjonsnummer, bransje, ansatte, adresse, stiftelsesdato, MVA-status og regnskapstall — hentes fra Enhetsregisteret og Regnskapsregisteret hos Brønnøysundregistrene, som er åpne offentlige registre. Kontaktopplysninger hentes fra foretakets egen offentlige nettside, og kun fellesadresser som post@ og firmapost@. Vi henter og lagrer aldri navn, e-post eller telefonnummer til navngitte enkeltpersoner fra disse kildene.",
     ],
   },
   {
@@ -133,13 +135,14 @@ export const PRIVACY: LegalSection[] = [
       "Levere og drifte Tjenesten, herunder innlogging, brukeradministrasjon og support — grunnlag: avtale (GDPR art. 6 nr. 1 b).",
       "Fakturering, regnskap og bokføring — grunnlag: rettslig forpliktelse (art. 6 nr. 1 c).",
       "Sikkerhet, misbruksforebygging, feilsøking og forbedring av Tjenesten — grunnlag: berettiget interesse (art. 6 nr. 1 f); vår interesse i en sikker og stabil tjeneste veier tungt, og behandlingen er begrenset til det nødvendige.",
+      "Kundesøk mot offentlige registre, for at Kunden skal finne relevante bedrifter å kontakte — grunnlag: berettiget interesse (art. 6 nr. 1 f). Behandlingen gjelder foretaksopplysninger fra åpne registre og er avgrenset til aksjeselskaper og offentlige virksomheter, slik at enkeltpersonforetak — der foretaksnavnet er et personnavn — holdes utenfor.",
       "Vi bruker ikke opplysningene til markedsføring uten samtykke, deler dem ikke med tredjeparter for deres formål, og selger dem aldri.",
     ],
   },
   {
     title: "4. Underleverandører og overføring",
     paragraphs: [
-      "Vi bruker Supabase (database og autentisering), Vercel (hosting og drift) og Stripe (betaling). Alle er bundet av skriftlige databehandleravtaler. Endring eller tillegg av underdatabehandlere varsles kundene minst 30 dager i forveien.",
+      "Vi bruker Supabase (database og autentisering), Vercel (hosting og drift), Stripe (betaling), Resend (e-post inn og ut, herunder e-postlogging) og Anthropic (språkmodellen som tolker fritekstsøk i kundesøket). Alle er bundet av skriftlige databehandleravtaler. Endring eller tillegg av underdatabehandlere varsles kundene minst 30 dager i forveien.",
       "Der data behandles utenfor EØS, sikres overføringen med EU-kommisjonens standardpersonvernbestemmelser (SCC) eller annet gyldig overføringsgrunnlag. Dokumentasjon på overføringsgrunnlag gjøres tilgjengelig på forespørsel.",
     ],
   },
