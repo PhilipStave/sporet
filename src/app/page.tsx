@@ -961,7 +961,14 @@ export default function LandingPage() {
             <a href="mailto:post@altiv.no" style={{ color: "var(--accent)", fontWeight: 600 }}>post@altiv.no</a>
           </span>
           <span style={{ fontSize: 13, color: "var(--muted)", opacity: 0.85 }}>
-            Altiv leveres av {COMPANY_LEGAL_NAME}, org.nr. {COMPANY_ORG_NR} · {COMPANY_ADDRESS}
+            Altiv leveres av{" "}
+            <a
+              href="https://stavesoftware.no"
+              style={{ color: "var(--muted)", textDecoration: "underline" }}
+            >
+              {COMPANY_LEGAL_NAME}
+            </a>
+            , org.nr. {COMPANY_ORG_NR} · {COMPANY_ADDRESS}
           </span>
         </div>
       </footer>

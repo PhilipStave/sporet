@@ -253,7 +253,10 @@ export function ArticleLayout({
           <Link href="/vilkar" style={{ color: "var(--muted)" }}>Vilkår</Link>
           <Link href="/personvern" style={{ color: "var(--muted)" }}>Personvern</Link>
           <span style={{ color: "var(--muted)", opacity: 0.8 }}>
-            {COMPANY_LEGAL_NAME} · org.nr. {COMPANY_ORG_NR}
+            <a href="https://stavesoftware.no" style={{ color: "var(--muted)" }}>
+              {COMPANY_LEGAL_NAME}
+            </a>{" "}
+            · org.nr. {COMPANY_ORG_NR}
           </span>
           <a href="mailto:post@altiv.no" style={{ color: "var(--muted)", marginLeft: "auto" }}>post@altiv.no</a>
         </div>
