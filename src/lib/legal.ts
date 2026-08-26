@@ -2,12 +2,12 @@
 // have a lawyer with IT/privacy expertise review before large-scale sales.
 // Update LEGAL_VERSION when the terms change materially — users re-accept on next login.
 
-export const LEGAL_VERSION = "2026-08-19";
+export const LEGAL_VERSION = "2026-08-25";
 
-// TODO: fill in when the company is registered (AS recommended).
-export const COMPANY_LEGAL_NAME = "Altiv"; // e.g. "Altiv AS"
-export const COMPANY_ORG_NR = ""; // e.g. "123 456 789"
-export const COMPANY_ADDRESS = ""; // e.g. "Storgata 1, 0155 Oslo"
+// Stave Software AS, registered in Foretaksregisteret 25 August 2026.
+export const COMPANY_LEGAL_NAME = "Stave Software AS";
+export const COMPANY_ORG_NR = "938 341 788";
+export const COMPANY_ADDRESS = "Holtegata 12A, 0259 Oslo";
 export const CONTACT_EMAIL = "post@altiv.no";
 
 const companyLine = () =>

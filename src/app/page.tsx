@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { SITE_NAME, SITE_URL, SITE_DESCRIPTION, PRICING, FAQ } from "@/lib/site";
+import { COMPANY_LEGAL_NAME, COMPANY_ORG_NR, COMPANY_ADDRESS } from "@/lib/legal";
 import {
   LandingProvider,
   DetailCard,
@@ -76,6 +77,20 @@ function jsonLd() {
     name: SITE_NAME,
     url: SITE_URL,
     logo: `${SITE_URL}/icons/icon-512.png`,
+    // The legal entity behind the brand — helps Google tie altiv.no to the
+    // company registration rather than treating it as an unknown site.
+    legalName: COMPANY_LEGAL_NAME,
+    // Organisation number only. No vatID until the company is actually
+    // registered for VAT — claiming one it does not hold would be wrong.
+    taxID: COMPANY_ORG_NR.replace(/[^0-9]/g, ""),
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: "Holtegata 12A",
+      postalCode: "0259",
+      addressLocality: "Oslo",
+      addressCountry: "NO",
+    },
+    email: "post@altiv.no",
   };
   const website = {
     "@context": "https://schema.org",
@@ -933,6 +948,9 @@ export default function LandingPage() {
           <span style={{ fontSize: 14, color: "var(--muted)" }}>
             Salgsoppfølging for team som selger til bedrifter og det offentlige. Spørsmål?{" "}
             <a href="mailto:post@altiv.no" style={{ color: "var(--accent)", fontWeight: 600 }}>post@altiv.no</a>
+          </span>
+          <span style={{ fontSize: 13, color: "var(--muted)", opacity: 0.85 }}>
+            Altiv leveres av {COMPANY_LEGAL_NAME}, org.nr. {COMPANY_ORG_NR} · {COMPANY_ADDRESS}
           </span>
         </div>
       </footer>

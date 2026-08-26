@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SITE_URL } from "@/lib/site";
+import { COMPANY_LEGAL_NAME, COMPANY_ORG_NR } from "@/lib/legal";
 
 // Shared shell for content pages (/hvorfor-altiv, /blogg/*): header, article JSON-LD, CTA, footer.
 
@@ -251,6 +252,9 @@ export function ArticleLayout({
           <Link href="/blogg" style={{ color: "var(--muted)" }}>Blogg</Link>
           <Link href="/vilkar" style={{ color: "var(--muted)" }}>Vilkår</Link>
           <Link href="/personvern" style={{ color: "var(--muted)" }}>Personvern</Link>
+          <span style={{ color: "var(--muted)", opacity: 0.8 }}>
+            {COMPANY_LEGAL_NAME} · org.nr. {COMPANY_ORG_NR}
+          </span>
           <a href="mailto:post@altiv.no" style={{ color: "var(--muted)", marginLeft: "auto" }}>post@altiv.no</a>
         </div>
       </footer>
