@@ -9,6 +9,19 @@ export interface DetailBlock {
 }
 
 export const FEATURE_DETAILS: Record<string, DetailBlock> = {
+  kundesok: {
+    title: "Finn kunder du ikke visste om",
+    lead: "Skriv hva du selger og til hvem. Altiv finner ekte norske bedrifter som passer, og legger dem rett i pipelinen med firmadata, kontaktinfo og regnskapstall.",
+    bullets: [
+      "«Feiemaskiner til kommuner i Bergens-området» gir deg kommunene og veientreprenørene som faktisk kjøper slikt — ikke konkurrentene dine",
+      "Alle bedrifter kommer fra Enhetsregisteret hos Brønnøysundregistrene. Ingen navn eller organisasjonsnumre er generert",
+      "Hvert treff viser bransje, antall ansatte, sted og omsetning, så du ser hvem som er verdt en telefon før du velger",
+      "Ett klikk legger bedriften i pipelinen med org.nr., adresse, stiftelsesdato, MVA-status, nettside og regnskapstall utfylt",
+      "E-post og telefon hentes fra bedriftens egen nettside — kun fellesadresser som post@ og firmapost@, aldri navngitte personer",
+      "Bedrifter du allerede har som kunder merkes automatisk, så du ikke legger dem inn to ganger",
+      "Konkurs og selskaper under avvikling filtreres bort",
+    ],
+  },
   kontakt: {
     title: "Hver samtale logget",
     lead: "Aldri mer «hvem snakket sist med dem, og hva ble sagt?». Hver kontakt ligger på kunden — med dato, kanal og hvem som tok den.",

@@ -14,6 +14,14 @@ import {
   planDetail,
 } from "@/lib/landingContent";
 
+/**
+ * The lead search is written and ready, but hidden until it is switched on for
+ * customers. Marketing a feature a trial user cannot find is a promise we do
+ * not keep — set this to true the day the AI key is in Vercel and the
+ * finnkunder flag is on for new orgs.
+ */
+const VIS_KUNDESOK = false;
+
 export const metadata: Metadata = {
   title: "Altiv — CRM for salgsoppfølging | Norsk salgsverktøy for B2B",
   description:
@@ -453,6 +461,9 @@ export default function LandingPage() {
             { id: "tall", kicker: "Tall", title: "Omsetning og margin", text: "Følg solgt-for per uke, måned og år — med margin i prosent og kroner." },
             { id: "epost", kicker: "E-post", title: "E-post logges av seg selv", text: "Sett bedriftens logg-adresse på BCC — e-posten og vedleggene havner på riktig kunde." },
             { id: "kalender", kicker: "Kalender og filer", title: "I din egen kalender", text: "Oppfølginger i Outlook, Google eller iPhone. Dokumenter lagret på kunden." },
+            ...(VIS_KUNDESOK
+              ? [{ id: "kundesok", kicker: "Kundesøk", title: "Finn kunder du ikke visste om", text: "Skriv hva du selger og til hvem. Ekte bedrifter fra Brønnøysund, rett i pipelinen." }]
+              : []),
           ].map((c) => (
             <DetailCard
               key={c.kicker}
