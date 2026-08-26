@@ -107,20 +107,6 @@ export default function InnstillingerPage() {
   };
 
   // ---- company / admin ops ----
-  const saveCompany = async () => {
-    setBusy(true);
-    await supabase.from("organizations").update({ name: companyName }).eq("id", org.id);
-    setBusy(false);
-    flash("Bedriftsnavn lagret.");
-    router.refresh();
-  };
-
-  const saveFeatures = async (next: Record<FeatureKey, boolean>) => {
-    setFeatures(next);
-    await supabase.from("organizations").update({ features: next }).eq("id", org.id);
-    router.refresh();
-  };
-
   const addDept = async () => {
     const name = newDept.trim();
     if (!name) return;
@@ -128,10 +114,43 @@ export default function InnstillingerPage() {
     await supabase.from("departments").insert({ org_id: org.id, name });
     router.refresh();
   };
-  const renameDept = async (id: string, name: string) => {
-    await supabase.from("departments").update({ name }).eq("id", id);
+  // Department names are edited locally and written on save, like the rest.
+  const [deptNavn, setDeptNavn] = useState<Record<string, string>>({});
+  const deptNavnet = (id: string, fallback: string) => deptNavn[id] ?? fallback;
+
+  const navnEndret = companyName.trim() !== org.name;
+  const funksjonerEndret = FEATURE_ORDER.some(
+    (k) => features[k] !== (org.features[k] !== false)
+  );
+  const avdelingerEndret = departments.some(
+    (d) => deptNavn[d.id] !== undefined && deptNavn[d.id].trim() !== d.name
+  );
+  const harEndringer = navnEndret || funksjonerEndret || avdelingerEndret;
+
+  /** One save for everything on the page that is a field rather than an action. */
+  const lagreAlt = async () => {
+    setBusy(true);
+    if (navnEndret) {
+      await supabase
+        .from("organizations")
+        .update({ name: companyName.trim() })
+        .eq("id", org.id);
+    }
+    if (funksjonerEndret) {
+      await supabase.from("organizations").update({ features }).eq("id", org.id);
+    }
+    for (const d of departments) {
+      const nytt = deptNavn[d.id]?.trim();
+      if (nytt && nytt !== d.name) {
+        await supabase.from("departments").update({ name: nytt }).eq("id", d.id);
+      }
+    }
+    setDeptNavn({});
+    setBusy(false);
+    flash("Endringene er lagret.");
     router.refresh();
   };
+
   const slettTimere = useRef(new Map<string, ReturnType<typeof setTimeout>>());
   const [slettede, setSlettede] = useState<string[]>([]);
   const [angre, setAngre] = useState<{ id: string; name: string } | null>(null);
@@ -373,20 +392,15 @@ export default function InnstillingerPage() {
 
           {/* Company */}
           <Section title="Bedrift">
-            <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
-              <label className="field-label" style={{ flex: 1 }}>
-                Bedriftsnavn
-                <input
-                  className="field-input"
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                  style={{ marginTop: 5 }}
-                />
-              </label>
-              <button className="btn btn-primary" onClick={saveCompany} disabled={busy}>
-                Lagre
-              </button>
-            </div>
+            <label className="field-label" style={{ display: "block" }}>
+              Bedriftsnavn
+              <input
+                className="field-input"
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+                style={{ marginTop: 5 }}
+              />
+            </label>
           </Section>
 
           {/* Features */}
@@ -400,7 +414,7 @@ export default function InnstillingerPage() {
                   key={k}
                   className="chip"
                   data-active={features[k]}
-                  onClick={() => saveFeatures({ ...features, [k]: !features[k] })}
+                  onClick={() => setFeatures((f) => ({ ...f, [k]: !f[k] }))}
                 >
                   {features[k] && <Icon name="check" size={13} />}
                   {FEATURE_LABELS[k]}
@@ -416,11 +430,10 @@ export default function InnstillingerPage() {
                 <div key={d.id} style={{ display: "flex", gap: 8 }}>
                   <input
                     className="field-input"
-                    defaultValue={d.name}
-                    onBlur={(e) => {
-                      if (e.target.value.trim() && e.target.value !== d.name)
-                        renameDept(d.id, e.target.value.trim());
-                    }}
+                    value={deptNavnet(d.id, d.name)}
+                    onChange={(e) =>
+                      setDeptNavn((n) => ({ ...n, [d.id]: e.target.value }))
+                    }
                   />
                   <button
                     className="btn"
@@ -474,6 +487,40 @@ export default function InnstillingerPage() {
               </button>
             </div>
           </Section>
+
+          {/* Saves bedrift, funksjoner and department names in one go. Sticks to
+              the bottom so it is reachable without scrolling back up. */}
+          {harEndringer && (
+            <div
+              style={{
+                position: "sticky",
+                bottom: 16,
+                zIndex: 5,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 12,
+                flexWrap: "wrap",
+                padding: "12px 16px",
+                borderRadius: 12,
+                background: "var(--surface)",
+                border: "1px solid var(--primary)",
+                boxShadow: "0 8px 24px rgba(17,20,32,.12)",
+              }}
+            >
+              <span style={{ fontSize: 13.5, color: "var(--muted)" }}>
+                Du har endringer som ikke er lagret.
+              </span>
+              <button
+                className="btn btn-primary"
+                onClick={lagreAlt}
+                disabled={busy}
+                style={{ padding: "9px 20px" }}
+              >
+                {busy ? "Lagrer …" : "Lagre endringer"}
+              </button>
+            </div>
+          )}
 
           {/* Pipeline stages */}
           <Section title="Pipeline-steg">
