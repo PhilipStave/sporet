@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BillingSection } from "@/components/BillingSection";
 import { CalendarSection } from "@/components/CalendarSection";
@@ -132,10 +132,30 @@ export default function InnstillingerPage() {
     await supabase.from("departments").update({ name }).eq("id", id);
     router.refresh();
   };
-  const deleteDept = async (id: string) => {
-    if (!confirm("Slette avdelingen? Kunder beholdes, men mister avdeling.")) return;
-    await supabase.from("departments").delete().eq("id", id);
-    router.refresh();
+  const slettTimere = useRef(new Map<string, ReturnType<typeof setTimeout>>());
+  const [slettede, setSlettede] = useState<string[]>([]);
+  const [angre, setAngre] = useState<{ id: string; name: string } | null>(null);
+
+  const deleteDept = (id: string, name: string) => {
+    // Hide it now, delete for real after the undo window. Nothing has left the
+    // database yet, so undo is just cancelling a timer — no restore needed.
+    setSlettede((s) => [...s, id]);
+    const t = setTimeout(async () => {
+      slettTimere.current.delete(id);
+      setAngre((a) => (a?.id === id ? null : a));
+      await supabase.from("departments").delete().eq("id", id);
+      router.refresh();
+    }, 6000);
+    slettTimere.current.set(id, t);
+    setAngre({ id, name });
+  };
+
+  const angreSletting = (id: string) => {
+    const t = slettTimere.current.get(id);
+    if (t) clearTimeout(t);
+    slettTimere.current.delete(id);
+    setSlettede((s) => s.filter((x) => x !== id));
+    setAngre(null);
   };
 
   const createInvite = async () => {
@@ -392,7 +412,7 @@ export default function InnstillingerPage() {
           {/* Departments */}
           <Section title="Avdelinger">
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {departments.map((d) => (
+              {departments.filter((d) => !slettede.includes(d.id)).map((d) => (
                 <div key={d.id} style={{ display: "flex", gap: 8 }}>
                   <input
                     className="field-input"
@@ -405,7 +425,7 @@ export default function InnstillingerPage() {
                   <button
                     className="btn"
                     aria-label="Slett avdeling"
-                    onClick={() => deleteDept(d.id)}
+                    onClick={() => deleteDept(d.id, d.name)}
                     style={{ width: 40, padding: 0 }}
                   >
                     <Icon name="x" size={15} />
@@ -413,6 +433,34 @@ export default function InnstillingerPage() {
                 </div>
               ))}
             </div>
+            {angre && (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 10,
+                  marginTop: 10,
+                  padding: "8px 12px",
+                  borderRadius: 10,
+                  background: "var(--tint-neutral)",
+                  fontSize: 13,
+                }}
+              >
+                <span style={{ color: "var(--muted)" }}>
+                  «{angre.name}» slettet
+                </span>
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={() => angreSletting(angre.id)}
+                  style={{ padding: "5px 12px", fontSize: 12.5 }}
+                >
+                  Angre
+                </button>
+              </div>
+            )}
+
             <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
               <input
                 className="field-input"
