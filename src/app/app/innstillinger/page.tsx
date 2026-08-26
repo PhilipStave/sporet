@@ -488,14 +488,17 @@ export default function InnstillingerPage() {
             </div>
           </Section>
 
-          {/* Saves bedrift, funksjoner and department names in one go. Sticks to
-              the bottom so it is reachable without scrolling back up. */}
+          {/* Saves bedrift, funksjoner and department names in one go. Fixed to
+              the bottom of the window so it follows wherever you scroll. */}
           {harEndringer && (
             <div
               style={{
-                position: "sticky",
-                bottom: 16,
-                zIndex: 5,
+                position: "fixed",
+                bottom: 18,
+                left: "50%",
+                transform: "translateX(-50%)",
+                width: "min(calc(100vw - 32px), 640px)",
+                zIndex: 40,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
@@ -505,7 +508,7 @@ export default function InnstillingerPage() {
                 borderRadius: 12,
                 background: "var(--surface)",
                 border: "1px solid var(--primary)",
-                boxShadow: "0 8px 24px rgba(17,20,32,.12)",
+                boxShadow: "0 12px 32px rgba(17,20,32,.18)",
               }}
             >
               <span style={{ fontSize: 13.5, color: "var(--muted)" }}>
