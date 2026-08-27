@@ -265,10 +265,12 @@ export default function LandingPage() {
 
       {/* Hero.
           Conversion logic, in order of the eye: the offer sits above the
-          headline (free, no lock-in — the two objections that stop a click),
-          the primary button carries the value instead of a generic verb, and
-          the check row answers "what am I risking?" before it is asked. The
-          right column shows the actual product — proof beats adjectives. */}
+          headline (free, no lock-in — the objections that stop a click), the
+          headline promises the outcome (win more sales) rather than the
+          mechanism, the primary button carries the value instead of a generic
+          verb, and the check row answers "what am I risking?" before it is
+          asked. The right column shows the actual product — proof beats
+          adjectives. No claims about cards: the signup flow asks for one. */}
       <section style={{ ...wrap, padding: "64px 24px 40px" }}>
         <div
           className="hero-grid"
@@ -302,16 +304,17 @@ export default function LandingPage() {
               letterSpacing: "-0.01em",
             }}
           >
-            Hold styr på hvem du har kontaktet, og{" "}
-            <em style={{ color: "var(--accent)" }}>hvor langt du er kommet</em>
+            Følg opp hver kunde i tide — og{" "}
+            <em style={{ color: "var(--accent)" }}>vinn flere salg</em>
           </h1>
           <p style={{ margin: 0, fontSize: 19, color: "var(--muted)", maxWidth: "58ch" }}>
             <strong style={{ color: "var(--text)", fontWeight: 600 }}>
-              Altiv er et norsk CRM for salgsoppfølging i B2B.
+              Salg tapes sjelden på prisen — de tapes på oppfølgingen som glapp.
             </strong>{" "}
-            Samle kundene, dialogen og salgstallene ett sted. Se pipeline på
-            tvers av avdelinger, logg hver kontakt, planlegg neste steg og følg
-            omsetning og margin per selger.
+            Altiv er et norsk CRM som samler kundene, dialogen og salgstallene
+            ett sted, så ingen kunde blir glemt og ingen avtale renner ut i
+            stillhet. Se hele pipelinen, logg hver kontakt og følg omsetning og
+            margin per selger.
             {VIS_KUNDESOK && (
               <> Og la AI-en finne neste kunde for deg — ekte bedrifter fra Brønnøysundregistrene.</>
             )}
@@ -337,8 +340,8 @@ export default function LandingPage() {
             }}
           >
             {[
-              "Ingen binding — avslutt når som helst",
-              "Ingen kort for å starte",
+              "Ingen binding — månedlig, avslutt når som helst",
+              "Alt inkludert i alle pakker — også AI-kundesøket",
               "Fungerer i nettleseren, ingen installasjon",
             ].map((t) => (
               <li key={t} style={{ display: "flex", alignItems: "center", gap: 7 }}>
