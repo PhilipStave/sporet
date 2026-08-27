@@ -441,6 +441,18 @@ export async function interpret(tekst: string): Promise<Interpretation | null> {
  * and it never produces company names. Those come from the register alone.
  */
 /**
+ * Why the AI pass gave up. Every return null below goes through here first.
+ *
+ * Falling back to the local matcher is by design — the search still works, just
+ * less well. The danger is that it happens silently: an expired key or an empty
+ * credit balance would degrade every search with nothing to show for it. These
+ * lines land in the Vercel log, so the cause is visible instead of guessed at.
+ */
+function aiGavOpp(grunn: string, detalj?: unknown) {
+  console.error(`[kundesok] AI-tolkning feilet (${grunn})`, detalj ?? "");
+}
+
+/**
  * The paid path. Dormant until ANTHROPIC_API_KEY is set.
  *
  * The model reads the whole query and fills in one search: industry codes,
@@ -544,11 +556,20 @@ async function interpretWithAi(tekst: string): Promise<Interpretation | null> {
         ],
       }),
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      // 401 means the key is gone or revoked, 400 with "credit balance" means
+      // the account is empty, 429 is rate limiting. All three look identical
+      // from the outside, so the status and Anthropic's own message matter.
+      aiGavOpp(`HTTP ${res.status}`, (await res.text()).slice(0, 300));
+      return null;
+    }
 
     const json = await res.json();
     const bruk = (json?.content ?? []).find((c: { type?: string }) => c?.type === "tool_use");
-    if (!bruk?.input) return null;
+    if (!bruk?.input) {
+      aiGavOpp("modellen kalte ikke verktoyet");
+      return null;
+    }
 
     // Whatever the model returns is checked against the real lists before use.
     const gyldigeKoder = new Set(KODER.map((k) => k.k));
@@ -556,7 +577,10 @@ async function interpretWithAi(tekst: string): Promise<Interpretation | null> {
       .map(String)
       .filter((k: string) => gyldigeKoder.has(k))
       .slice(0, 4);
-    if (koder.length === 0) return null;
+    if (koder.length === 0) {
+      aiGavOpp("ingen gyldige bransjekoder", bruk.input.naeringskoder);
+      return null;
+    }
 
     const gyldigeKommuner = new Set(KOMMUNER.map((k) => k.k));
     const kommuner: string[] = (bruk.input.kommunenummer ?? [])
@@ -571,7 +595,10 @@ async function interpretWithAi(tekst: string): Promise<Interpretation | null> {
     // straight back in.
     const baPrivat = bruk.input.offentlig === false;
     const brukteKoder = baPrivat ? koder.filter((k) => !k.startsWith("84.")) : koder;
-    if (brukteKoder.length === 0) return null;
+    if (brukteKoder.length === 0) {
+      aiGavOpp("bare offentlige koder igjen etter privat-filter", koder);
+      return null;
+    }
 
     const former = baPrivat
       ? ["AS", "ASA"]
@@ -604,7 +631,8 @@ async function interpretWithAi(tekst: string): Promise<Interpretation | null> {
       forklaring: deler.join(" · "),
       kilde: "ai",
     };
-  } catch {
+  } catch (e) {
+    aiGavOpp("kallet kastet", (e as Error).message);
     return null;
   }
 }
