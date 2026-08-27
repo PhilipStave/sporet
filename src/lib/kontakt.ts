@@ -63,12 +63,19 @@ function harOrgnr(html: string, orgnr: string) {
 const TITTEL = /<title[^>]*>([\s\S]*?)<\/title>/i;
 
 /** Does the page title actually name this company? */
-function navnITittel(html: string, navn: string) {
+/**
+ * How much of the company name the page title carries back.
+ *
+ * One word used to be enough. That let "CITY ROAD AS" confirm itself on
+ * city.no — a site belonging to someone else entirely, whose title naturally
+ * contains "city". A wrong address is worse than none: the seller mails a
+ * stranger and never learns why nobody answered. So the count is returned and
+ * the caller decides how much it needs, based on how risky the domain guess was.
+ */
+function ordITittel(html: string, navn: string) {
   const tittel = (html.match(TITTEL)?.[1] ?? "").toLowerCase();
-  if (!tittel) return false;
-  return reneOrd(navn)
-    .filter((w) => w.length >= 3)
-    .some((w) => tittel.includes(w));
+  if (!tittel) return 0;
+  return reneOrd(navn).filter((w) => w.length >= 3 && tittel.includes(w)).length;
 }
 
 function finnEpost(html: string, domene: string): string | null {
@@ -122,11 +129,21 @@ async function hent(url: string, ms: number): Promise<string | null> {
  * cannot be tied back to the company.
  */
 export async function finnKontakt(navn: string, orgnr: string): Promise<Kontakt> {
+  const ord = reneOrd(navn).filter((w) => w.length >= 3);
+
   for (const domene of domeneKandidater(navn)) {
+    // The candidate built from the first word alone is the risky one: for a
+    // multi-word name it can land on a generic domain that has nothing to do
+    // with the company. Such a guess has to bring back the rest of the name
+    // before it counts as the right site.
+    const gjettetPaaEttOrd = ord.length > 1 && domene === `${ord[0]}.no`;
+    const kreves = gjettetPaaEttOrd ? 2 : 1;
+
     const forside = await hent(`https://${domene}`, 6000);
     if (!forside) continue;
 
-    let sikker = harOrgnr(forside, orgnr) || navnITittel(forside, navn);
+    let orgnrTreff = harOrgnr(forside, orgnr);
+    let treff = ordITittel(forside, navn);
     let epost = finnEpost(forside, domene);
     let telefon = finnTelefon(forside);
 
@@ -135,11 +152,15 @@ export async function finnKontakt(navn: string, orgnr: string): Promise<Kontakt>
       if (epost && telefon) break;
       const side = await hent(`https://${domene}${sti}`, 5000);
       if (!side) continue;
-      sikker = sikker || harOrgnr(side, orgnr) || navnITittel(side, navn);
+      orgnrTreff = orgnrTreff || harOrgnr(side, orgnr);
+      treff = Math.max(treff, ordITittel(side, navn));
       epost = epost ?? finnEpost(side, domene);
       telefon = telefon ?? finnTelefon(side);
     }
 
+    // The org number is proof; the title is only evidence.
+    const sikker = orgnrTreff || treff >= kreves;
+    if (gjettetPaaEttOrd && !sikker) continue;
     if (!epost && !telefon) continue;
 
     return {
