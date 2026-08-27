@@ -24,7 +24,7 @@ const VIS_KUNDESOK = true;
 export const metadata: Metadata = {
   title: "Altiv — CRM for salgsoppfølging | Norsk salgsverktøy for B2B",
   description:
-    "Altiv samler kundene, dialogen og salgstallene ett sted. Pipeline på tvers av avdelinger, logg hver kontakt, planlegg neste steg og følg omsetning og margin per selger. Fra 790 kr/mnd — ingen installasjon.",
+    "Altiv samler kundene, dialogen og salgstallene ett sted — og finner nye kunder for deg med AI-søk mot Brønnøysundregistrene. Pipeline, aktivitetslogg og statistikk. Fra 790 kr/mnd — ingen installasjon.",
   alternates: { canonical: "/" },
 };
 
@@ -138,8 +138,11 @@ const CheckIcon = () => (
 );
 
 // Every plan includes the whole system — only the user limit differs.
+// The AI search is listed on every card for the same reason: it is a selling
+// point included in the price, not a surcharge tier.
 const BASE_FEATURES = [
   "Hele systemet — ingen funksjoner låst",
+  "AI-kundesøk mot Brønnøysundregistrene",
   "Ubegrenset antall kunder og avtaler",
   "Pipeline, kalender og aktivitetslogg",
   "Statistikk, margin og selgeroversikt",
@@ -295,6 +298,9 @@ export default function LandingPage() {
             Samle kundene, dialogen og salgstallene ett sted. Se pipeline på
             tvers av avdelinger, logg hver kontakt, planlegg neste steg og følg
             omsetning og margin per selger.
+            {VIS_KUNDESOK && (
+              <> Og la AI-en finne neste kunde for deg — ekte bedrifter fra Brønnøysundregistrene.</>
+            )}
           </p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 6, alignItems: "center" }}>
             <Link href="/setup" style={{ ...inkBtn, padding: "14px 28px", fontSize: 17 }}>
@@ -454,15 +460,16 @@ export default function LandingPage() {
           }}
         >
           {[
+            // Newest selling point first — the one no competitor's card looks like.
+            ...(VIS_KUNDESOK
+              ? [{ id: "kundesok", kicker: "AI-kundesøk", title: "Finn kunder du ikke visste om", text: "Skriv hva du selger og til hvem. AI-en tolker det, og ekte bedrifter fra Brønnøysund legges rett i pipelinen." }]
+              : []),
             { id: "kontakt", kicker: "Kontakt", title: "Hver samtale logget", text: "Telefon, e-post, SMS og møter havner i kundens aktivitetslogg med dato." },
             { id: "oppfolging", kicker: "Oppfølging", title: "Neste steg med dato", text: "Sett tid og deltakere, og se alt samlet i kalenderen." },
             { id: "team", kicker: "Team", title: "Avdelinger og selgere", text: "Overfør et salg til en kollega, og se hvem som selger hva." },
             { id: "tall", kicker: "Tall", title: "Omsetning og margin", text: "Følg solgt-for per uke, måned og år — med margin i prosent og kroner." },
             { id: "epost", kicker: "E-post", title: "E-post logges av seg selv", text: "Sett bedriftens logg-adresse på BCC — e-posten og vedleggene havner på riktig kunde." },
             { id: "kalender", kicker: "Kalender og filer", title: "I din egen kalender", text: "Oppfølginger i Outlook, Google eller iPhone. Dokumenter lagret på kunden." },
-            ...(VIS_KUNDESOK
-              ? [{ id: "kundesok", kicker: "Kundesøk", title: "Finn kunder du ikke visste om", text: "Skriv hva du selger og til hvem. Ekte bedrifter fra Brønnøysund, rett i pipelinen." }]
-              : []),
           ].map((c) => (
             <DetailCard
               key={c.kicker}

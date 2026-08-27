@@ -149,6 +149,7 @@ export function planDetail(users: string, price: string): DetailBlock {
     bullets: [
       "14 dager gratis prøve — ingen trekk før prøveperioden er over",
       "Hele systemet: Pipeline, Oversikt, Kalender, Statistikk, Selgere, Kunder, Aktivitet",
+      "AI-kundesøk mot Enhetsregisteret — inkludert i prisen, ikke et tillegg",
       "E-postlogging, kalenderabonnement (Outlook/Google/iPhone) og dokumenter på kunden",
       "Ubegrenset antall kunder, avdelinger og aktiviteter",
       "Egen isolert database for bedriften — ingen andre ser dataene deres",
