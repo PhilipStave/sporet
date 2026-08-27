@@ -406,6 +406,8 @@ const REGLER = [
   "Er teksten et merke- eller modellnavn, finn først ut hva slags produkt det er, og deretter hvilken bransje som kjøper det.",
   "Velg heller tre presise bransjekoder enn fire brede. Treffsikkerhet betyr mer enn antall.",
   "Nevner brukeren ikke sted, la kommunelisten stå tom. Ikke gjett geografi.",
+  "Sier brukeren noe om størrelse — «små», «mellomstore», «store», «kjeder», «enmannsforetak» — sett fraAntallAnsatte og tilAntallAnsatte deretter. Treffene sorteres etter størrelse, så uten et tak ser brukeren bare landets aller største selskaper.",
+  "Nevner brukeren et sted «i X-området» eller «rundt X», ta med X og nabokommunene — ikke hele fylket.",
   "Begrunnelsen skal være én kort setning på norsk, uten markedsføringsspråk.",
 ];
 
@@ -485,8 +487,18 @@ async function interpretWithAi(tekst: string): Promise<Interpretation | null> {
             "Kommunenumre fra kommunelisten. Tom hvis brukeren ikke nevner sted. " +
             "Nevner de et område eller fylke, ta med alle kommunene som hører til.",
         },
-        fraAntallAnsatte: { type: "number", description: "Utelat hvis ikke nevnt." },
-        tilAntallAnsatte: { type: "number", description: "Utelat hvis ikke nevnt." },
+        fraAntallAnsatte: {
+          type: "number",
+          description:
+            "Nedre grense for antall ansatte. «Små bedrifter» ≈ 1, «mellomstore» ≈ 20, " +
+            "«store» ≈ 250. Utelat hvis brukeren ikke sier noe om størrelse.",
+        },
+        tilAntallAnsatte: {
+          type: "number",
+          description:
+            "Øvre grense for antall ansatte. «Små bedrifter» ≈ 20, «mellomstore» ≈ 250. " +
+            "Utelat for «store». Utelat hvis brukeren ikke sier noe om størrelse.",
+        },
         antall: {
           type: "number",
           description: "Hvor mange treff brukeren ba om. Utelat hvis de ikke sa et tall.",
