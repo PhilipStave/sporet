@@ -930,13 +930,17 @@ function MemberRow({
 
 /**
  * Monthly sales targets for the whole company, each department and each
- * seller. Saved on blur — one number per row, and an emptied field removes
- * the target. The bar on Oversikt reads these through the same store.
+ * seller. Edits collect locally; a save button appears the moment something
+ * differs from what is stored — save-on-blur gave no sign that anything
+ * happened, and an invisible save is indistinguishable from a broken one.
  */
 function SalgsmaalEditor() {
   const { departments, members, salgsmaal, settSalgsmaal } = useStore();
+  const [utkast, setUtkast] = useState<Record<string, string>>({});
+  const [lagrer, setLagrer] = useState(false);
+  const [kvittering, setKvittering] = useState(false);
 
-  const verdi = (department_id: string | null, profile_id: string | null) =>
+  const lagret = (department_id: string | null, profile_id: string | null) =>
     salgsmaal.find(
       (m) => m.department_id === department_id && m.profile_id === profile_id
     )?.maanedsmaal;
@@ -947,12 +951,12 @@ function SalgsmaalEditor() {
     holder: { department_id?: string; profile_id?: string };
     gjeldende: number | undefined;
   }[] = [
-    { key: "org", navn: "Hele bedriften", holder: {}, gjeldende: verdi(null, null) },
+    { key: "org", navn: "Hele bedriften", holder: {}, gjeldende: lagret(null, null) },
     ...departments.map((d) => ({
       key: `avd-${d.id}`,
       navn: d.name,
       holder: { department_id: d.id },
-      gjeldende: verdi(d.id, null),
+      gjeldende: lagret(d.id, null),
     })),
     ...members
       .filter((m) => m.status !== "pending")
@@ -960,41 +964,79 @@ function SalgsmaalEditor() {
         key: `selger-${m.id}`,
         navn: m.full_name || m.email,
         holder: { profile_id: m.id },
-        gjeldende: verdi(null, m.id),
+        gjeldende: lagret(null, m.id),
       })),
   ];
+
+  // A row is dirty when the draft parses to a different number than the row
+  // in the database. Comparing numbers, not strings, so "50 000" typed as
+  // 50000 over an existing 50000 is not an "edit".
+  const tall = (s: string | undefined) => {
+    const n = Number(s);
+    return Number.isFinite(n) && n > 0 ? n : 0;
+  };
+  const endrede = rader.filter(
+    (r) => r.key in utkast && tall(utkast[r.key]) !== (r.gjeldende ?? 0)
+  );
+
+  const lagreAlle = async () => {
+    if (lagrer || endrede.length === 0) return;
+    setLagrer(true);
+    for (const r of endrede) await settSalgsmaal(r.holder, tall(utkast[r.key]));
+    setUtkast({});
+    setLagrer(false);
+    setKvittering(true);
+    setTimeout(() => setKvittering(false), 3000);
+  };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
       <p style={{ margin: "0 0 4px", fontSize: 13, color: "var(--muted)" }}>
-        Mål per måned i kroner. Vises som en søyle på Oversikt, mot «Solgt for» i
-        valgt periode — uke og år regnes ut fra månedsmålet. Tomt felt betyr
-        ikke noe mål.
+        Mål per måned i kroner. Vises på Oversikt, mot «Solgt for» i valgt
+        periode — uke og år regnes ut fra månedsmålet. Tomt felt betyr ikke noe
+        mål.
       </p>
       {rader.map((r) => (
         <div key={r.key} style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span style={{ flex: "1 1 160px", fontSize: 14 }}>{r.navn}</span>
           <input
-            // Keyed on the loaded value: targets arrive async, and an
-            // uncontrolled field would otherwise stay blank after load.
-            key={`${r.key}-${r.gjeldende ?? "tom"}`}
             className="field-input"
             type="number"
             min={0}
             step={1000}
-            defaultValue={r.gjeldende ?? ""}
+            value={utkast[r.key] ?? (r.gjeldende ?? "")}
             placeholder="—"
-            onBlur={(e) => {
-              const nytt = Number(e.target.value);
-              const gammelt = r.gjeldende ?? 0;
-              if ((Number.isFinite(nytt) ? nytt : 0) !== gammelt)
-                settSalgsmaal(r.holder, Number.isFinite(nytt) ? nytt : 0);
-            }}
+            onChange={(e) => setUtkast((u) => ({ ...u, [r.key]: e.target.value }))}
             style={{ flex: "0 1 170px", textAlign: "right" }}
           />
           <span style={{ fontSize: 13, color: "var(--muted)", width: 48 }}>kr/mnd</span>
         </div>
       ))}
+
+      {/* The button exists only while there is something to save — appearing
+          is the signal the user asked for. */}
+      {endrede.length > 0 && (
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 6 }}>
+          <button
+            className="btn btn-primary"
+            onClick={lagreAlle}
+            disabled={lagrer}
+            style={{ padding: "9px 20px" }}
+          >
+            {lagrer
+              ? "Lagrer …"
+              : `Lagre ${endrede.length === 1 ? "målet" : `${endrede.length} mål`}`}
+          </button>
+          <span style={{ fontSize: 13, color: "var(--muted)" }}>
+            Endringer er ikke lagret ennå.
+          </span>
+        </div>
+      )}
+      {kvittering && endrede.length === 0 && (
+        <span style={{ fontSize: 13, color: "#059669", fontWeight: 600, marginTop: 6 }}>
+          ✓ Målene er lagret.
+        </span>
+      )}
     </div>
   );
 }

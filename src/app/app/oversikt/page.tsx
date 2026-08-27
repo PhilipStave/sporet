@@ -7,6 +7,7 @@ import { Icon } from "@/components/Icon";
 import { DetailModal, type DetailData, type DetailRow } from "@/components/DetailModal";
 import {
   pillStyle,
+  WON_KEY,
 } from "@/lib/constants";
 import { fmtKr, fmtShort, diffDays, fmtDateShort } from "@/lib/format";
 import { stageLabel, stageColor } from "@/lib/stages";
@@ -15,9 +16,22 @@ import type { Deal } from "@/types";
 
 type SoldPeriod = "uke" | "mnd" | "ar";
 
+/** Stable department colours: index in the department list decides, so a
+ *  department keeps its colour across periods and reloads. */
+const AVD_FARGER = ["#4f46e5", "#059669", "#d97706", "#dc2626", "#0891b2", "#8b5cf6", "#be185d"];
+
 export default function OversiktPage() {
-  const { scopedDeals, deptName, setSelectedDealId, stageMaps, scope, profile, salgsmaal } =
-    useStore();
+  const {
+    scopedDeals,
+    deals,
+    departments,
+    deptName,
+    setSelectedDealId,
+    stageMaps,
+    scope,
+    profile,
+    salgsmaal,
+  } = useStore();
   const router = useRouter();
   const [soldPeriod, setSoldPeriod] = useState<SoldPeriod>("uke");
   const [detail, setDetail] = useState<string | null>(null);
@@ -40,6 +54,43 @@ export default function OversiktPage() {
     [o.won, soldPeriod]
   );
   const soldValue = soldDeals.reduce((a, d) => a + (d.value || 0), 0);
+
+  /**
+   * Sales per department for the chosen period — the leader's answer to
+   * "who is delivering the company number?". Shares are of actual sales, so
+   * they always sum to 100 %; the target column is each department's own
+   * monthly target scaled to the period, when one is set.
+   */
+  const avdSalg = useMemo(() => {
+    if (departments.length === 0) return [];
+    const skala = soldPeriod === "mnd" ? 1 : soldPeriod === "ar" ? 12 : 12 / 52;
+    // All won deals in the period, org-wide — this panel deliberately ignores
+    // the scope selector: its whole point is comparing departments.
+    const vunnet = deals.filter((d) => d.stage === WON_KEY && withinDays(d, soldPeriod));
+    const rows = departments.map((avd, i) => {
+      const solgt = vunnet
+        .filter((d) => d.department_id === avd.id)
+        .reduce((a, d) => a + (d.value || 0), 0);
+      const maalMnd = salgsmaal.find((m) => m.department_id === avd.id)?.maanedsmaal ?? null;
+      return {
+        id: avd.id,
+        navn: avd.name,
+        farge: AVD_FARGER[i % AVD_FARGER.length],
+        solgt,
+        maal: maalMnd != null ? maalMnd * skala : null,
+      };
+    });
+    const utenAvd = vunnet
+      .filter((d) => !d.department_id || !departments.some((a) => a.id === d.department_id))
+      .reduce((a, d) => a + (d.value || 0), 0);
+    if (utenAvd > 0)
+      rows.push({ id: "uten", navn: "Uten avdeling", farge: "#9ca3af", solgt: utenAvd, maal: null });
+    const total = rows.reduce((a, r) => a + r.solgt, 0);
+    return rows
+      .map((r) => ({ ...r, andel: total > 0 ? r.solgt / total : 0 }))
+      .sort((a, b) => b.solgt - a.solgt);
+  }, [departments, deals, salgsmaal, soldPeriod]);
+  const avdTotal = avdSalg.reduce((a, r) => a + r.solgt, 0);
 
   /**
    * The sales target matching what the screen currently shows: the seller's
@@ -370,6 +421,130 @@ export default function OversiktPage() {
           </div>
         ))}
       </div>
+
+      {/* Sales per department: who delivers the company number, and are they
+          on their own target. Hidden when the org has no departments. */}
+      {avdSalg.length > 0 && (
+        <div className="card stat-card" style={{ padding: 20, marginBottom: 26 }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 16 }}>
+            <h4 style={{ fontSize: 16, margin: 0 }}>Salg per avdeling</h4>
+            <span style={{ fontSize: 12, color: "var(--muted)" }}>{spSub}</span>
+          </div>
+          <div style={{ display: "flex", gap: 26, alignItems: "center", flexWrap: "wrap" }}>
+            {/* Donut of each department's share of what was actually sold. */}
+            <div
+              aria-hidden
+              style={{
+                width: 130,
+                height: 130,
+                borderRadius: "50%",
+                flex: "none",
+                background:
+                  avdTotal > 0
+                    ? `conic-gradient(${avdSalg
+                        .reduce<{ stops: string[]; acc: number }>(
+                          (s, r) => {
+                            const fra = s.acc * 360;
+                            const til = (s.acc + r.andel) * 360;
+                            s.stops.push(`${r.farge} ${fra}deg ${til}deg`);
+                            s.acc += r.andel;
+                            return s;
+                          },
+                          { stops: [], acc: 0 }
+                        )
+                        .stops.join(", ")})`
+                    : "var(--bg)",
+                border: avdTotal > 0 ? "none" : "1px dashed var(--border)",
+                position: "relative",
+              }}
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 26,
+                  borderRadius: "50%",
+                  background: "var(--surface)",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 12,
+                  color: "var(--muted)",
+                  textAlign: "center",
+                }}
+              >
+                <strong style={{ fontSize: 13, color: "var(--text)" }}>
+                  {fmtShort(avdTotal)}
+                </strong>
+                solgt
+              </div>
+            </div>
+
+            <div style={{ flex: "1 1 320px", display: "flex", flexDirection: "column", gap: 10 }}>
+              {avdSalg.map((r) => (
+                <div key={r.id}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      fontSize: 13.5,
+                      marginBottom: 3,
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: 10,
+                        height: 10,
+                        borderRadius: 3,
+                        background: r.farge,
+                        flex: "none",
+                      }}
+                    />
+                    <span style={{ fontWeight: 600 }}>{r.navn}</span>
+                    <span style={{ color: "var(--muted)" }}>
+                      {fmtKr(r.solgt)} · {Math.round(r.andel * 100)} % av salget
+                    </span>
+                    <span style={{ marginLeft: "auto", fontSize: 12.5 }}>
+                      {r.maal != null ? (
+                        r.solgt >= r.maal ? (
+                          <span style={{ color: "#059669", fontWeight: 700 }}>✓ Mål nådd</span>
+                        ) : (
+                          <span style={{ color: "var(--muted)" }}>
+                            {Math.round((r.solgt / r.maal) * 100)} % av {fmtShort(r.maal)}
+                          </span>
+                        )
+                      ) : (
+                        <span style={{ color: "var(--muted)", opacity: 0.6 }}>uten mål</span>
+                      )}
+                    </span>
+                  </div>
+                  {r.maal != null && (
+                    <div
+                      style={{
+                        height: 5,
+                        borderRadius: 999,
+                        background: "var(--bg)",
+                        border: "1px solid var(--border)",
+                        overflow: "hidden",
+                      }}
+                    >
+                      <div
+                        style={{
+                          height: "100%",
+                          width: `${Math.min(100, (r.solgt / r.maal) * 100)}%`,
+                          background: r.solgt >= r.maal ? "#059669" : r.farge,
+                          borderRadius: 999,
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Panels */}
       <div
