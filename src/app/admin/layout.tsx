@@ -12,7 +12,9 @@ export const dynamic = "force-dynamic";
 /** Platform-owner area (Stave Software). Only profiles.is_superadmin get in. */
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const me = await requireSuperadmin();
-  if (!me) redirect("/app/oversikt");
+  // The footer link points straight at /admin; without a superadmin session
+  // you get the admin door, not a detour through the tenant app.
+  if (!me) redirect("/admin-innlogging");
 
   return (
     <div style={{ minHeight: "100dvh", display: "flex", flexDirection: "column", background: "var(--bg)", color: "var(--text)" }}>

@@ -441,3 +441,54 @@ export async function logout() {
   await supabase.auth.signOut({ scope: "global" });
   redirect("/login");
 }
+
+// ------------------------------------------------------------
+// Admin login (platform owner only)
+// ------------------------------------------------------------
+
+/**
+ * Separate door for the /admin area, reached from the small footer link.
+ *
+ * It differs from login() in one deliberate way: an account without the
+ * superadmin flag is signed straight out again and told no. The regular
+ * login would happily send them to their own workspace — fine there, but
+ * this form promises the admin area, and a door that quietly leads
+ * somewhere else teaches people to mistrust doors.
+ */
+export async function adminLogin(
+  _prev: AuthState,
+  formData: FormData
+): Promise<AuthState> {
+  if (missingEnv())
+    return {
+      error:
+        "Supabase er ikke konfigurert. Fyll inn nøklene i .env.local og start på nytt.",
+    };
+
+  const email = String(formData.get("email") || "")
+    .trim()
+    .toLowerCase();
+  const password = String(formData.get("password") || "");
+  if (!email || !password) return { error: "Fyll inn e-post og passord." };
+
+  const supabase = await createClient();
+  const { data: signIn, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) {
+    const msg = error.message.toLowerCase();
+    if (msg.includes("invalid")) return { error: "Feil e-post eller passord." };
+    return { error: error.message };
+  }
+
+  const { data: me } = await createAdminClient()
+    .from("profiles")
+    .select("is_superadmin")
+    .eq("id", signIn.user?.id ?? "")
+    .maybeSingle();
+
+  if (!me?.is_superadmin) {
+    await supabase.auth.signOut();
+    return { error: "Denne innloggingen er kun for Stave Software." };
+  }
+
+  redirect("/admin");
+}

@@ -960,7 +960,6 @@ export default function LandingPage() {
             <Link href="/login" style={{ color: "var(--muted)" }}>Logg inn</Link>
             <Link href="/vilkar" style={{ color: "var(--muted)" }}>Vilkår</Link>
             <Link href="/personvern" style={{ color: "var(--muted)" }}>Personvern</Link>
-            <Link href="/admin" style={{ color: "var(--muted)", opacity: 0.7 }}>Admin</Link>
           </nav>
           <span style={{ fontSize: 14, color: "var(--muted)" }}>
             Salgsoppfølging for team som selger til bedrifter og det offentlige. Spørsmål?{" "}
@@ -975,6 +974,11 @@ export default function LandingPage() {
               {COMPANY_LEGAL_NAME}
             </a>
             , org.nr. {COMPANY_ORG_NR} · {COMPANY_ADDRESS}
+            {/* Deliberately quiet: the platform owner's door, not a nav item. */}
+            {" · "}
+            <Link href="/admin" style={{ color: "var(--muted)", opacity: 0.6 }}>
+              Administrasjon
+            </Link>
           </span>
         </div>
       </footer>
