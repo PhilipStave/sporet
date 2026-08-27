@@ -271,7 +271,7 @@ export default function LandingPage() {
           verb, and the check row answers "what am I risking?" before it is
           asked. The right column shows the actual product — proof beats
           adjectives. No claims about cards: the signup flow asks for one. */}
-      <section style={{ ...wrap, padding: "64px 24px 40px" }}>
+      <section style={{ ...wrap, padding: "34px 24px 30px" }}>
         <div
           className="hero-grid"
           style={{
@@ -281,7 +281,7 @@ export default function LandingPage() {
             alignItems: "center",
           }}
         >
-        <div style={{ maxWidth: 760, display: "flex", flexDirection: "column", gap: 20 }}>
+        <div style={{ maxWidth: 760, display: "flex", flexDirection: "column", gap: 15 }}>
           <span
             style={{
               alignSelf: "flex-start",
@@ -299,15 +299,15 @@ export default function LandingPage() {
             style={{
               fontFamily: "var(--font-display)",
               fontWeight: 400,
-              fontSize: "clamp(42px, 6.2vw, 74px)",
-              lineHeight: 1.03,
+              fontSize: "clamp(38px, 4.8vw, 58px)",
+              lineHeight: 1.05,
               letterSpacing: "-0.01em",
             }}
           >
             Følg opp hver kunde i tide — og{" "}
             <em style={{ color: "var(--accent)" }}>vinn flere salg</em>
           </h1>
-          <p style={{ margin: 0, fontSize: 19, color: "var(--muted)", maxWidth: "58ch" }}>
+          <p style={{ margin: 0, fontSize: 17.5, color: "var(--muted)", maxWidth: "58ch" }}>
             <strong style={{ color: "var(--text)", fontWeight: 600 }}>
               Salg tapes sjelden på prisen — de tapes på oppfølgingen som glapp.
             </strong>{" "}
@@ -352,10 +352,13 @@ export default function LandingPage() {
           </ul>
         </div>
 
-        {/* The product itself, not an illustration of it. */}
+        {/* The product itself, not an illustration of it — plus a floating
+            "Solgt for" card with a rising curve. Growth is the promise in the
+            headline; this is the same promise drawn. Demo figures, like the
+            demo companies in the screenshot behind it. */}
         <figure
           className="hero-bilde"
-          style={{ margin: 0 }}
+          style={{ margin: 0, position: "relative" }}
         >
           <span
             style={{
@@ -374,6 +377,56 @@ export default function LandingPage() {
               style={{ display: "block", width: "100%", height: "auto" }}
             />
           </span>
+          <div
+            className="hero-vekst"
+            aria-hidden
+            style={{
+              position: "absolute",
+              left: -26,
+              bottom: -20,
+              background: "var(--surface)",
+              border: "1px solid var(--divider)",
+              borderRadius: 14,
+              boxShadow: "0 16px 40px rgba(27,26,24,.16)",
+              padding: "12px 16px 10px",
+              display: "flex",
+              flexDirection: "column",
+              gap: 4,
+              minWidth: 190,
+            }}
+          >
+            <span style={{ fontSize: 11.5, textTransform: "uppercase", letterSpacing: ".06em", color: "var(--muted)", fontWeight: 600 }}>
+              Solgt for
+            </span>
+            <span style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+              <strong style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 24 }}>
+                3,9 mill kr
+              </strong>
+              <span
+                style={{
+                  fontSize: 12.5,
+                  fontWeight: 700,
+                  color: "#059669",
+                  background: "rgba(5,150,105,.1)",
+                  padding: "2px 8px",
+                  borderRadius: 999,
+                }}
+              >
+                ↑ 18 %
+              </span>
+            </span>
+            <svg viewBox="0 0 160 40" style={{ width: "100%", height: 34, display: "block" }}>
+              <polyline
+                points="0,34 22,30 44,31 66,24 88,25 110,16 132,12 160,4"
+                fill="none"
+                stroke="var(--accent)"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <circle cx="160" cy="4" r="3" fill="var(--accent)" />
+            </svg>
+          </div>
         </figure>
         </div>
       </section>

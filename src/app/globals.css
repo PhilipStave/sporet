@@ -650,3 +650,12 @@ a {
     max-width: 560px;
   }
 }
+
+/* Growth card hugs the image edge on wide screens; tucked inside on narrow
+   ones so it cannot spill outside the viewport. */
+@media (max-width: 960px) {
+  .hero-vekst {
+    left: 12px !important;
+    bottom: 12px !important;
+  }
+}
