@@ -24,10 +24,19 @@ const SUFFIKS = new Set([
 ]);
 
 // Mailboxes that belong to the company rather than to a person.
+//
+// Every entry has to be a role, never something that could be a first name —
+// a named individual's address is personal data and stays out, however openly
+// it is published. The list grows from real misses: Avonova publishes
+// kundesenter@ on its front page, and we threw it away because only
+// kundeservice@ was listed. Municipalities almost all use postmottak@.
 const GENERELLE = new Set([
-  "post", "firmapost", "kontakt", "salg", "salgs", "info", "mail", "epost",
-  "hei", "hallo", "resepsjon", "sentralbord", "adm", "administrasjon", "office",
-  "sales", "contact", "kundeservice", "support",
+  "post", "postmottak", "firmapost", "kontakt", "salg", "salgs", "info",
+  "mail", "epost", "hei", "hallo", "resepsjon", "sentralbord", "adm",
+  "administrasjon", "office", "sales", "contact", "kundeservice",
+  "kundesenter", "kundesupport", "support", "service", "bestilling", "ordre",
+  "booking", "faktura", "regnskap", "tilbud", "anbud", "marked", "teknisk",
+  "hello", "enquiries",
 ]);
 
 // /personvern earns its place: often the only page carrying firmapost@.
