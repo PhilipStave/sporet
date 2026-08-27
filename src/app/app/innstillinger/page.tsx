@@ -525,6 +525,11 @@ export default function InnstillingerPage() {
             </div>
           )}
 
+          {/* Sales targets */}
+          <Section title="Salgsmål">
+            <SalgsmaalEditor />
+          </Section>
+
           {/* Pipeline stages */}
           <Section title="Pipeline-steg">
             <StagesEditor onMessage={flash} />
@@ -919,6 +924,77 @@ function MemberRow({
           </button>
         </div>
       )}
+    </div>
+  );
+}
+
+/**
+ * Monthly sales targets for the whole company, each department and each
+ * seller. Saved on blur — one number per row, and an emptied field removes
+ * the target. The bar on Oversikt reads these through the same store.
+ */
+function SalgsmaalEditor() {
+  const { departments, members, salgsmaal, settSalgsmaal } = useStore();
+
+  const verdi = (department_id: string | null, profile_id: string | null) =>
+    salgsmaal.find(
+      (m) => m.department_id === department_id && m.profile_id === profile_id
+    )?.maanedsmaal;
+
+  const rader: {
+    key: string;
+    navn: string;
+    holder: { department_id?: string; profile_id?: string };
+    gjeldende: number | undefined;
+  }[] = [
+    { key: "org", navn: "Hele bedriften", holder: {}, gjeldende: verdi(null, null) },
+    ...departments.map((d) => ({
+      key: `avd-${d.id}`,
+      navn: d.name,
+      holder: { department_id: d.id },
+      gjeldende: verdi(d.id, null),
+    })),
+    ...members
+      .filter((m) => m.status !== "pending")
+      .map((m) => ({
+        key: `selger-${m.id}`,
+        navn: m.full_name || m.email,
+        holder: { profile_id: m.id },
+        gjeldende: verdi(null, m.id),
+      })),
+  ];
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <p style={{ margin: "0 0 4px", fontSize: 13, color: "var(--muted)" }}>
+        Mål per måned i kroner. Vises som en søyle på Oversikt, mot «Solgt for» i
+        valgt periode — uke og år regnes ut fra månedsmålet. Tomt felt betyr
+        ikke noe mål.
+      </p>
+      {rader.map((r) => (
+        <div key={r.key} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ flex: "1 1 160px", fontSize: 14 }}>{r.navn}</span>
+          <input
+            // Keyed on the loaded value: targets arrive async, and an
+            // uncontrolled field would otherwise stay blank after load.
+            key={`${r.key}-${r.gjeldende ?? "tom"}`}
+            className="field-input"
+            type="number"
+            min={0}
+            step={1000}
+            defaultValue={r.gjeldende ?? ""}
+            placeholder="—"
+            onBlur={(e) => {
+              const nytt = Number(e.target.value);
+              const gammelt = r.gjeldende ?? 0;
+              if ((Number.isFinite(nytt) ? nytt : 0) !== gammelt)
+                settSalgsmaal(r.holder, Number.isFinite(nytt) ? nytt : 0);
+            }}
+            style={{ flex: "0 1 170px", textAlign: "right" }}
+          />
+          <span style={{ fontSize: 13, color: "var(--muted)", width: 48 }}>kr/mnd</span>
+        </div>
+      ))}
     </div>
   );
 }

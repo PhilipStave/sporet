@@ -4,6 +4,7 @@ import type {
   OrganizationRow,
   ProfileRow,
   DepartmentRow,
+  SalgsmaalRow,
 } from "./database";
 
 export * from "./database";
@@ -14,6 +15,7 @@ export type Deal = DealRow & { activities: ActivityRow[] };
 export type Organization = OrganizationRow;
 export type Profile = ProfileRow;
 export type Department = DepartmentRow;
+export type Salgsmaal = SalgsmaalRow;
 
 /** Team member as shown in autocomplete / seller lists. */
 export interface Member {

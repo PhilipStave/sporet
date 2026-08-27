@@ -16,7 +16,8 @@ import type { Deal } from "@/types";
 type SoldPeriod = "uke" | "mnd" | "ar";
 
 export default function OversiktPage() {
-  const { scopedDeals, deptName, setSelectedDealId, stageMaps } = useStore();
+  const { scopedDeals, deptName, setSelectedDealId, stageMaps, scope, profile, salgsmaal } =
+    useStore();
   const router = useRouter();
   const [soldPeriod, setSoldPeriod] = useState<SoldPeriod>("uke");
   const [detail, setDetail] = useState<string | null>(null);
@@ -39,6 +40,36 @@ export default function OversiktPage() {
     [o.won, soldPeriod]
   );
   const soldValue = soldDeals.reduce((a, d) => a + (d.value || 0), 0);
+
+  /**
+   * The sales target matching what the screen currently shows: the seller's
+   * own target under "Mine", the department's under a department scope, and
+   * the org target under "Alle" — falling back to the sum of department (or
+   * seller) targets when no org-wide number is set, so a leader who only set
+   * per-department targets still gets a company bar.
+   *
+   * Targets are stored per month. Week and year are steady-pace derivations
+   * (×12/52 and ×12), not separate promises.
+   */
+  const soldTarget = useMemo(() => {
+    let mnd: number | null = null;
+    if (scope.type === "mine") {
+      mnd = salgsmaal.find((m) => m.profile_id === profile.id)?.maanedsmaal ?? null;
+    } else if (scope.type === "dept") {
+      mnd = salgsmaal.find((m) => m.department_id === scope.deptId)?.maanedsmaal ?? null;
+    } else {
+      const org = salgsmaal.find((m) => !m.department_id && !m.profile_id);
+      if (org) mnd = org.maanedsmaal;
+      else {
+        const avd = salgsmaal.filter((m) => m.department_id);
+        const selgere = salgsmaal.filter((m) => m.profile_id);
+        const sum = (avd.length ? avd : selgere).reduce((a, m) => a + m.maanedsmaal, 0);
+        mnd = sum > 0 ? sum : null;
+      }
+    }
+    if (mnd == null) return null;
+    return soldPeriod === "mnd" ? mnd : soldPeriod === "ar" ? mnd * 12 : (mnd * 12) / 52;
+  }, [salgsmaal, scope, profile.id, soldPeriod]);
 
   const drow = (d: Deal): DetailRow => {
     const parts = [
@@ -261,6 +292,48 @@ export default function OversiktPage() {
             <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 2 }}>
               {c.sub}
             </div>
+            {c.periods && soldTarget != null && (
+              <div style={{ marginTop: 10 }} onClick={(e) => e.stopPropagation()}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    fontSize: 12,
+                    color: "var(--muted)",
+                    marginBottom: 4,
+                  }}
+                >
+                  <span>Mål: {fmtKr(Math.round(soldTarget))}</span>
+                  <span
+                    style={{
+                      fontWeight: 600,
+                      color: soldValue >= soldTarget ? "#059669" : "var(--muted)",
+                    }}
+                  >
+                    {Math.round((soldValue / soldTarget) * 100)} %
+                  </span>
+                </div>
+                <div
+                  style={{
+                    height: 7,
+                    borderRadius: 999,
+                    background: "var(--bg)",
+                    border: "1px solid var(--border)",
+                    overflow: "hidden",
+                  }}
+                >
+                  <div
+                    style={{
+                      height: "100%",
+                      width: `${Math.min(100, (soldValue / soldTarget) * 100)}%`,
+                      borderRadius: 999,
+                      background: soldValue >= soldTarget ? "#059669" : "var(--primary)",
+                      transition: "width .3s ease",
+                    }}
+                  />
+                </div>
+              </div>
+            )}
             {c.periods && (
               <div
                 style={{ display: "flex", gap: 5, marginTop: 10 }}

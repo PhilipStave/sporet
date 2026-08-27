@@ -31,6 +31,7 @@ import type {
   Department,
   Member,
   ActivityRow,
+  Salgsmaal,
 } from "@/types";
 
 export type Scope =
@@ -64,6 +65,14 @@ interface StoreValue {
   scopedDeals: Deal[];
   deptName: (id: string | null) => string;
   sellerNames: string[];
+
+  /** Monthly sales targets: whole org, per department, per seller. */
+  salgsmaal: Salgsmaal[];
+  /** Upsert a target (0 or empty deletes it). Admin only — RLS enforces it. */
+  settSalgsmaal: (
+    holder: { department_id?: string; profile_id?: string },
+    maanedsmaal: number
+  ) => Promise<void>;
 
   /** Pipeline stages for this org (ordered) + derived lookups. */
   stages: StageConfig[];
@@ -120,6 +129,7 @@ export function StoreProvider({
 }) {
   const supabase = useMemo(() => createClient(), []);
   const [deals, setDeals] = useState<Deal[]>([]);
+  const [salgsmaal, setSalgsmaal] = useState<Salgsmaal[]>([]);
   const [loading, setLoading] = useState(true);
   const [scope, setScope] = useState<Scope>({ type: "all" });
   const [query, setQuery] = useState("");
@@ -215,15 +225,64 @@ export function StoreProvider({
   );
 
   const refresh = useCallback(async () => {
-    const { data, error } = await supabase
-      .from("deals")
-      .select(DEAL_SELECT)
-      .order("updated_at", { ascending: false });
-    if (!error && data) {
-      setDeals((data as unknown as Deal[]).map(sortActivities));
+    const [dealsRes, maalRes] = await Promise.all([
+      supabase
+        .from("deals")
+        .select(DEAL_SELECT)
+        .order("updated_at", { ascending: false }),
+      supabase.from("salgsmaal").select("*"),
+    ]);
+    if (!dealsRes.error && dealsRes.data) {
+      setDeals((dealsRes.data as unknown as Deal[]).map(sortActivities));
+    }
+    if (!maalRes.error && maalRes.data) {
+      setSalgsmaal(maalRes.data as Salgsmaal[]);
     }
     setLoading(false);
   }, [supabase]);
+
+  /**
+   * Upsert one target; 0 (or less) means "no target" and deletes the row, so
+   * clearing a field in settings works without a separate delete button.
+   */
+  const settSalgsmaal = useCallback(
+    async (
+      holder: { department_id?: string; profile_id?: string },
+      maanedsmaal: number
+    ) => {
+      const department_id = holder.department_id ?? null;
+      const profile_id = holder.profile_id ?? null;
+      const eksisterende = salgsmaal.find(
+        (m) => m.department_id === department_id && m.profile_id === profile_id
+      );
+
+      if (!(maanedsmaal > 0)) {
+        if (!eksisterende) return;
+        await supabase.from("salgsmaal").delete().eq("id", eksisterende.id);
+        setSalgsmaal((arr) => arr.filter((m) => m.id !== eksisterende.id));
+        return;
+      }
+
+      if (eksisterende) {
+        await supabase
+          .from("salgsmaal")
+          .update({ maanedsmaal, updated_at: new Date().toISOString() })
+          .eq("id", eksisterende.id);
+        setSalgsmaal((arr) =>
+          arr.map((m) => (m.id === eksisterende.id ? { ...m, maanedsmaal } : m))
+        );
+        return;
+      }
+
+      const { data } = await supabase
+        .from("salgsmaal")
+        .insert({ org_id: org.id, department_id, profile_id, maanedsmaal })
+        .select("*")
+        .single();
+      if (data) setSalgsmaal((arr) => [...arr, data as Salgsmaal]);
+    },
+    [supabase, org.id, salgsmaal]
+  );
 
   useEffect(() => {
     // Initial data load — async fetch that sets state after awaiting (external sync).
@@ -509,6 +568,8 @@ export function StoreProvider({
     scopedDeals,
     deptName,
     sellerNames,
+    salgsmaal,
+    settSalgsmaal,
     stages,
     stageMaps,
     addStage,

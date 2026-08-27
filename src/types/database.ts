@@ -53,6 +53,20 @@ export type DepartmentRow = {
   created_at: string;
 }
 
+/**
+ * A sales target. Exactly one of department_id / profile_id is set — or
+ * neither, which makes it the target for the whole organisation. The amount
+ * is per month; week and year views are derived in the UI.
+ */
+export type SalgsmaalRow = {
+  id: string;
+  org_id: string;
+  department_id: string | null;
+  profile_id: string | null;
+  maanedsmaal: number;
+  updated_at: string;
+}
+
 export type ProfileRow = {
   id: string;
   org_id: string | null;
@@ -188,6 +202,7 @@ export type Database = {
       pipeline_stages: Table<PipelineStageRow>;
       deal_documents: Table<DealDocumentRow>;
       inbound_emails: Table<InboundEmailRow>;
+      salgsmaal: Table<SalgsmaalRow>;
     };
     Views: { [_ in never]: never };
     Functions: {
