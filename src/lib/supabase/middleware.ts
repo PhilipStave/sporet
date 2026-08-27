@@ -40,12 +40,15 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
-  const isAppRoute = path.startsWith("/app") || path.startsWith("/admin");
+  // Segment-exact on purpose: startsWith("/admin") also matched
+  // /admin-innlogging, so the admin login page bounced its own visitors.
+  const isAdminRoute = path === "/admin" || path.startsWith("/admin/");
+  const isAppRoute = path.startsWith("/app");
 
-  // Not logged in and trying to reach the app -> send to login.
-  if (!user && isAppRoute) {
+  // Not logged in -> each area sends you to its own door.
+  if (!user && (isAppRoute || isAdminRoute)) {
     const url = request.nextUrl.clone();
-    url.pathname = "/login";
+    url.pathname = isAdminRoute ? "/admin-innlogging" : "/login";
     return NextResponse.redirect(url);
   }
 
