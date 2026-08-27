@@ -406,6 +406,7 @@ const REGLER = [
   "Er teksten et merke- eller modellnavn, finn først ut hva slags produkt det er, og deretter hvilken bransje som kjøper det.",
   "Velg heller tre presise bransjekoder enn fire brede. Treffsikkerhet betyr mer enn antall.",
   "Nevner brukeren ikke sted, la kommunelisten stå tom. Ikke gjett geografi.",
+  "Spør deg alltid om kjøperen faktisk har behovet. En kommune har ingen salgsavdeling, så verktøy for salg, markedsføring og kundeoppfølging hører ikke hjemme der — sett offentlig=false for slikt, selv om brukeren ikke sier noe om det.",
   "Sier brukeren noe om størrelse — «små», «mellomstore», «store», «kjeder», «enmannsforetak» — sett fraAntallAnsatte og tilAntallAnsatte deretter. Treffene sorteres etter størrelse, så uten et tak ser brukeren bare landets aller største selskaper.",
   "Nevner brukeren et sted «i X-området» eller «rundt X», ta med X og nabokommunene — ikke hele fylket.",
   "Begrunnelsen skal være én kort setning på norsk, uten markedsføringsspråk.",
@@ -508,10 +509,13 @@ async function interpretWithAi(tekst: string): Promise<Interpretation | null> {
           description:
             "True hvis kjøperne er kommuner, fylker eller offentlig sektor — de er " +
             "ikke aksjeselskap og må søkes opp som KOMM og FYLK. " +
-            "FALSE hvis brukeren uttrykkelig sier de IKKE vil ha offentlige, bare " +
-            "private bedrifter. Velg da bransjekoder for private selskaper i stedet " +
-            "for 84-kodene (offentlig administrasjon). Utelat feltet hvis de ikke " +
-            "sier noe om det.",
+            "FALSE når brukeren sier de ikke vil ha offentlige, OG når produktet " +
+            "bare gir mening for noen som driver forretning: salgsverktøy, CRM, " +
+            "markedsføring, fakturering, rekruttering av selgere. Det offentlige " +
+            "selger ikke, og har ikke de behovene. Velg da bransjekoder for private " +
+            "selskaper i stedet for 84-kodene (offentlig administrasjon). " +
+            "Utelat feltet når begge deler er tenkelige — maskiner, bygg, " +
+            "vedlikehold, IT-drift og de fleste varer kjøpes av begge.",
         },
         begrunnelse: {
           type: "string",
