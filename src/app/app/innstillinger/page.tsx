@@ -27,7 +27,7 @@ import {
 } from "../actions";
 
 export default function InnstillingerPage() {
-  const { org, profile, departments, members } = useStore();
+  const { org, profile, departments, members, salgsmaal, settSalgsmaal } = useStore();
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const isAdmin = profile.role === "admin";
@@ -118,6 +118,14 @@ export default function InnstillingerPage() {
   const [deptNavn, setDeptNavn] = useState<Record<string, string>>({});
   const deptNavnet = (id: string, fallback: string) => deptNavn[id] ?? fallback;
 
+  // Sales-target drafts live here rather than in the editor, so they ride the
+  // same fixed save bar as everything else — one obvious place to save.
+  const [maalUtkast, setMaalUtkast] = useState<Record<string, string>>({});
+  const maalRader = byggMaalRader(departments, members, salgsmaal);
+  const endredeMaal = maalRader.filter(
+    (r) => r.key in maalUtkast && maalTall(maalUtkast[r.key]) !== (r.gjeldende ?? 0)
+  );
+
   const navnEndret = companyName.trim() !== org.name;
   const funksjonerEndret = FEATURE_ORDER.some(
     (k) => features[k] !== (org.features[k] !== false)
@@ -125,7 +133,8 @@ export default function InnstillingerPage() {
   const avdelingerEndret = departments.some(
     (d) => deptNavn[d.id] !== undefined && deptNavn[d.id].trim() !== d.name
   );
-  const harEndringer = navnEndret || funksjonerEndret || avdelingerEndret;
+  const harEndringer =
+    navnEndret || funksjonerEndret || avdelingerEndret || endredeMaal.length > 0;
 
   /** One save for everything on the page that is a field rather than an action. */
   const lagreAlt = async () => {
@@ -145,6 +154,10 @@ export default function InnstillingerPage() {
         await supabase.from("departments").update({ name: nytt }).eq("id", d.id);
       }
     }
+    for (const r of endredeMaal) {
+      await settSalgsmaal(r.holder, maalTall(maalUtkast[r.key]));
+    }
+    setMaalUtkast({});
     setDeptNavn({});
     setBusy(false);
     flash("Endringene er lagret.");
@@ -527,7 +540,7 @@ export default function InnstillingerPage() {
 
           {/* Sales targets */}
           <Section title="Salgsmål">
-            <SalgsmaalEditor />
+            <SalgsmaalEditor rader={maalRader} utkast={maalUtkast} setUtkast={setMaalUtkast} />
           </Section>
 
           {/* Pipeline stages */}
@@ -928,29 +941,29 @@ function MemberRow({
   );
 }
 
-/**
- * Monthly sales targets for the whole company, each department and each
- * seller. Edits collect locally; a save button appears the moment something
- * differs from what is stored — save-on-blur gave no sign that anything
- * happened, and an invisible save is indistinguishable from a broken one.
- */
-function SalgsmaalEditor() {
-  const { departments, members, salgsmaal, settSalgsmaal } = useStore();
-  const [utkast, setUtkast] = useState<Record<string, string>>({});
-  const [lagrer, setLagrer] = useState(false);
-  const [kvittering, setKvittering] = useState(false);
+/** "50 000" typed over an existing 50000 is not an edit — compare numbers. */
+function maalTall(s: string | undefined) {
+  const n = Number(s);
+  return Number.isFinite(n) && n > 0 ? n : 0;
+}
 
+type MaalRad = {
+  key: string;
+  navn: string;
+  holder: { department_id?: string; profile_id?: string };
+  gjeldende: number | undefined;
+};
+
+function byggMaalRader(
+  departments: ReturnType<typeof useStore>["departments"],
+  members: ReturnType<typeof useStore>["members"],
+  salgsmaal: ReturnType<typeof useStore>["salgsmaal"]
+): MaalRad[] {
   const lagret = (department_id: string | null, profile_id: string | null) =>
     salgsmaal.find(
       (m) => m.department_id === department_id && m.profile_id === profile_id
     )?.maanedsmaal;
-
-  const rader: {
-    key: string;
-    navn: string;
-    holder: { department_id?: string; profile_id?: string };
-    gjeldende: number | undefined;
-  }[] = [
+  return [
     { key: "org", navn: "Hele bedriften", holder: {}, gjeldende: lagret(null, null) },
     ...departments.map((d) => ({
       key: `avd-${d.id}`,
@@ -967,28 +980,23 @@ function SalgsmaalEditor() {
         gjeldende: lagret(null, m.id),
       })),
   ];
+}
 
-  // A row is dirty when the draft parses to a different number than the row
-  // in the database. Comparing numbers, not strings, so "50 000" typed as
-  // 50000 over an existing 50000 is not an "edit".
-  const tall = (s: string | undefined) => {
-    const n = Number(s);
-    return Number.isFinite(n) && n > 0 ? n : 0;
-  };
-  const endrede = rader.filter(
-    (r) => r.key in utkast && tall(utkast[r.key]) !== (r.gjeldende ?? 0)
-  );
-
-  const lagreAlle = async () => {
-    if (lagrer || endrede.length === 0) return;
-    setLagrer(true);
-    for (const r of endrede) await settSalgsmaal(r.holder, tall(utkast[r.key]));
-    setUtkast({});
-    setLagrer(false);
-    setKvittering(true);
-    setTimeout(() => setKvittering(false), 3000);
-  };
-
+/**
+ * Monthly sales targets for the whole company, each department and each
+ * seller. Drafts live in the page component and are written by the shared
+ * "Lagre endringer" bar fixed at the bottom — the same, single place every
+ * other setting on this page is saved from.
+ */
+function SalgsmaalEditor({
+  rader,
+  utkast,
+  setUtkast,
+}: {
+  rader: MaalRad[];
+  utkast: Record<string, string>;
+  setUtkast: React.Dispatch<React.SetStateAction<Record<string, string>>>;
+}) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
       <p style={{ margin: "0 0 4px", fontSize: 13, color: "var(--muted)" }}>
@@ -1012,31 +1020,6 @@ function SalgsmaalEditor() {
           <span style={{ fontSize: 13, color: "var(--muted)", width: 48 }}>kr/mnd</span>
         </div>
       ))}
-
-      {/* The button exists only while there is something to save — appearing
-          is the signal the user asked for. */}
-      {endrede.length > 0 && (
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 6 }}>
-          <button
-            className="btn btn-primary"
-            onClick={lagreAlle}
-            disabled={lagrer}
-            style={{ padding: "9px 20px" }}
-          >
-            {lagrer
-              ? "Lagrer …"
-              : `Lagre ${endrede.length === 1 ? "målet" : `${endrede.length} mål`}`}
-          </button>
-          <span style={{ fontSize: 13, color: "var(--muted)" }}>
-            Endringer er ikke lagret ennå.
-          </span>
-        </div>
-      )}
-      {kvittering && endrede.length === 0 && (
-        <span style={{ fontSize: 13, color: "#059669", fontWeight: 600, marginTop: 6 }}>
-          ✓ Målene er lagret.
-        </span>
-      )}
     </div>
   );
 }
