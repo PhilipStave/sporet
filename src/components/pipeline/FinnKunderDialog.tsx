@@ -59,7 +59,7 @@ function navnNokkel(navn: string) {
 }
 
 export function FinnKunderDialog({ onClose }: { onClose: () => void }) {
-  const { createDeal, canWrite, deals } = useStore();
+  const { createDeal, updateDeal, canWrite, deals } = useStore();
   const [tekst, setTekst] = useState("");
   const [laster, setLaster] = useState(false);
   const [svar, setSvar] = useState<Svar | null>(null);
@@ -153,6 +153,24 @@ export function FinnKunderDialog({ onClose }: { onClose: () => void }) {
     }
   };
 
+  /**
+   * The fields that only the detail lookup can fill: contact details scraped
+   * from the company's own site, plus the accounts. Kept separate so they can
+   * be patched onto a deal that is already in the pipeline.
+   */
+  const fraDetalj = (lead: Lead, d: Detalj) => ({
+    email: d.kontakt.epost ?? "",
+    phone: d.kontakt.telefon ?? "",
+    adresse: d.adresse || lead.adresse || null,
+    postnummer: d.postnummer || null,
+    stiftet: d.stiftet ?? null,
+    nettside: d.kontakt.domene ?? null,
+    omsetning: d.regnskap?.omsetning ?? null,
+    driftsresultat: d.regnskap?.driftsresultat ?? null,
+    aarsresultat: d.regnskap?.aarsresultat ?? null,
+    regnskapsaar: d.regnskap?.aar ?? null,
+  });
+
   /** Everything we know about one company, ready for createDeal. */
   const somKunde = (lead: Lead, detalj: Detalj | null) => ({
     company: lead.navn,
@@ -191,46 +209,68 @@ export function FinnKunderDialog({ onClose }: { onClose: () => void }) {
 
     setBulk({ ferdig: 0, av: kandidater.length });
 
-    let detaljer: Detalj[] = [];
+    // Everyone lands in the pipeline first, on register data alone.
+    const opprettet = new Map<string, string>();
+    for (const lead of kandidater) {
+      const id = await createDeal(somKunde(lead, null));
+      if (id) {
+        opprettet.set(lead.orgnr, id);
+        setLagtInn((s) => new Set(s).add(lead.orgnr));
+      }
+      setBulk((b) => (b ? { ...b, ferdig: b.ferdig + 1 } : b));
+    }
+    setBulk(null);
+
+    // Then the slow part — one website visit per company — fills in contact
+    // details behind the scenes. The list is already usable while this runs.
     try {
       const res = await fetch("/api/kundesok/detalj", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ orgnr: kandidater.map((l) => l.orgnr) }),
       });
-      if (res.ok) detaljer = (await res.json())?.detaljer ?? [];
+      if (!res.ok) return;
+      const detaljer: Detalj[] = (await res.json())?.detaljer ?? [];
+      for (const lead of kandidater) {
+        const id = opprettet.get(lead.orgnr);
+        const d = detaljer.find((x) => x.orgnr === lead.orgnr);
+        if (id && d) await updateDeal(id, fraDetalj(lead, d));
+      }
     } catch {
-      // Fall back to what the search already gave us.
+      // The companies are in the pipeline; they just lack contact details.
     }
-
-    for (const lead of kandidater) {
-      const d = detaljer.find((x) => x.orgnr === lead.orgnr) ?? null;
-      const id = await createDeal(somKunde(lead, d));
-      if (id) setLagtInn((s) => new Set(s).add(lead.orgnr));
-      setBulk((b) => (b ? { ...b, ferdig: b.ferdig + 1 } : b));
-    }
-    setBulk(null);
   };
 
-  /** One click = one customer in the pipeline, with the full record attached. */
+  /**
+   * One click = one customer in the pipeline.
+   *
+   * The deal is created from the register data straight away, and the contact
+   * details are patched on when they arrive. Waiting for the detail lookup
+   * first meant several seconds of nothing after pressing plus — long enough
+   * that the button read as broken.
+   */
   const leggTil = async (lead: Lead) => {
     if (!canWrite || lagtInn.has(lead.orgnr)) return;
+
+    const id = await createDeal(somKunde(lead, null));
+    if (!id) return;
+    setLagtInn((s) => new Set(s).add(lead.orgnr));
+
     setJobber(lead.orgnr);
-    let detalj: Detalj | null = null;
     try {
       const res = await fetch("/api/kundesok/detalj", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ orgnr: [lead.orgnr] }),
       });
-      if (res.ok) detalj = (await res.json())?.detaljer?.[0] ?? null;
+      if (res.ok) {
+        const d: Detalj | null = (await res.json())?.detaljer?.[0] ?? null;
+        if (d) await updateDeal(id, fraDetalj(lead, d));
+      }
     } catch {
-      // Fall back to what the search already gave us.
+      // The company is already in the pipeline; it just lacks contact details.
     }
-
-    const id = await createDeal(somKunde(lead, detalj));
     setJobber(null);
-    if (id) setLagtInn((s) => new Set(s).add(lead.orgnr));
   };
 
   return (

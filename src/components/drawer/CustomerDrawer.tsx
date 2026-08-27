@@ -19,6 +19,60 @@ import { fmtKr, fmtDateShort, relativeLabel, fmtTime } from "@/lib/format";
 import { stageLabel, stageColor, type StageConfig } from "@/lib/stages";
 import type { Deal } from "@/types";
 
+/**
+ * Send an email, call, or open the company site — without retyping anything.
+ *
+ * Each link only appears when there is something behind it, so an empty row
+ * never promises an action that would open a blank mail window. The website
+ * comes from the register as a bare domain, hence the https:// here.
+ */
+function Handlinger({
+  email,
+  phone,
+  nettside,
+}: {
+  email: string;
+  phone: string;
+  nettside?: string | null;
+}) {
+  const url = nettside?.trim()
+    ? /^https?:\/\//i.test(nettside.trim())
+      ? nettside.trim()
+      : `https://${nettside.trim()}`
+    : null;
+
+  const lenker = [
+    email.trim() && { tekst: "Send e-post", ikon: "mail", href: `mailto:${email.trim()}` },
+    phone.trim() && { tekst: "Ring", ikon: "phone", href: `tel:${phone.replace(/\s/g, "")}` },
+    url && { tekst: "Nettside", ikon: "building", href: url, eksternt: true },
+  ].filter(Boolean) as { tekst: string; ikon: string; href: string; eksternt?: boolean }[];
+
+  if (lenker.length === 0) return null;
+
+  return (
+    <div style={{ display: "flex", gap: 14, marginTop: 8, flexWrap: "wrap" }}>
+      {lenker.map((l) => (
+        <a
+          key={l.tekst}
+          href={l.href}
+          {...(l.eksternt ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 5,
+            fontSize: 12.5,
+            color: "var(--primary)",
+            textDecoration: "none",
+          }}
+        >
+          <Icon name={l.ikon} size={13} />
+          {l.tekst}
+        </a>
+      ))}
+    </div>
+  );
+}
+
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
     <div
@@ -199,6 +253,11 @@ function DrawerInner({ deal }: { deal: Deal }) {
             onBlur={() => updateDeal(deal.id, { phone: f.phone })}
           />
         </div>
+
+        {/* Act on the contact details rather than copy them out by hand.
+            mailto: and tel: hand over to whatever the seller already uses —
+            Outlook, Gmail, the phone app — so no integration is needed. */}
+        <Handlinger email={f.email} phone={f.phone} nettside={deal.nettside} />
 
         {/* Product */}
         <input
