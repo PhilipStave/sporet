@@ -6,6 +6,7 @@ import {
   Karla,
 } from "next/font/google";
 import "./globals.css";
+import { Analytics } from "@vercel/analytics/next";
 import { ThemeProvider, themeInitScript } from "@/components/ThemeProvider";
 import {
   SITE_NAME,
@@ -117,6 +118,9 @@ export default function RootLayout({
       </head>
       <body>
         <ThemeProvider>{children}</ThemeProvider>
+        {/* Vercel Web Analytics: aggregate, cookieless visitor counts.
+            It never identifies a person — that is a feature, not a gap. */}
+        <Analytics />
       </body>
     </html>
   );
