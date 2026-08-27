@@ -639,3 +639,14 @@ a {
     display: none;
   }
 }
+
+/* Hero: text + product image side by side, stacking on narrow screens where
+   the image would otherwise shrink the headline into a sidebar. */
+@media (max-width: 960px) {
+  .hero-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .hero-bilde {
+    max-width: 560px;
+  }
+}

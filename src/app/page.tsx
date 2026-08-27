@@ -263,8 +263,22 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* Hero */}
+      {/* Hero.
+          Conversion logic, in order of the eye: the offer sits above the
+          headline (free, no lock-in — the two objections that stop a click),
+          the primary button carries the value instead of a generic verb, and
+          the check row answers "what am I risking?" before it is asked. The
+          right column shows the actual product — proof beats adjectives. */}
       <section style={{ ...wrap, padding: "64px 24px 40px" }}>
+        <div
+          className="hero-grid"
+          style={{
+            display: "grid",
+            gridTemplateColumns: "minmax(0, 1.15fr) minmax(0, 1fr)",
+            gap: 44,
+            alignItems: "center",
+          }}
+        >
         <div style={{ maxWidth: 760, display: "flex", flexDirection: "column", gap: 20 }}>
           <span
             style={{
@@ -277,7 +291,7 @@ export default function LandingPage() {
               fontWeight: 600,
             }}
           >
-            Salgsoppfølging for team
+            Prøv gratis i 14 dager — ingen binding
           </span>
           <h1
             style={{
@@ -304,15 +318,60 @@ export default function LandingPage() {
           </p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 6, alignItems: "center" }}>
             <Link href="/setup" style={{ ...inkBtn, padding: "14px 28px", fontSize: 17 }}>
-              Kom i gang
+              Prøv gratis i 14 dager
             </Link>
             <a href="#priser" style={outlineBtn}>
               Se priser
             </a>
-            <span style={{ fontSize: 14, color: "var(--muted)" }}>
-              Ingen installasjon. Fungerer i nettleseren.
-            </span>
           </div>
+          <ul
+            style={{
+              listStyle: "none",
+              margin: 0,
+              padding: 0,
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "8px 22px",
+              fontSize: 14.5,
+              color: "var(--muted)",
+            }}
+          >
+            {[
+              "Ingen binding — avslutt når som helst",
+              "Ingen kort for å starte",
+              "Fungerer i nettleseren, ingen installasjon",
+            ].map((t) => (
+              <li key={t} style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                <span style={{ color: "var(--accent)", fontWeight: 700 }}>✓</span>
+                {t}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* The product itself, not an illustration of it. */}
+        <figure
+          className="hero-bilde"
+          style={{ margin: 0 }}
+        >
+          <span
+            style={{
+              display: "block",
+              borderRadius: "var(--r-lg-land)",
+              overflow: "hidden",
+              border: "1px solid var(--divider)",
+              boxShadow: "0 24px 60px rgba(27,26,24,.14)",
+              background: "var(--surface)",
+            }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/screenshots/01-app.png"
+              alt="Pipelinen i Altiv med kunder fordelt på steg"
+              style={{ display: "block", width: "100%", height: "auto" }}
+            />
+          </span>
+        </figure>
         </div>
       </section>
 
