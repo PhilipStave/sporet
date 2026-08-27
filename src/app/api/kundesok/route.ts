@@ -89,8 +89,8 @@ export async function POST(req: Request) {
       kvoteBrukt,
       kvote,
       melding:
-        "Fant ingen bransje som passer. Prøv å beskrive hva kunden driver med, " +
-        "for eksempel «betongelementer til boligbygg» eller «regnskapstjenester til småbedrifter».",
+        "Fant ingen bransje som passer. Prøv å beskrive hva kunden din driver med, " +
+        "ikke bare hva produktet heter — modellnavn og varemerker er ofte for smale å søke på.",
     });
   }
 

@@ -22,11 +22,18 @@ type Svar = {
   kvote: number | null;
 };
 
-const EKSEMPLER = [
-  "feiemaskiner til kommuner",
-  "gravemaskiner til entreprenører",
-  "betongelementer til boligbygg",
-  "regnskapstjenester i Oslo",
+/**
+ * What the search understands, rather than four ready-made queries.
+ *
+ * Concrete examples taught the wrong lesson: they were all machines and
+ * construction, so a seller of anything else read them as "this is not for
+ * me". These three are the parameters the search actually acts on — place,
+ * size and count — and they hold whatever the user sells.
+ */
+const HINT = [
+  { hva: "Sted", som: "«i Trondheim», «på Sørlandet»" },
+  { hva: "Størrelse", som: "«små bedrifter», «over 50 ansatte»" },
+  { hva: "Antall", som: "«finn 20 kunder»" },
 ];
 
 function kr(n: number) {
@@ -298,7 +305,7 @@ export function FinnKunderDialog({ onClose }: { onClose: () => void }) {
               value={tekst}
               onChange={(e) => setTekst(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && sok()}
-              placeholder="Hva selger du? F.eks. «bucher feiemaskin» eller «gravemaskiner»"
+              placeholder="Hva selger du, og til hvem?"
               style={{
                 flex: "1 1 280px",
                 minWidth: 0,
@@ -320,26 +327,15 @@ export function FinnKunderDialog({ onClose }: { onClose: () => void }) {
               {laster ? "Søker …" : "Søk"}
             </button>
           </div>
-          <div style={{ marginTop: 10, display: "flex", gap: 7, flexWrap: "wrap" }}>
-            {EKSEMPLER.map((e) => (
-              <button
-                key={e}
-                type="button"
-                onClick={() => sok(e)}
-                disabled={laster}
-                style={{
-                  fontSize: 11.5,
-                  padding: "4px 10px",
-                  borderRadius: 999,
-                  border: "1px solid var(--border)",
-                  background: "transparent",
-                  color: "var(--muted)",
-                  cursor: "pointer",
-                }}
-              >
-                {e}
-              </button>
-            ))}
+          <div style={{ marginTop: 10, fontSize: 11.5, color: "var(--muted)", lineHeight: 1.7 }}>
+            Skriv med egne ord hva du selger og hvem som kjøper det. Du kan også ta med:
+            <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginTop: 3 }}>
+              {HINT.map((h) => (
+                <span key={h.hva}>
+                  <strong style={{ fontWeight: 600, color: "var(--text)" }}>{h.hva}</strong> {h.som}
+                </span>
+              ))}
+            </div>
           </div>
 
           <div style={{ marginTop: 10, display: "flex", gap: 7, alignItems: "center", flexWrap: "wrap" }}>
