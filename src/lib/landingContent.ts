@@ -13,7 +13,8 @@ export const FEATURE_DETAILS: Record<string, DetailBlock> = {
     title: "Finn kunder du ikke visste om",
     lead: "Skriv hva du selger og til hvem. Altiv finner ekte norske bedrifter som passer, og legger dem rett i pipelinen med firmadata, kontaktinfo og regnskapstall.",
     bullets: [
-      "«Feiemaskiner til kommuner i Bergens-området» gir deg kommunene og veientreprenørene som faktisk kjøper slikt — ikke konkurrentene dine",
+      "Skriv med egne ord: «regnskapstjenester til småbedrifter i Trondheim» eller «feiemaskiner til kommuner». Du får kjøperne, ikke konkurrentene dine",
+      "Ta med sted, størrelse eller antall når du vil styre treffene — «små bedrifter», «på Sørlandet», «finn 20 kunder»",
       "Alle bedrifter kommer fra Enhetsregisteret hos Brønnøysundregistrene. Ingen navn eller organisasjonsnumre er generert",
       "Hvert treff viser bransje, antall ansatte, sted og omsetning, så du ser hvem som er verdt en telefon før du velger",
       "Ett klikk legger bedriften i pipelinen med org.nr., adresse, stiftelsesdato, MVA-status, nettside og regnskapstall utfylt",

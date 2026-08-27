@@ -15,12 +15,11 @@ import {
 } from "@/lib/landingContent";
 
 /**
- * The lead search is written and ready, but hidden until it is switched on for
- * customers. Marketing a feature a trial user cannot find is a promise we do
- * not keep — set this to true the day the AI key is in Vercel and the
- * finnkunder flag is on for new orgs.
+ * Live since 27. august 2026: the API key is in Vercel and finnkunder is on
+ * by default for new orgs, so a trial user who reads about the lead search
+ * here finds it in the pipeline the same minute.
  */
-const VIS_KUNDESOK = false;
+const VIS_KUNDESOK = true;
 
 export const metadata: Metadata = {
   title: "Altiv — CRM for salgsoppfølging | Norsk salgsverktøy for B2B",

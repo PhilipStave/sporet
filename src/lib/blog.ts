@@ -21,6 +21,17 @@ export function isPublished(datePublished: string, now = new Date()): boolean {
 
 const HAND_WRITTEN: BlogPost[] = [
   {
+    slug: "finne-nye-kunder",
+    title: "Slik finner du nye B2B-kunder — uten å kjøpe en liste",
+    description:
+      "Opplysningene om 1,1 millioner norske bedrifter ligger gratis i Enhetsregisteret. Her er de tre reglene som gjør dem brukbare til prospektering — og hvor grensen går mot personopplysninger.",
+    datePublished: "2026-08-27",
+    readMinutes: 6,
+    image: "/blog/finne-nye-kunder.jpg",
+    imageAlt:
+      "Illustrasjon: et mylder av like bygninger der noen få lyser opp og løftes fram",
+  },
+  {
     slug: "hva-er-crm",
     title: "Hva er et CRM-system? Enkelt forklart for små bedrifter",
     description:

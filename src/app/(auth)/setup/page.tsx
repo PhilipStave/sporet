@@ -31,8 +31,7 @@ export default function SetupPage() {
     avdelinger: true,
     kunder: true,
     aktivitet: true,
-    // Not launched — new orgs never get it switched on by default.
-    finnkunder: false,
+    finnkunder: true,
   });
   const [password, setPassword] = useState("");
   const [password2, setPassword2] = useState("");

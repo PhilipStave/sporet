@@ -109,8 +109,7 @@ export const DEFAULT_FEATURES: Record<FeatureKey, boolean> = {
   avdelinger: true,
   kunder: true,
   aktivitet: true,
-  // Not launched. Off unless explicitly switched on for an org.
-  finnkunder: false,
+  finnkunder: true,
 };
 
 export const FEATURE_LABELS: Record<FeatureKey, string> = {
