@@ -166,7 +166,9 @@ const plans = PLAN_DEFS.map((p) => {
   };
 });
 
-const wrap: React.CSSProperties = { maxWidth: 1120, margin: "0 auto" };
+// Wide enough to fill a big desktop nearly edge to edge; the cap exists so
+// ultrawide monitors do not stretch lines past what an eye can track back.
+const wrap: React.CSSProperties = { maxWidth: 1680, margin: "0 auto" };
 
 const inkBtn: React.CSSProperties = {
   display: "inline-flex",
@@ -307,7 +309,7 @@ export default function LandingPage() {
             Følg opp hver kunde i tide — og{" "}
             <em style={{ color: "var(--accent)" }}>vinn flere salg</em>
           </h1>
-          <p style={{ margin: 0, fontSize: 17.5, color: "var(--muted)", maxWidth: "58ch" }}>
+          <p style={{ margin: 0, fontSize: 17.5, color: "var(--muted)", maxWidth: "64ch" }}>
             <strong style={{ color: "var(--text)", fontWeight: 600 }}>
               Salg tapes sjelden på prisen — de tapes på oppfølgingen som glapp.
             </strong>{" "}
@@ -443,8 +445,7 @@ export default function LandingPage() {
             fontFamily: "var(--font-display)",
             fontWeight: 400,
             fontSize: "clamp(26px, 3.2vw, 36px)",
-            margin: "0 auto 18px",
-            maxWidth: 940,
+            margin: "0 0 18px",
           }}
         >
           Alt du trenger for å følge opp salget
