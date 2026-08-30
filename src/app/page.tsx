@@ -166,10 +166,10 @@ const plans = PLAN_DEFS.map((p) => {
   };
 });
 
-// Wide enough to fill a big desktop, capped so ultrawide monitors do not
-// stretch lines past what an eye can track back. 1680 read as too airy;
-// 1440 keeps the density without falling back to the old letterbox feel.
-const wrap: React.CSSProperties = { maxWidth: 1440, margin: "0 auto" };
+// Tuned by eye against a wide desktop: 1120 read as a letterbox, 1680 as
+// too airy, 1440 as cluttered. 1280 keeps a calm margin on both sides while
+// still using clearly more of the screen than the original.
+const wrap: React.CSSProperties = { maxWidth: 1280, margin: "0 auto" };
 
 const inkBtn: React.CSSProperties = {
   display: "inline-flex",
