@@ -166,9 +166,10 @@ const plans = PLAN_DEFS.map((p) => {
   };
 });
 
-// Wide enough to fill a big desktop nearly edge to edge; the cap exists so
-// ultrawide monitors do not stretch lines past what an eye can track back.
-const wrap: React.CSSProperties = { maxWidth: 1680, margin: "0 auto" };
+// Wide enough to fill a big desktop, capped so ultrawide monitors do not
+// stretch lines past what an eye can track back. 1680 read as too airy;
+// 1440 keeps the density without falling back to the old letterbox feel.
+const wrap: React.CSSProperties = { maxWidth: 1440, margin: "0 auto" };
 
 const inkBtn: React.CSSProperties = {
   display: "inline-flex",
@@ -622,43 +623,10 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Demo video */}
-      <section style={{ ...wrap, padding: "0 24px 56px" }}>
-        <div style={{ maxWidth: 620, marginBottom: 22 }}>
-          <h2
-            style={{
-              fontFamily: "var(--font-display)",
-              fontWeight: 400,
-              fontSize: "clamp(32px, 4.2vw, 48px)",
-              lineHeight: 1.1,
-              margin: "0 0 10px",
-            }}
-          >
-            Se Altiv i bruk
-          </h2>
-          <p style={{ margin: 0, fontSize: 17, color: "var(--muted)", lineHeight: 1.6 }}>
-            80 sekunder: logg inn, opprett en kunde, flytt den i pipelinen, logg en telefon, og se
-            statistikk, selgerrangering, kundelisten og kalenderen. Ekte system, ingen klipping.
-          </p>
-        </div>
-        <video
-          controls
-          muted
-          playsInline
-          preload="metadata"
-          poster="/demo-poster.jpg"
-          style={{
-            width: "100%",
-            borderRadius: "var(--r-lg-land)",
-            border: "1px solid var(--divider)",
-            boxShadow: "0 18px 50px rgba(27,26,24,.12)",
-            display: "block",
-            background: "var(--surface)",
-          }}
-        >
-          <source src="/demo.mp4" type="video/mp4" />
-        </video>
-      </section>
+      {/* The demo video is parked for now (user call, 27. aug 2026): the
+          recording shows the app before the AI search and the new hero
+          promises. /demo.mp4 and /demo-poster.jpg stay in public/ so putting
+          it back is one section, not a re-recording hunt. */}
 
       {/* How it works */}
       <section
