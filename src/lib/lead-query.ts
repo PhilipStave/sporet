@@ -652,3 +652,125 @@ async function interpretWithAi(tekst: string): Promise<Interpretation | null> {
     return null;
   }
 }
+
+// ------------------------------------------------------------
+// Relevance pass: rank the register hits against the actual query
+// ------------------------------------------------------------
+
+export type RangeringsKandidat = {
+  orgnr: string;
+  navn: string;
+  naering: string;
+  /** Free text from the register about what the company actually does. */
+  aktivitet: string;
+  ansatte: number | null;
+  registrert: string | null;
+};
+
+/**
+ * Second, cheap model pass over the hits themselves.
+ *
+ * The industry-code search finds the right *kind* of company; this pass reads
+ * what each company says it actually does (the register's free-text activity
+ * field) and puts the best prospects first. It can only reorder and annotate —
+ * every orgnr it returns is checked against the input, and hits it leaves out
+ * are shown after the ranked ones, never dropped. Costs one small Haiku call
+ * on top of the interpretation (~1–2 øre), covered by the same quota unit.
+ */
+export async function rangerTreff(
+  tekst: string,
+  kandidater: RangeringsKandidat[]
+): Promise<Map<string, string> | null> {
+  const key = process.env.ANTHROPIC_API_KEY?.trim();
+  if (!key || kandidater.length < 3) return null;
+
+  const linjer = kandidater
+    .map((k) => {
+      const alder = k.registrert ? `reg. ${k.registrert.slice(0, 4)}` : "";
+      const str = k.ansatte != null ? `${k.ansatte} ansatte` : "";
+      const om = k.aktivitet ? ` — «${k.aktivitet.slice(0, 220)}»` : "";
+      return `${k.orgnr} | ${k.navn} | ${k.naering} | ${[str, alder].filter(Boolean).join(", ")}${om}`;
+    })
+    .join(String.fromCharCode(10));
+
+  const verktoy = {
+    name: "ranger_treff",
+    description: "Ranger bedriftene etter hvor gode prospekter de er for selgeren.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        rangering: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              orgnr: { type: "string", description: "Org.nr. fra listen, uendret." },
+              hvorfor: {
+                type: "string",
+                description:
+                  "Maks tolv ord på norsk om hvorfor dette er et godt prospekt. " +
+                  "Bygg på aktivitetsteksten når den finnes.",
+              },
+            },
+            required: ["orgnr", "hvorfor"],
+          },
+          description:
+            "Bedriftene som faktisk passer, beste først. Utelat dem som ikke " +
+            "gjør det — de vises likevel, bare lenger ned.",
+        },
+      },
+      required: ["rangering"],
+    },
+  };
+
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-api-key": key,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: modell(),
+        max_tokens: 1500,
+        system:
+          "Du rangerer bedrifter som salgs-prospekter. Les hva hver bedrift " +
+          "faktisk driver med, og sett dem som mest sannsynlig KJØPER det " +
+          "selgeren tilbyr først. Bedrifter i vekst og nyere bedrifter er ofte " +
+          "bedre prospekter enn store etablerte med faste leverandører. Vær " +
+          "streng: en bedrift som åpenbart ikke passer, skal utelates.",
+        tools: [verktoy],
+        tool_choice: { type: "tool", name: "ranger_treff" },
+        messages: [
+          {
+            role: "user",
+            content:
+              `Selgeren skrev: "${tekst}"` +
+              String.fromCharCode(10) + String.fromCharCode(10) +
+              `Bedriftene (orgnr | navn | bransje | størrelse — «hva de sier de driver med»):` +
+              String.fromCharCode(10) + linjer,
+          },
+        ],
+      }),
+    });
+    if (!res.ok) {
+      aiGavOpp(`rangering HTTP ${res.status}`, (await res.text()).slice(0, 300));
+      return null;
+    }
+    const json = await res.json();
+    const bruk = (json?.content ?? []).find((c: { type?: string }) => c?.type === "tool_use");
+    const rader: { orgnr?: unknown; hvorfor?: unknown }[] = bruk?.input?.rangering ?? [];
+
+    const gyldige = new Set(kandidater.map((k) => k.orgnr));
+    const ut = new Map<string, string>();
+    for (const r of rader) {
+      const o = String(r.orgnr ?? "");
+      if (gyldige.has(o) && !ut.has(o)) ut.set(o, String(r.hvorfor ?? "").slice(0, 140));
+    }
+    return ut.size > 0 ? ut : null;
+  } catch (e) {
+    aiGavOpp("rangeringen kastet", (e as Error).message);
+    return null;
+  }
+}

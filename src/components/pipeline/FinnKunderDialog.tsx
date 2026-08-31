@@ -505,6 +505,18 @@ export function FinnKunderDialog({ onClose }: { onClose: () => void }) {
                         <div style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 1 }}>
                           {l.naering}
                         </div>
+                        {l.hvorfor && (
+                          <div
+                            style={{
+                              fontSize: 12,
+                              color: "var(--primary)",
+                              marginTop: 2,
+                              fontStyle: "italic",
+                            }}
+                          >
+                            {l.hvorfor}
+                          </div>
+                        )}
                         <div
                           style={{
                             display: "flex",

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { interpret, matchLocally, aiEnabled } from "@/lib/lead-query";
-import { searchCompanies } from "@/lib/brreg";
+import { interpret, matchLocally, aiEnabled, rangerTreff } from "@/lib/lead-query";
+import { searchCompanies, fetchCompany } from "@/lib/brreg";
 
 // Lead search: free text in, real companies from Enhetsregisteret out.
 // Signed-in users only — the register is public, but the endpoint is not a proxy
@@ -97,6 +97,33 @@ export async function POST(req: Request) {
   // The model may have picked up a number from the query ("finn 13 kunder").
   const grense = Math.min(Math.max(tolkning.antall ?? 40, 1), 100);
   const { leads, total } = await searchCompanies(tolkning.filter, grense);
+
+  // Relevance pass, AI searches only: read what the top hits say they actually
+  // do (the register's free-text activity field) and put the best prospects
+  // first, each with a one-line why. Reorder and annotate — never drop.
+  if (tolkning.kilde === "ai" && leads.length >= 3) {
+    const topp = leads.slice(0, 25);
+    const detaljer = await Promise.all(topp.map((l) => fetchCompany(l.orgnr)));
+    const rangering = await rangerTreff(
+      tekst,
+      topp.map((l, i) => ({
+        orgnr: l.orgnr,
+        navn: l.navn,
+        naering: l.naering,
+        aktivitet: (detaljer[i]?.aktivitet || detaljer[i]?.formaal || "").slice(0, 300),
+        ansatte: l.ansatte,
+        registrert: l.registrert,
+      }))
+    );
+    if (rangering) {
+      const rangerte = [...rangering.keys()]
+        .map((o) => leads.find((l) => l.orgnr === o))
+        .filter((l): l is NonNullable<typeof l> => Boolean(l))
+        .map((l) => ({ ...l, hvorfor: rangering.get(l.orgnr) }));
+      const resten = leads.filter((l) => !rangering.has(l.orgnr));
+      leads.splice(0, leads.length, ...rangerte, ...resten);
+    }
+  }
 
   const svar = {
     leads,

@@ -30,6 +30,8 @@ export type Lead = {
   adresse: string;
   registrert: string | null;
   mva: boolean;
+  /** One line from the relevance pass on why this hit fits the query. */
+  hvorfor?: string;
 };
 
 type BrregEnhet = {
