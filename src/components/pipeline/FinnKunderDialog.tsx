@@ -5,6 +5,7 @@ import { useStore } from "@/store/Store";
 import { Icon } from "@/components/Icon";
 import type { Lead, LeadDetail, Regnskap } from "@/lib/brreg";
 import type { Kontakt } from "@/lib/kontakt";
+import type { Anbud } from "@/lib/doffin";
 
 type Detalj = LeadDetail & { kontakt: Kontakt; regnskap: Regnskap | null };
 
@@ -63,6 +64,9 @@ export function FinnKunderDialog({ onClose }: { onClose: () => void }) {
   const [tekst, setTekst] = useState("");
   const [laster, setLaster] = useState(false);
   const [svar, setSvar] = useState<Svar | null>(null);
+  // Active Doffin notices matching the same phrase — buyers who are looking
+  // right now. Loaded alongside the company search, never blocking it.
+  const [anbud, setAnbud] = useState<Anbud[]>([]);
   const [feil, setFeil] = useState<string | null>(null);
   const [lagtInn, setLagtInn] = useState<Set<string>>(new Set());
   const [jobber, setJobber] = useState<string | null>(null);
@@ -116,6 +120,17 @@ export function FinnKunderDialog({ onClose }: { onClose: () => void }) {
     setLaster(true);
     setFeil(null);
     setSvar(null);
+    setAnbud([]);
+    // Fire-and-collect: tenders arrive whenever Doffin answers, and a Doffin
+    // hiccup never touches the company search.
+    fetch("/api/kundesok/anbud", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ tekst: spørring }),
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => setAnbud(j?.anbud ?? []))
+      .catch(() => {});
     try {
       const res = await fetch("/api/kundesok", {
         method: "POST",
@@ -424,6 +439,78 @@ export function FinnKunderDialog({ onClose }: { onClose: () => void }) {
                     </>
                   )}
                 </p>
+              )}
+
+              {/* Buyers who are looking RIGHT NOW: open notices from Doffin.
+                  The register shows who exists; this shows demand. */}
+              {anbud.length > 0 && (
+                <div
+                  style={{
+                    border: "1px solid var(--border)",
+                    borderRadius: 12,
+                    padding: "12px 14px",
+                    marginBottom: 14,
+                    background: "var(--bg)",
+                  }}
+                >
+                  <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>
+                    Aktive anbud på Doffin ({anbud.length})
+                    <span style={{ fontWeight: 400, color: "var(--muted)" }}>
+                      {" "}
+                      — offentlige kjøpere som leter etter dette nå
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {anbud.map((a) => (
+                      <div key={a.id} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                        <div style={{ flex: 1, minWidth: 0, fontSize: 12.5 }}>
+                          <a
+                            href={a.lenke}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ fontWeight: 600, color: "var(--primary)", textDecoration: "none" }}
+                          >
+                            {a.tittel}
+                          </a>
+                          <span style={{ color: "var(--muted)" }}>
+                            {" · "}
+                            {a.kjoperNavn}
+                            {a.verdi != null && <> · est. {kr(a.verdi)} kr</>}
+                            {a.frist && (
+                              <> · frist {new Date(a.frist).toLocaleDateString("nb-NO", { day: "numeric", month: "short" })}</>
+                            )}
+                          </span>
+                        </div>
+                        {a.kjoperOrgnr && (
+                          <button
+                            type="button"
+                            className="btn"
+                            title={`Legg ${a.kjoperNavn} i pipelinen`}
+                            disabled={!canWrite || lagtInn.has(a.kjoperOrgnr)}
+                            onClick={() =>
+                              leggTil({
+                                orgnr: a.kjoperOrgnr!,
+                                navn: a.kjoperNavn,
+                                form: "",
+                                naeringskode: "",
+                                naering: "",
+                                ansatte: null,
+                                poststed: "",
+                                kommune: "",
+                                adresse: "",
+                                registrert: null,
+                                mva: false,
+                              })
+                            }
+                            style={{ padding: "3px 10px", fontSize: 12, flex: "none" }}
+                          >
+                            {lagtInn.has(a.kjoperOrgnr) ? "✓" : "+"}
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
 
               <div
