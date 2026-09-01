@@ -86,6 +86,24 @@ function noekkelord(tekst: string): string[] {
     .slice(0, 3);
 }
 
+/**
+ * Does the notice actually talk about this word?
+ *
+ * The match has to start a word. Plain substring matching let "legge" hit
+ * "planlegge" and "kjøre" hit "kjøretøy", which is how a search for decking
+ * came back with a data centre. Norwegian compounds put the meaningful stem
+ * first, so a prefix match is right and a suffix match is not.
+ */
+function naevner(h: DoffinHit, ord: string): boolean {
+  const tekst = `${h.heading ?? ""} ${h.description ?? ""}`.toLowerCase();
+  let i = tekst.indexOf(ord);
+  while (i >= 0) {
+    if (i === 0 || !/[a-zæøå0-9]/.test(tekst[i - 1])) return true;
+    i = tekst.indexOf(ord, i + 1);
+  }
+  return false;
+}
+
 async function spor(searchString: string): Promise<DoffinHit[]> {
   const res = await fetch(
     "https://api.doffin.no/webclient/api/v2/search-api/search",
@@ -130,16 +148,19 @@ export async function sokAnbud(tekst: string, maks = 12): Promise<Anbud[]> {
     const ord = noekkelord(tekst);
     const relevant = (h: DoffinHit) => {
       if (ord.length === 0) return true;
-      const tekstIKunngjoering = `${h.heading ?? ""} ${h.description ?? ""}`.toLowerCase();
-      return ord.some((o) => tekstIKunngjoering.includes(o));
+      return ord.some((o) => naevner(h, o));
     };
 
     let treff = (await spor(tekst)).filter(relevant);
     if (treff.length === 0) {
-      for (const o of ord) {
-        const kandidater = (await spor(o)).filter((h) =>
-          `${h.heading ?? ""} ${h.description ?? ""}`.toLowerCase().includes(o)
-        );
+      // A fallback word carries the entire result set on its own, so it has to
+      // be specific enough to deserve that. "legge" and "kjøre" are actions,
+      // not subjects: falling back to them answered "legge platting" with
+      // water mains and child welfare services, because both descriptions say
+      // "planlegge". Six letters is the line where a Norwegian word tends to
+      // stop being a verb and start being a thing.
+      for (const o of ord.filter((x) => x.length >= 6)) {
+        const kandidater = (await spor(o)).filter((h) => naevner(h, o));
         if (kandidater.length > 0) {
           treff = kandidater;
           break;
