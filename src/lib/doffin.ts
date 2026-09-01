@@ -55,6 +55,23 @@ const STOPP = new Set([
 ]);
 
 /**
+ * Action words: what you *do*, not what you sell.
+ *
+ * Notices are categorised by noun — "Asfaltering", "Vikartjenester",
+ * "Kontormøbler" — so a verb can never carry a search on its own. A length
+ * rule was tried first and was quietly biased: it would have thrown out
+ * kaffe, frukt, glass and strøm, which are exactly the words a seller in
+ * those trades would use. Grammar is fair to every industry; word length is
+ * not.
+ */
+const HANDLINGSORD = new Set([
+  "legge", "kjøre", "frakte", "hente", "bringe", "rydde", "vaske", "montere",
+  "installere", "reparere", "bygge", "grave", "felle", "skifte", "bytte",
+  "ordne", "fikse", "utføre", "gjøre", "lage", "sette", "drive", "holde",
+  "pusse", "koste", "rive", "flytte", "losse", "laste", "måke", "levere",
+]);
+
+/**
  * Place names, from the same municipality list the lead search uses.
  *
  * Geography is a filter, not a subject: "oslo" and "bergen" appear in the
@@ -94,8 +111,10 @@ function noekkelord(tekst: string): string[] {
  * came back with a data centre. Norwegian compounds put the meaningful stem
  * first, so a prefix match is right and a suffix match is not.
  */
-function naevner(h: DoffinHit, ord: string): boolean {
-  const tekst = `${h.heading ?? ""} ${h.description ?? ""}`.toLowerCase();
+function naevner(h: DoffinHit, ord: string, kunTittel = false): boolean {
+  const tekst = (
+    kunTittel ? (h.heading ?? "") : `${h.heading ?? ""} ${h.description ?? ""}`
+  ).toLowerCase();
   let i = tekst.indexOf(ord);
   while (i >= 0) {
     if (i === 0 || !/[a-zæøå0-9]/.test(tekst[i - 1])) return true;
@@ -153,14 +172,13 @@ export async function sokAnbud(tekst: string, maks = 12): Promise<Anbud[]> {
 
     let treff = (await spor(tekst)).filter(relevant);
     if (treff.length === 0) {
-      // A fallback word carries the entire result set on its own, so it has to
-      // be specific enough to deserve that. "legge" and "kjøre" are actions,
-      // not subjects: falling back to them answered "legge platting" with
-      // water mains and child welfare services, because both descriptions say
-      // "planlegge". Six letters is the line where a Norwegian word tends to
-      // stop being a verb and start being a thing.
-      for (const o of ord.filter((x) => x.length >= 6)) {
-        const kandidater = (await spor(o)).filter((h) => naevner(h, o));
+      // A fallback word carries the whole result set on its own, so it has to
+      // earn that twice over: it must name a thing rather than an action, and
+      // it must appear in the notice's own title. A word buried in a
+      // description is a mention; a word in the title is what the notice is
+      // about.
+      for (const o of ord.filter((x) => !HANDLINGSORD.has(x))) {
+        const kandidater = (await spor(o)).filter((h) => naevner(h, o, true));
         if (kandidater.length > 0) {
           treff = kandidater;
           break;
