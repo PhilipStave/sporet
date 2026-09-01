@@ -99,19 +99,27 @@ async function spor(searchString: string): Promise<DoffinHit[]> {
  */
 export async function sokAnbud(tekst: string, maks = 12): Promise<Anbud[]> {
   try {
-    let treff = await spor(tekst);
+    // Doffin matches on ANY word in the phrase, so a sentence never comes back
+    // empty — "kjøre oppdrag fra oslo til bergen" returned twelve notices about
+    // accounting, snow clearing and police work. Every hit therefore has to
+    // earn its place by actually mentioning one of the words that carry the
+    // meaning. Showing an unrelated tender is worse than showing none: the
+    // seller spends an evening on a bid that was never theirs.
+    const ord = noekkelord(tekst);
+    const relevant = (h: DoffinHit) => {
+      if (ord.length === 0) return true;
+      const tekstIKunngjoering = `${h.heading ?? ""} ${h.description ?? ""}`.toLowerCase();
+      return ord.some((o) => tekstIKunngjoering.includes(o));
+    };
+
+    let treff = (await spor(tekst)).filter(relevant);
     if (treff.length === 0) {
-      for (const ord of noekkelord(tekst)) {
-        const kandidater = await spor(ord);
-        // Doffin's matching is loose, so a fallback word can drag in notices
-        // that have nothing to do with it. Showing an unrelated tender is
-        // worse than showing none: the seller spends an evening on a bid that
-        // was never theirs. Keep only the ones that actually say the word.
-        const relevante = kandidater.filter((h) =>
-          `${h.heading ?? ""} ${h.description ?? ""}`.toLowerCase().includes(ord)
+      for (const o of ord) {
+        const kandidater = (await spor(o)).filter((h) =>
+          `${h.heading ?? ""} ${h.description ?? ""}`.toLowerCase().includes(o)
         );
-        if (relevante.length > 0) {
-          treff = relevante;
+        if (kandidater.length > 0) {
+          treff = kandidater;
           break;
         }
       }
