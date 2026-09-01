@@ -109,12 +109,29 @@ function finnEpost(html: string, domene: string): string | null {
   return null;
 }
 
+/**
+ * Words that mark a phone number as belonging to a named person rather than
+ * to the company. An employee's direct line is personal data exactly like
+ * their e-mail address is — the mailbox rule was enforced from the start, the
+ * phone rule was not, and a staff list is where most tel:-links live.
+ */
+const PERSONMARKOER =
+  /(dagleg |daglig |avdelingsleder|prosjektleder|salgssjef|selger|kontaktperson|ansvarlig|direkt|mobil|styreleder|innehaver|leder\b)/i;
+
 function finnTelefon(html: string): string | null {
   // Only numbers the site itself marked as a phone link — free-text digits are
   // just as likely to be an account or invoice number.
   for (const m of html.matchAll(/href=["']tel:([^"']+)["']/gi)) {
     const bare = m[1].replace(/[^0-9]/g, "").replace(/^0047/, "").replace(/^47(?=\d{8}$)/, "");
-    if (bare.length === 8) return bare.replace(/(\d{2})(\d{2})(\d{2})(\d{2})/, "$1 $2 $3 $4");
+    if (bare.length !== 8) continue;
+
+    // Look at the markup immediately around the link: a direct line sits next
+    // to a job title or a person's name, a switchboard does not.
+    const start = Math.max(0, m.index - 260);
+    const rundt = html.slice(start, m.index + 260).replace(/<[^>]*>/g, " ");
+    if (PERSONMARKOER.test(rundt)) continue;
+
+    return bare.replace(/(\d{2})(\d{2})(\d{2})(\d{2})/, "$1 $2 $3 $4");
   }
   return null;
 }
@@ -129,11 +146,17 @@ async function hent(url: string, ms: number): Promise<string | null> {
       headers: { "user-agent": "AltivKundesok/1.0 (+https://altiv.no)" },
       next: { revalidate: 604800 },
     });
-    clearTimeout(t);
-    if (!res.ok) return null;
-    if (!(res.headers.get("content-type") ?? "").includes("text/html")) return null;
-    // Contact details live near the top and in the footer; 400 kB is plenty.
-    return (await res.text()).slice(0, 400_000);
+    // The timeout has to survive until the body is read: a server that sends
+    // headers fast and then trickles the page would otherwise hang here with
+    // nothing left to abort it, and the whole batch waits on that one site.
+    try {
+      if (!res.ok) return null;
+      if (!(res.headers.get("content-type") ?? "").includes("text/html")) return null;
+      // Contact details live near the top and in the footer; 400 kB is plenty.
+      return (await res.text()).slice(0, 400_000);
+    } finally {
+      clearTimeout(t);
+    }
   } catch {
     return null;
   }
@@ -152,7 +175,14 @@ export async function finnKontakt(
   orgnr: string,
   registrert?: string | null
 ): Promise<Kontakt> {
-  const ord = reneOrd(navn).filter((w) => w.length >= 3);
+  // Two word lists, and they must agree. domeneKandidater builds the
+  // first-word guess from the *unfiltered* words, so filtering here made
+  // "Hansen & Co AS" look like a one-word name: the guard below went quiet,
+  // hansen.no was accepted on a single title match, and a stranger's mailbox
+  // was returned as confirmed. That is the CITY ROAD bug again, wearing a
+  // different name.
+  const alleOrd = reneOrd(navn);
+  const ord = alleOrd.filter((w) => w.length >= 3);
 
   // The registered site goes first, and the guessed ones only if it fails.
   const fraRegisteret = (registrert ?? "").trim().toLowerCase() || null;
@@ -165,8 +195,11 @@ export async function finnKontakt(
     // The candidate built from the first word alone is the risky one: for a
     // multi-word name it can land on a generic domain that has nothing to do
     // with the company. Such a guess has to bring back the rest of the name
-    // before it counts as the right site.
-    const gjettetPaaEttOrd = !erRegistrert && ord.length > 1 && domene === `${ord[0]}.no`;
+    // before it counts as the right site — and when the rest is too short to
+    // ever appear in a title check, the guess cannot be confirmed at all.
+    const gjettetPaaEttOrd =
+      !erRegistrert && alleOrd.length > 1 && domene === `${alleOrd[0]}.no`;
+    const kanBekreftes = ord.length > 1;
     const kreves = gjettetPaaEttOrd ? 2 : 1;
 
     const forside = await hent(`https://${domene}`, 6000);
@@ -190,7 +223,7 @@ export async function finnKontakt(
 
     // The register is proof in itself, as is the org number on the page; the
     // title is only evidence.
-    const sikker = erRegistrert || orgnrTreff || treff >= kreves;
+    const sikker = erRegistrert || orgnrTreff || (kanBekreftes && treff >= kreves);
     if (gjettetPaaEttOrd && !sikker) continue;
     // A registered site with no contact details still tells the seller where
     // the company lives — worth returning even when the mailbox hunt failed.

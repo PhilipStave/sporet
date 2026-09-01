@@ -134,9 +134,13 @@ export async function POST(req: Request) {
   // that would never reach the first page. Sirdal kommune buying a sweeper is
   // the whole point of the search; being number 400 by headcount is not.
   const anbud = await sokAnbud(tekst, 40);
-  const perOrgnr = new Map(
-    anbud.filter((a) => a.kjoperOrgnr).map((a) => [a.kjoperOrgnr!, a])
-  );
+  // sokAnbud returns newest first, and Map keeps the *last* write per key —
+  // so building it straight from the list would show a buyer's oldest open
+  // notice. The seller wants the one that just came out.
+  const perOrgnr = new Map<string, (typeof anbud)[number]>();
+  for (const a of anbud) {
+    if (a.kjoperOrgnr && !perOrgnr.has(a.kjoperOrgnr)) perOrgnr.set(a.kjoperOrgnr, a);
+  }
 
   if (perOrgnr.size > 0) {
     const finnes = new Set(leads.map((l) => l.orgnr));

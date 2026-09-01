@@ -146,14 +146,30 @@ export async function searchCompanies(
 function reisDomene(raa: string | undefined): string | null {
   const s = (raa ?? "").trim().toLowerCase();
   if (!s || s.includes("@")) return null;
-  const vert = s
-    .replace(/^https?:\/\//, "")
-    .replace(/^www\./, "")
-    .split(/[/?#]/)[0]
-    .trim();
+  const uten = s.replace(/^https?:\/\//, "").replace(/^www\./, "");
+  const vert = uten.split(/[/?#]/)[0].trim();
   // A real hostname: at least one dot, no spaces, plausible TLD.
-  return /^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}$/.test(vert) ? vert : null;
+  if (!/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}$/.test(vert)) return null;
+
+  // Small companies often register a page on somebody else's platform. There
+  // the path is the company and the host is not — dropping the path leaves us
+  // pointing at Facebook, and the caller would then trust facebook.com as this
+  // company's own confirmed site and harvest whatever mailbox it finds there.
+  const sti = uten.slice(vert.length).replace(/^\/+/, "").split(/[?#]/)[0];
+  if (sti.length > 0 && DELT_VERT.some((d) => vert === d || vert.endsWith("." + d))) {
+    return null;
+  }
+  return vert;
 }
+
+/** Platforms where a path, not the host, identifies the company. */
+const DELT_VERT = [
+  "facebook.com", "instagram.com", "linkedin.com", "x.com", "twitter.com",
+  "youtube.com", "google.com", "sites.google.com", "wordpress.com",
+  "blogspot.com", "wix.com", "wixsite.com", "squarespace.com", "weebly.com",
+  "webnode.no", "123hjemmeside.no", "one.com", "proff.no", "gulesider.no",
+  "finn.no", "1881.no",
+];
 
 export type LeadDetail = Lead & {
   stiftet: string | null;

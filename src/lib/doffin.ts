@@ -30,7 +30,15 @@ type DoffinHit = {
   deadline?: string;
   publicationDate?: string;
   type?: string;
+  allTypes?: string[];
 };
+
+/**
+ * A notice with no deadline is only treated as live while it is recent. Some
+ * carry neither status nor deadline, and "not marked expired" is not the same
+ * as open — a 2019 announcement sailed through that test.
+ */
+const AAPEN_UTEN_FRIST_MS = 180 * 24 * 60 * 60 * 1000;
 
 // Doffin matches literal text against notice titles and descriptions, so a
 // whole sentence usually finds nothing while its key noun finds plenty.
@@ -93,10 +101,20 @@ export async function sokAnbud(tekst: string, maks = 12): Promise<Anbud[]> {
       .filter((h) => {
         if (!h.id || !h.heading) return false;
         if (h.status === "EXPIRED" || h.status === "CANCELLED") return false;
-        // A deadline in the past means the competition is over even when the
-        // status field lags behind.
-        if (h.deadline && new Date(h.deadline).getTime() < naa) return false;
-        return true;
+
+        // Doffin publishes results too: ANNOUNCEMENT_OF_CONCLUSION_OF_CONTRACT
+        // means the contract is already awarded — someone else won. Only an
+        // open competition is a lead.
+        if (!(h.allTypes ?? []).includes("COMPETITION")) return false;
+
+        // Being current has to be proven, not assumed. Some notices carry
+        // neither status nor deadline — a 2019 announcement with both fields
+        // missing sailed through an "is it expired?" test and was presented
+        // to the seller as live. Telling someone to call about a competition
+        // that closed six years ago is worse than showing them nothing.
+        if (h.deadline) return new Date(h.deadline).getTime() > naa;
+        if (!h.publicationDate) return false;
+        return naa - new Date(h.publicationDate).getTime() < AAPEN_UTEN_FRIST_MS;
       })
       .sort((a, b) => (b.publicationDate ?? "").localeCompare(a.publicationDate ?? ""))
       .slice(0, maks)
