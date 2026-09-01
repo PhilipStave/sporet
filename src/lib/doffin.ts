@@ -264,15 +264,19 @@ export async function sokAnbud(tekst: string, maks = 12): Promise<Anbud[]> {
     // The seller's word and the buyer's word are often different words for
     // the same trade, and nothing mechanical closes that gap.
     if (treff.length === 0) {
+      const forslag = await aiSokeord(tekst);
+      // In parallel: four suggestions run one after another added seconds to a
+      // search that had already come up empty twice.
+      const svar = await Promise.all(
+        forslag.map(async (f) => {
+          // A suggestion can be two words ("renhold av veier"); require the
+          // first, most specific one to appear in the title.
+          const kjerne = f.split(/\s+/)[0];
+          return (await spor(f)).filter((h) => naevner(h, kjerne, true));
+        })
+      );
       const sett = new Map<string, DoffinHit>();
-      for (const forslag of await aiSokeord(tekst)) {
-        // A suggestion can be two words ("renhold av veier"); require the
-        // first, most specific one to appear in the title.
-        const kjerne = forslag.split(/\s+/)[0];
-        for (const h of await spor(forslag)) {
-          if (h.id && !sett.has(h.id) && naevner(h, kjerne, true)) sett.set(h.id, h);
-        }
-      }
+      for (const h of svar.flat()) if (h.id && !sett.has(h.id)) sett.set(h.id, h);
       treff = [...sett.values()];
     }
     const naa = Date.now();

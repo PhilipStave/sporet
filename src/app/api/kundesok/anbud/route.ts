@@ -5,6 +5,11 @@ import { sokAnbud } from "@/lib/doffin";
 // Active Doffin notices for a search phrase. Signed-in users only, same as the
 // company search — public data, but the endpoint is not an open proxy.
 
+// A fruitless search does the most work: the phrase, then each key word, then
+// a model call and the terms it suggests. Still seconds, not minutes — but the
+// default limit is too tight to leave it to chance.
+export const maxDuration = 60;
+
 export async function POST(req: Request) {
   const supabase = await createClient();
   const {
