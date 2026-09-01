@@ -353,6 +353,9 @@ export async function sokAnbud(tekst: string, maks = 12): Promise<Anbud[]> {
     // earn its place by actually mentioning one of the words that carry the
     // meaning. Showing an unrelated tender is worse than showing none: the
     // seller spends an evening on a bid that was never theirs.
+    // How each hit was found: 0 = the seller's own words, 1 = the model's
+    // wording, 2 = category alone. Decides the order at the end.
+    const kilderang = new Map<string, number>();
     const ord = noekkelord(tekst);
     const relevant = (h: DoffinHit) => {
       if (ord.length === 0) return true;
@@ -402,9 +405,22 @@ export async function sokAnbud(tekst: string, maks = 12): Promise<Anbud[]> {
       // Merged, not replaced: the mechanical hits were found on the seller's
       // own words, which is the strongest signal there is. The model's are
       // added behind them.
+      // Order by how the hit was found, not just by deadline. A notice that
+      // matched the seller's own words is a surer thing than one that merely
+      // shares a category: "vakthold" finds two notices actually about
+      // guarding, and those must not end up below a radar procurement that
+      // happens to sit in the same CPV branch.
       const sett = new Map<string, DoffinHit>();
-      for (const h of [...treff, ...fraKoder, ...svar.flat()]) {
-        if (h.id && !sett.has(h.id)) sett.set(h.id, h);
+      const rangert: [DoffinHit, number][] = [
+        ...treff.map((h) => [h, 0] as [DoffinHit, number]),
+        ...svar.flat().map((h) => [h, 1] as [DoffinHit, number]),
+        ...fraKoder.map((h) => [h, 2] as [DoffinHit, number]),
+      ];
+      for (const [h, rang] of rangert) {
+        if (h.id && !sett.has(h.id)) {
+          sett.set(h.id, h);
+          kilderang.set(h.id, rang);
+        }
       }
       treff = [...sett.values()];
     }
@@ -419,10 +435,16 @@ export async function sokAnbud(tekst: string, maks = 12): Promise<Anbud[]> {
         if (h.deadline && new Date(h.deadline).getTime() <= naa) return false;
         return true;
       })
-      // Soonest deadline first — a competition closing this week is worth more
-      // than one that just opened. Notices without a deadline (dynamic
-      // purchasing schemes you can join any time) go last.
-      .sort((a, b) => (a.deadline ?? "9999").localeCompare(b.deadline ?? "9999"))
+      // Surest match first, then soonest deadline within each group. A
+      // competition closing this week beats one that just opened, but a hit
+      // on the seller's own words beats a mere category match either way.
+      // Notices with no deadline (open schemes) go last in their group.
+      .sort((a, b) => {
+        const ra = kilderang.get(a.id ?? "") ?? 0;
+        const rb = kilderang.get(b.id ?? "") ?? 0;
+        if (ra !== rb) return ra - rb;
+        return (a.deadline ?? "9999").localeCompare(b.deadline ?? "9999");
+      })
       .slice(0, maks)
       .map((h) => ({
         id: h.id!,
