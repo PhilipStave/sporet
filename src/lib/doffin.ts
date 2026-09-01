@@ -260,10 +260,15 @@ export async function sokAnbud(tekst: string, maks = 12): Promise<Anbud[]> {
       }
     }
 
-    // Last resort: let the model say what a notice would have called this.
-    // The seller's word and the buyer's word are often different words for
-    // the same trade, and nothing mechanical closes that gap.
-    if (treff.length === 0) {
+    // Let the model say what a notice would have called this. The seller's
+    // word and the buyer's word are often different words for the same trade,
+    // and nothing mechanical closes that gap.
+    //
+    // The threshold is not zero on purpose: a single weak mechanical match
+    // used to block this entirely. "Lage mat til møter" found a notice for
+    // meeting-room *furniture*, called it a day, and never asked about
+    // catering. Below a handful of hits the model is worth the second.
+    if (treff.length < 3) {
       const forslag = await aiSokeord(tekst);
       // In parallel: four suggestions run one after another added seconds to a
       // search that had already come up empty twice.
@@ -275,8 +280,13 @@ export async function sokAnbud(tekst: string, maks = 12): Promise<Anbud[]> {
           return (await spor(f)).filter((h) => naevner(h, kjerne, true));
         })
       );
+      // Merged, not replaced: the mechanical hits were found on the seller's
+      // own words, which is the strongest signal there is. The model's are
+      // added behind them.
       const sett = new Map<string, DoffinHit>();
-      for (const h of svar.flat()) if (h.id && !sett.has(h.id)) sett.set(h.id, h);
+      for (const h of [...treff, ...svar.flat()]) {
+        if (h.id && !sett.has(h.id)) sett.set(h.id, h);
+      }
       treff = [...sett.values()];
     }
     const naa = Date.now();
