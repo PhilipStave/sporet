@@ -224,8 +224,8 @@ async function aiKoder(tekst: string): Promise<string[]> {
           type: "array",
           items: { type: "string" },
           description:
-            "1–4 CPV-koder fra listen, mest treffende først. Velg heller en " +
-            "bred kategori enn en gal smal.",
+            "1–3 CPV-koder fra listen, den mest treffende først. Velg bare " +
+            "kategorier du er trygg på — heller én presis enn tre omtrentlige.",
         },
       },
       required: ["koder"],
@@ -246,10 +246,12 @@ async function aiKoder(tekst: string): Promise<string[]> {
         system:
           "Du plasserer en norsk leverandør i riktig CPV-kategori — EUs " +
           "vokabular for offentlige anskaffelser. Brukeren skriver med egne " +
-          "ord hva de leverer; du velger kodene en kunngjøring om nettopp " +
-          "dette ville vært merket med. Velg kun fra listen. Er du i tvil " +
-          "mellom en bred og en smal kategori, ta den brede — kodene er " +
-          "hierarkiske, så en overordnet kode finner også alt under seg.",
+          "ord hva de leverer; du velger kategorien en kunngjøring om nettopp " +
+          "dette ville vært merket med. Velg kun fra listen, og vær presis: " +
+          "en for vid kategori fyller svaret med kunngjøringer fra helt andre " +
+          "fag. «Legge platting» hører til ferdigstillende bygningsarbeid, " +
+          "ikke til bygg og anlegg generelt. Passer ingen kategori godt, " +
+          "svar med tom liste framfor å gjette.",
         tools: [verktoy],
         tool_choice: { type: "tool", name: "velg_cpv" },
         messages: [
@@ -302,7 +304,9 @@ async function sporKoder(koder: string[]): Promise<DoffinHit[]> {
       }
     );
     if (!res.ok) return [];
-    return ((await res.json()) as { hits?: DoffinHit[] }).hits ?? [];
+    // Capped: a wide category can hold hundreds of notices, and letting one
+    // flood the list buries the hits found on the seller's own words.
+    return (((await res.json()) as { hits?: DoffinHit[] }).hits ?? []).slice(0, 20);
   } catch {
     return [];
   }
