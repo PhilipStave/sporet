@@ -1,3 +1,4 @@
+import KOMMUNEDATA from "@/data/kommuner.json";
 // Active public tenders from Doffin — the buyers who are looking right now.
 //
 // The industry-code search finds companies that exist; Doffin shows demand:
@@ -53,13 +54,34 @@ const STOPP = new Set([
   "utstyr", "diverse", "annet", "øvrige", "vedlikehold", "drift",
 ]);
 
+/**
+ * Place names, from the same municipality list the lead search uses.
+ *
+ * Geography is a filter, not a subject: "oslo" and "bergen" appear in the
+ * description of a large share of all notices, so treating them as meaningful
+ * made "kjøre oppdrag fra Oslo til Bergen" match sensor calibration and
+ * ventilation contracts. What the seller *delivers* is the topic.
+ */
+const STEDER = new Set<string>(
+  (KOMMUNEDATA as { fylke: Record<string, string>; kommuner: { n: string }[] }).kommuner
+    .flatMap((k) => k.n.toLowerCase().split(/[\s\-/]+/))
+    .concat(
+      Object.values(
+        (KOMMUNEDATA as { fylke: Record<string, string> }).fylke
+      ).flatMap((f) => f.toLowerCase().split(/[\s\-/]+/))
+    )
+    .filter((w) => w.length >= 3)
+);
+
 /** The distinctive words, longest first — the ones worth searching on. */
 function noekkelord(tekst: string): string[] {
   return tekst
     .toLowerCase()
     .replace(/[^a-zæøå0-9\s-]/g, " ")
     .split(/\s+/)
-    .filter((w) => w.length >= 4 && !STOPP.has(w) && !/^\d+$/.test(w))
+    .filter(
+      (w) => w.length >= 4 && !STOPP.has(w) && !STEDER.has(w) && !/^\d+$/.test(w)
+    )
     .sort((a, b) => b.length - a.length)
     .slice(0, 3);
 }
