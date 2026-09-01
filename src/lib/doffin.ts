@@ -312,7 +312,7 @@ async function sporKoder(koder: string[], region?: string): Promise<DoffinHit[]>
           facets: {
             status: { checkedItems: ["ACTIVE"] },
             cpvCodesId: { checkedItems: koder },
-            ...(region ? { locations: { checkedItems: [region, "anyw"] } } : {}),
+            ...(region ? { location: { checkedItems: [region, "anyw"] } } : {}),
           },
         }),
         next: { revalidate: 600 },
@@ -345,7 +345,7 @@ async function spor(searchString: string, region?: string): Promise<DoffinHit[]>
           status: { checkedItems: ["ACTIVE"] },
           // "anyw" = notices with no geography: framework agreements that
           // apply anywhere, and always worth seeing alongside a region.
-          ...(region ? { locations: { checkedItems: [region, "anyw"] } } : {}),
+          ...(region ? { location: { checkedItems: [region, "anyw"] } } : {}),
         },
       }),
       next: { revalidate: 600 },
