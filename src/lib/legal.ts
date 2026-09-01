@@ -2,7 +2,7 @@
 // have a lawyer with IT/privacy expertise review before large-scale sales.
 // Update LEGAL_VERSION when the terms change materially — users re-accept on next login.
 
-export const LEGAL_VERSION = "2026-08-26";
+export const LEGAL_VERSION = "2026-09-01";
 
 // Stave Software AS, registered in Foretaksregisteret 25 August 2026.
 export const COMPANY_LEGAL_NAME = "Stave Software AS";
@@ -32,10 +32,12 @@ export const TERMS: LegalSection[] = [
   {
     title: "2. Tjenesten, endringer og tilgjengelighet",
     paragraphs: [
-      "2.1 Tjenestebeskrivelse. Tjenesten er et CRM-system for salgsoppfølging: kunderegister, pipeline, aktivitetslogg, kalender, statistikk og brukeradministrasjon, som beskrevet på altiv.no.",
+      "2.1 Tjenestebeskrivelse. Tjenesten er et CRM-system for salgsoppfølging: kunderegister, pipeline, aktivitetslogg, kalender, statistikk, salgsmål og brukeradministrasjon, samt kundesøk mot offentlige registre og søk i offentlige anbudskunngjøringer, som beskrevet på altiv.no.",
       "2.2 Endringer i funksjonalitet. Leverandøren kan endre, forbedre eller fjerne funksjoner. Ved endringer som vesentlig reduserer Tjenestens funksjonalitet skal Kunden varsles i Tjenesten eller skriftlig minst 30 dager før ikrafttredelse, og kan i så fall si opp med virkning fra endringstidspunktet.",
       "2.3 Tilgjengelighet. Leverandøren tilstreber høy tilgjengelighet, men gir ingen garanti for oppetid, svartid eller feilfri drift, og Avtalen inneholder ingen tjenestenivåavtale (SLA). Nedetid gir ikke rett til prisavslag eller erstatning utover det som følger av ufravikelig lov. Tjenesten leveres «som den er» og «som tilgjengelig», uten uttrykkelige eller underforståtte garantier om egnethet for et bestemt formål. Prøveperioden gir Kunden anledning til å vurdere om Tjenesten dekker Kundens behov før betaling.",
       "2.4 Support og vedlikehold. Support ytes per e-post i normal arbeidstid, uten garantert responstid. Planlagt vedlikehold varsles der det er praktisk mulig, og Leverandøren søker å begrense påvirkning i normal arbeidstid.",
+      "2.5 Kunstig intelligens. Deler av Tjenesten bruker kunstig intelligens (språkmodeller fra Anthropic). Det gjelder tolkning av fritekstsøk i kundesøket og i anbudssøket, der modellen oversetter det Kunden skriver med egne ord til søkeord og kategorier, og en relevansvurdering av treffene. Dette er tydelig merket i Tjenesten. Språkmodeller kan ta feil, utelate treff og gi ulikt svar på samme spørsmål. Resultatene er forslag som Kunden selv må vurdere, aldri råd eller beslutninger. Tjenesten treffer ingen automatiserte avgjørelser med rettsvirkning eller tilsvarende vesentlig betydning for enkeltpersoner, jf. personvernforordningen artikkel 22. Kundedata brukes ikke til å trene språkmodeller. Leverandøren kan bytte modell eller modellleverandør; underdatabehandlere varsles etter punkt 7.3.",
+      "2.6 Anbudssøk. Anbudssøket viser offentlige kunngjøringer fra Doffin, den nasjonale kunngjøringsdatabasen driftet av Direktoratet for forvaltning og økonomistyring (DFØ). Opplysningene er offentlige og gjengis slik de er kunngjort. Leverandøren er ikke tilknyttet Doffin eller DFØ, garanterer ikke at listen er fullstendig eller oppdatert, og svarer ikke for feil i kunngjøringene. Det offentlige har bare plikt til å kunngjøre kjøp over terskelverdiene, så mindre oppdrag vil ikke finnes i Tjenesten. Frister, vilkår og krav skal alltid kontrolleres i den opprinnelige kunngjøringen før Kunden leverer tilbud; Tjenesten er et hjelpemiddel for å finne konkurranser, ikke en kilde til fristberegning. Der Doffin har kunngjort en tildeling, kan Tjenesten vise hvem som fikk kontrakten. Ikke alle konkurranser får kunngjort et resultat, og Tjenesten setter aldri utfallet på et bud uten at Kunden selv registrerer det.",
     ],
   },
   {
@@ -54,8 +56,9 @@ export const TERMS: LegalSection[] = [
       "4.1 Kundedata. Kunden er ansvarlig for alt innhold og alle data som legges inn i Tjenesten («Kundedata»), og for at bruken skjer i samsvar med gjeldende rett. Kunden garanterer å ha rettslig grunnlag for å behandle personopplysninger som legges inn (f.eks. om kontaktpersoner hos Kundens kunder), og at Kunden oppfyller sin informasjonsplikt overfor de registrerte. Kunden er behandlingsansvarlig for Kundedata; Leverandøren er databehandler etter punkt 7.",
       "4.2 Kontoansvar. Kunden skal holde innloggingsopplysninger, bedriftskode og invitasjonslenker konfidensielle, og er ansvarlig for all aktivitet via Kundens brukerkontoer. Kunden skal straks varsle Leverandøren ved mistanke om uautorisert tilgang. Brukerkontoer er personlige og skal ikke deles. Kunden skal holde administrators kontaktopplysninger oppdatert i Innstillinger; varsler fra Leverandøren sendes dit.",
       "4.3 Forbudte handlinger. Kunden skal ikke (a) forsøke å omgå sikkerhetsmekanismer, teste sårbarheter uten skriftlig samtykke, eller få tilgang til andre kunders data, (b) belaste Tjenesten unormalt (f.eks. automatiserte masseoppslag), (c) videreselge, leie ut eller tilby Tjenesten til tredjeparter, (d) kopiere, dekompilere eller lage avledede verk av Tjenesten, eller (e) bruke Tjenesten til ulovlig eller krenkende formål. Brudd gir Leverandøren rett til umiddelbar stenging.",
-      "4.5 Kundesøk. Kundesøket henter foretaksopplysninger fra Enhetsregisteret og Regnskapsregisteret hos Brønnøysundregistrene, og kontaktopplysninger fra foretakenes egne offentlige nettsider. Fritekstsøket tolkes av en språkmodell, men bedriftene som vises kommer alltid fra registrene. Leverandøren garanterer ikke at treffene er fullstendige, oppdaterte eller relevante for Kundens formål — registrenes opplysninger er oppgitt av foretakene selv. Resultatene er forslag, ikke anbefalinger. Kunden er ansvarlig for egen kontakt med foretakene som finnes, herunder markedsføringsloven og personvernregelverket.",
       "4.4 Sikkerhetskopi. Kunden er selv ansvarlig for å ta sikkerhetskopi av Kundedata. Tjenesten tilbyr eksport til CSV for dette formålet, og Leverandøren anbefaler regelmessig eksport av kritiske data.",
+      "4.5 Kundesøk. Kundesøket henter foretaksopplysninger fra Enhetsregisteret og Regnskapsregisteret hos Brønnøysundregistrene, og kontaktopplysninger fra foretakenes egne offentlige nettsider. Fritekstsøket tolkes av en språkmodell, men bedriftene som vises kommer alltid fra registrene. Leverandøren garanterer ikke at treffene er fullstendige, oppdaterte eller relevante for Kundens formål — registrenes opplysninger er oppgitt av foretakene selv. Resultatene er forslag, ikke anbefalinger. Kunden er ansvarlig for egen kontakt med foretakene som finnes, herunder markedsføringsloven og personvernregelverket.",
+      "4.6 Anbud. Kunden er selv ansvarlig for egen deltakelse i offentlige konkurranser, herunder å overholde frister, kvalifikasjonskrav og regelverket om offentlige anskaffelser. Statusen Kunden registrerer på et anbud i Tjenesten er Kundens egen notering og har ingen betydning overfor oppdragsgiveren.",
     ],
   },
   {
@@ -126,6 +129,7 @@ export const PRIVACY: LegalSection[] = [
       "Kundedata (på vegne av Kunden): selskapsnavn, kontaktpersoners navn, rolle, e-post og telefon, notater, verdier, steg i salgsprosessen, tags og aktivitetslogg — det Kunden selv velger å legge inn.",
       "Betalingsopplysninger behandles av Stripe. Vi mottar kun kunde-ID, abonnementsstatus og fakturagrunnlag (firmanavn, adresse, evt. mva-nummer) — aldri kortnummer.",
       "Tekniske data: IP-adresse, nettlesertype og tidspunkt i serverlogger, for drift, feilsøking og sikkerhet. Slettes automatisk etter maksimalt 90 dager.",
+      "Anbud: når Kunden søker etter offentlige konkurranser, sendes søketeksten til Anthropic for å oversettes til fagord og kategorier, og selve søket gjøres mot Doffin. Kunngjøringene gjelder offentlige oppdragsgivere — kommuner, fylker, statlige virksomheter og offentlige selskaper — og opplysningene vi lagrer om dem er virksomhetsopplysninger: navn, organisasjonsnummer, tittel på konkurransen, frist, estimert verdi og lenke til kunngjøringen. Følger Kunden et anbud, lagrer vi i tillegg Kundens egne notater, status og eventuell tilbudssum. Der Doffin har kunngjort hvem som vant, viser vi leverandørens foretaksnavn slik det står i den offentlige kunngjøringen.",
       "Kundesøk: når Kunden bruker kundesøket, sendes søketeksten til Anthropic for å tolkes til et registersøk. Bedriftsopplysningene som vises og lagres — foretaksnavn, organisasjonsnummer, bransje, ansatte, adresse, stiftelsesdato, MVA-status og regnskapstall — hentes fra Enhetsregisteret og Regnskapsregisteret hos Brønnøysundregistrene, som er åpne offentlige registre. Kontaktopplysninger hentes fra foretakets egen offentlige nettside, og kun fellesadresser som post@ og firmapost@. Vi henter og lagrer aldri navn, e-post eller telefonnummer til navngitte enkeltpersoner fra disse kildene.",
     ],
   },
@@ -136,6 +140,7 @@ export const PRIVACY: LegalSection[] = [
       "Fakturering, regnskap og bokføring — grunnlag: rettslig forpliktelse (art. 6 nr. 1 c).",
       "Sikkerhet, misbruksforebygging, feilsøking og forbedring av Tjenesten — grunnlag: berettiget interesse (art. 6 nr. 1 f); vår interesse i en sikker og stabil tjeneste veier tungt, og behandlingen er begrenset til det nødvendige.",
       "Kundesøk mot offentlige registre, for at Kunden skal finne relevante bedrifter å kontakte — grunnlag: berettiget interesse (art. 6 nr. 1 f). Behandlingen gjelder foretaksopplysninger fra åpne registre og er avgrenset til aksjeselskaper og offentlige virksomheter, slik at enkeltpersonforetak — der foretaksnavnet er et personnavn — holdes utenfor.",
+      "Anbudssøk mot Doffin, for at Kunden skal finne offentlige konkurranser å delta i — grunnlag: berettiget interesse (art. 6 nr. 1 f). Kunngjøringene gjelder virksomheter, ikke privatpersoner.",
       "Vi bruker ikke opplysningene til markedsføring uten samtykke, deler dem ikke med tredjeparter for deres formål, og selger dem aldri.",
     ],
   },
@@ -143,6 +148,7 @@ export const PRIVACY: LegalSection[] = [
     title: "4. Underleverandører og overføring",
     paragraphs: [
       "Vi bruker Supabase (database og autentisering), Vercel (hosting og drift), Stripe (betaling), Resend (e-post inn og ut, herunder e-postlogging) og Anthropic (språkmodellen som tolker fritekstsøk i kundesøket). Alle er bundet av skriftlige databehandleravtaler. Endring eller tillegg av underdatabehandlere varsles kundene minst 30 dager i forveien.",
+      "Doffin (Direktoratet for forvaltning og økonomistyring) er ikke en underdatabehandler, men en offentlig kilde vi henter kunngjøringer fra. Det samme gjelder Enhetsregisteret og Regnskapsregisteret hos Brønnøysundregistrene. Vi sender ingen kundedata dit; vi leser offentlig tilgjengelige opplysninger derfra.",
       "Der data behandles utenfor EØS, sikres overføringen med EU-kommisjonens standardpersonvernbestemmelser (SCC) eller annet gyldig overføringsgrunnlag. Dokumentasjon på overføringsgrunnlag gjøres tilgjengelig på forespørsel.",
     ],
   },
@@ -173,7 +179,16 @@ export const PRIVACY: LegalSection[] = [
     ],
   },
   {
-    title: "9. Endringer",
+    title: "9. Kunstig intelligens",
+    paragraphs: [
+      "Altiv bruker språkmodeller fra Anthropic to steder: til å tolke det du skriver med egne ord i kundesøket og i anbudssøket, og til å vurdere hvor godt treffene passer det du beskrev. Det er merket i Tjenesten der det skjer.",
+      "Det som sendes til modellen er søketeksten din, og — i kundesøket — foretaksopplysninger fra de offentlige registrene som grunnlag for relevansvurderingen. Vi sender ikke kunderegisteret, pipelinen, notatene eller kontaktopplysningene dine til språkmodellen. Søketekst og kundedata brukes ikke til å trene språkmodeller.",
+      "Språkmodeller kan ta feil. De kan utelate relevante treff, foreslå noe som ikke passer, og svare ulikt på samme spørsmål. Resultatene er forslag du selv må vurdere. Tjenesten treffer ingen automatiserte avgjørelser med rettsvirkning eller tilsvarende vesentlig betydning for deg, jf. personvernforordningen artikkel 22.",
+      "Bytter vi modell eller modellleverandør, varsler vi som ved andre underdatabehandlere: minst 30 dager i forveien.",
+    ],
+  },
+  {
+    title: "10. Endringer",
     paragraphs: [
       "Vi kan oppdatere denne erklæringen. Gjeldende versjon ligger alltid på altiv.no/personvern. Ved vesentlige endringer varsler vi i Tjenesten.",
     ],
