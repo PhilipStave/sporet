@@ -33,12 +33,6 @@ type DoffinHit = {
   allTypes?: string[];
 };
 
-/**
- * A notice with no deadline is only treated as live while it is recent. Some
- * carry neither status nor deadline, and "not marked expired" is not the same
- * as open — a 2019 announcement sailed through that test.
- */
-const AAPEN_UTEN_FRIST_MS = 180 * 24 * 60 * 60 * 1000;
 
 // Doffin matches literal text against notice titles and descriptions, so a
 // whole sentence usually finds nothing while its key noun finds plenty.
@@ -68,7 +62,16 @@ async function spor(searchString: string): Promise<DoffinHit[]> {
     {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ searchString, numHitsPerPage: 40, page: 1 }),
+      body: JSON.stringify({
+        searchString,
+        numHitsPerPage: 40,
+        page: 1,
+        // Let Doffin do the filtering. Without this the API answers by
+        // relevance across every notice ever published, and page one fills up
+        // with competitions that closed years ago — "asfaltering" returned
+        // 2 146 hits and not one of the 8 open ones was among the first 40.
+        facets: { status: { checkedItems: ["ACTIVE"] } },
+      }),
       next: { revalidate: 600 },
     }
   );
@@ -100,23 +103,16 @@ export async function sokAnbud(tekst: string, maks = 12): Promise<Anbud[]> {
     return treff
       .filter((h) => {
         if (!h.id || !h.heading) return false;
+        // Doffin already filtered to ACTIVE; these are belt and braces, and
+        // catch a deadline that passed since the notice was last indexed.
         if (h.status === "EXPIRED" || h.status === "CANCELLED") return false;
-
-        // Doffin publishes results too: ANNOUNCEMENT_OF_CONCLUSION_OF_CONTRACT
-        // means the contract is already awarded — someone else won. Only an
-        // open competition is a lead.
-        if (!(h.allTypes ?? []).includes("COMPETITION")) return false;
-
-        // Being current has to be proven, not assumed. Some notices carry
-        // neither status nor deadline — a 2019 announcement with both fields
-        // missing sailed through an "is it expired?" test and was presented
-        // to the seller as live. Telling someone to call about a competition
-        // that closed six years ago is worse than showing them nothing.
-        if (h.deadline) return new Date(h.deadline).getTime() > naa;
-        if (!h.publicationDate) return false;
-        return naa - new Date(h.publicationDate).getTime() < AAPEN_UTEN_FRIST_MS;
+        if (h.deadline && new Date(h.deadline).getTime() <= naa) return false;
+        return true;
       })
-      .sort((a, b) => (b.publicationDate ?? "").localeCompare(a.publicationDate ?? ""))
+      // Soonest deadline first — a competition closing this week is worth more
+      // than one that just opened. Notices without a deadline (dynamic
+      // purchasing schemes you can join any time) go last.
+      .sort((a, b) => (a.deadline ?? "9999").localeCompare(b.deadline ?? "9999"))
       .slice(0, maks)
       .map((h) => ({
         id: h.id!,
