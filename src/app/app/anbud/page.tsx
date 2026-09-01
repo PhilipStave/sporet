@@ -5,7 +5,6 @@ import { useStore } from "@/store/Store";
 import { Icon } from "@/components/Icon";
 import { fmtKr } from "@/lib/format";
 import { REGIONER, type Anbud } from "@/lib/doffin";
-import type { Lead } from "@/lib/brreg";
 
 // Open public tenders, from Doffin. The lead search answers "who could buy
 // what I sell"; this answers "who is buying it right now, with a deadline".
@@ -34,6 +33,8 @@ export default function AnbudPage() {
   /** All, one-off competitions, or standing schemes you qualify into. */
   const [type, setType] = useState<"alle" | "frist" | "lopende">("alle");
   const [lagtInn, setLagtInn] = useState<Set<string>>(new Set());
+  /** Stamped when results arrive, so the countdown is stable while reading. */
+  const [naa, setNaa] = useState(() => Date.now());
 
   /** Buyers already in the pipeline, so nobody is added twice. */
   const finnesFra = useMemo(() => {
@@ -63,7 +64,10 @@ export default function AnbudPage() {
       });
       const json = await res.json();
       if (!res.ok) setFeil(json?.error ?? "Søket feilet");
-      else setAnbud(json?.anbud ?? []);
+      else {
+        setNaa(Date.now());
+        setAnbud(json?.anbud ?? []);
+      }
     } catch {
       setFeil("Fikk ikke kontakt med Doffin. Prøv igjen.");
     } finally {
@@ -95,10 +99,10 @@ export default function AnbudPage() {
       company: a.kjoperNavn,
       org_nr: a.kjoperOrgnr,
       value: a.lopende ? 0 : a.verdi ?? 0,
-      next_step: (a.lopende ? `Søk opptak: ${a.tittel}` : `Anbudsfrist: ${a.tittel}`).slice(0, 200),
+      next_step_text: (a.lopende ? `Søk opptak: ${a.tittel}` : `Anbudsfrist: ${a.tittel}`).slice(0, 200),
       next_step_date: a.frist ? a.frist.slice(0, 10) : null,
       tags: a.lopende ? ["Anbud", "Løpende ordning"] : ["Anbud"],
-    } as Partial<Lead> as never);
+    });
     if (!id) return;
 
     // Contact details come from the same lookup the lead search uses.
@@ -262,7 +266,7 @@ export default function AnbudPage() {
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         {synlige.map((a) => {
           const dager = a.frist
-            ? Math.ceil((new Date(a.frist).getTime() - Date.now()) / 86_400_000)
+            ? Math.ceil((new Date(a.frist).getTime() - naa) / 86_400_000)
             : null;
           const alt = erKunde(a);
           return (

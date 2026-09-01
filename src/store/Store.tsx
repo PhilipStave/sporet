@@ -426,6 +426,13 @@ export function StoreProvider({
         channel: (partial?.channel as Channel) ?? "epost",
         tags: partial?.tags ?? [],
         notes: partial?.notes ?? "",
+        // The insert is a whitelist, so anything missing here is dropped
+        // without a word. Leaving these out cost the tender page its deadline
+        // and the title of the competition on every single lead it created.
+        next_step_text: partial?.next_step_text ?? null,
+        next_step_date: partial?.next_step_date ?? null,
+        next_step_time: partial?.next_step_time ?? null,
+        next_step_who: partial?.next_step_who ?? null,
         created_by: profile.id,
         created_at: now,
         updated_at: now,
