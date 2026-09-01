@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { useStore } from "@/store/Store";
 import { Icon } from "@/components/Icon";
 import { fmtKr } from "@/lib/format";
-import type { Anbud } from "@/lib/doffin";
+import { REGIONER, type Anbud } from "@/lib/doffin";
 import type { Lead } from "@/lib/brreg";
 
 // Open public tenders, from Doffin. The lead search answers "who could buy
@@ -21,6 +21,8 @@ export default function AnbudPage() {
   const [sokt, setSokt] = useState(false);
   const [feil, setFeil] = useState<string | null>(null);
   const [sortering, setSortering] = useState<Sortering>("frist");
+  /** Empty means the whole country. Narrowing happens at Doffin, not here. */
+  const [region, setRegion] = useState("");
   const [bareMedVerdi, setBareMedVerdi] = useState(false);
   const [lagtInn, setLagtInn] = useState<Set<string>>(new Set());
 
@@ -48,7 +50,7 @@ export default function AnbudPage() {
       const res = await fetch("/api/kundesok/anbud", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ tekst: spørring }),
+        body: JSON.stringify({ tekst: spørring, region: region || undefined }),
       });
       const json = await res.json();
       if (!res.ok) setFeil(json?.error ?? "Søket feilet");
@@ -134,8 +136,22 @@ export default function AnbudPage() {
             onChange={(e) => setTekst(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && sok()}
             placeholder="Hva leverer du? F.eks. «catering», «vikartjenester», «asfaltering»"
-            style={{ flex: "1 1 320px", minWidth: 0 }}
+            style={{ flex: "1 1 280px", minWidth: 0 }}
           />
+          <select
+            className="field-input"
+            value={region}
+            onChange={(e) => setRegion(e.target.value)}
+            title="Rammeavtaler uten geografi vises uansett landsdel"
+            style={{ flex: "0 1 190px" }}
+          >
+            <option value="">Hele landet</option>
+            {REGIONER.map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.navn}
+              </option>
+            ))}
+          </select>
           <button
             type="button"
             className="btn btn-primary"

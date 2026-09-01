@@ -12,6 +12,20 @@ const CPV = (CPVDATA as { koder: { k: string; n: string }[] }).koder;
 // to be read, and every query here is user-triggered and cached — we are a
 // polite guest, not a crawler.
 
+/**
+ * Doffin's regions. A plumber in Trondheim has no use for a competition in
+ * Finnmark, and "Ikke stedbunden" covers framework agreements with no
+ * geography — those are relevant everywhere, so they always come along.
+ */
+export const REGIONER: { id: string; navn: string }[] = [
+  { id: "NO08", navn: "Oslo og Viken" },
+  { id: "NO09", navn: "Agder og Sør-Østlandet" },
+  { id: "NO02", navn: "Innlandet" },
+  { id: "NO0A", navn: "Vestlandet" },
+  { id: "NO06", navn: "Trøndelag" },
+  { id: "NO07", navn: "Nord-Norge" },
+];
+
 export type Anbud = {
   id: string;
   tittel: string;
@@ -283,7 +297,7 @@ async function aiKoder(tekst: string): Promise<string[]> {
 }
 
 /** All open notices tagged with these CPV categories. */
-async function sporKoder(koder: string[]): Promise<DoffinHit[]> {
+async function sporKoder(koder: string[], region?: string): Promise<DoffinHit[]> {
   if (koder.length === 0) return [];
   try {
     const res = await fetch(
@@ -298,6 +312,7 @@ async function sporKoder(koder: string[]): Promise<DoffinHit[]> {
           facets: {
             status: { checkedItems: ["ACTIVE"] },
             cpvCodesId: { checkedItems: koder },
+            ...(region ? { locations: { checkedItems: [region, "anyw"] } } : {}),
           },
         }),
         next: { revalidate: 600 },
@@ -312,7 +327,7 @@ async function sporKoder(koder: string[]): Promise<DoffinHit[]> {
   }
 }
 
-async function spor(searchString: string): Promise<DoffinHit[]> {
+async function spor(searchString: string, region?: string): Promise<DoffinHit[]> {
   const res = await fetch(
     "https://api.doffin.no/webclient/api/v2/search-api/search",
     {
@@ -326,7 +341,12 @@ async function spor(searchString: string): Promise<DoffinHit[]> {
         // relevance across every notice ever published, and page one fills up
         // with competitions that closed years ago — "asfaltering" returned
         // 2 146 hits and not one of the 8 open ones was among the first 40.
-        facets: { status: { checkedItems: ["ACTIVE"] } },
+        facets: {
+          status: { checkedItems: ["ACTIVE"] },
+          // "anyw" = notices with no geography: framework agreements that
+          // apply anywhere, and always worth seeing alongside a region.
+          ...(region ? { locations: { checkedItems: [region, "anyw"] } } : {}),
+        },
       }),
       next: { revalidate: 600 },
     }
@@ -345,7 +365,7 @@ async function spor(searchString: string): Promise<DoffinHit[]> {
  * tried on its own, because the seller writes a sentence and the buyer wrote
  * a product name.
  */
-export async function sokAnbud(tekst: string, maks = 12): Promise<Anbud[]> {
+export async function sokAnbud(tekst: string, maks = 12, region?: string): Promise<Anbud[]> {
   try {
     // Doffin matches on ANY word in the phrase, so a sentence never comes back
     // empty — "kjøre oppdrag fra oslo til bergen" returned twelve notices about
@@ -362,7 +382,7 @@ export async function sokAnbud(tekst: string, maks = 12): Promise<Anbud[]> {
       return ord.some((o) => naevner(h, o));
     };
 
-    let treff = (await spor(tekst)).filter(relevant);
+    let treff = (await spor(tekst, region)).filter(relevant);
     if (treff.length === 0) {
       // A fallback word carries the whole result set on its own, so it has to
       // earn that twice over: it must name a thing rather than an action, and
@@ -370,7 +390,7 @@ export async function sokAnbud(tekst: string, maks = 12): Promise<Anbud[]> {
       // description is a mention; a word in the title is what the notice is
       // about.
       for (const o of ord.filter((x) => !HANDLINGSORD.has(x))) {
-        const kandidater = (await spor(o)).filter((h) => naevner(h, o, true));
+        const kandidater = (await spor(o, region)).filter((h) => naevner(h, o, true));
         if (kandidater.length > 0) {
           treff = kandidater;
           break;
@@ -391,7 +411,7 @@ export async function sokAnbud(tekst: string, maks = 12): Promise<Anbud[]> {
       // the trade regardless of phrasing, the words catch a notice filed under
       // an odd category. Both run in parallel — neither waits for the other.
       const [koder, forslag] = await Promise.all([aiKoder(tekst), aiSokeord(tekst)]);
-      const fraKoder = await sporKoder(koder);
+      const fraKoder = await sporKoder(koder, region);
       // In parallel: four suggestions run one after another added seconds to a
       // search that had already come up empty twice.
       const svar = await Promise.all(
@@ -399,7 +419,7 @@ export async function sokAnbud(tekst: string, maks = 12): Promise<Anbud[]> {
           // A suggestion can be two words ("renhold av veier"); require the
           // first, most specific one to appear in the title.
           const kjerne = f.split(/\s+/)[0];
-          return (await spor(f)).filter((h) => naevner(h, kjerne, true));
+          return (await spor(f, region)).filter((h) => naevner(h, kjerne, true));
         })
       );
       // Merged, not replaced: the mechanical hits were found on the seller's
