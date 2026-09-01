@@ -43,6 +43,14 @@ const STOPP = new Set([
   "har", "vi", "jeg", "du", "meg", "oss", "finn", "kunder", "kunde", "bedrifter",
   "bedrift", "selge", "selger", "selg", "leverer", "leverandør", "nye", "ny",
   "små", "store", "mellomstore", "området", "rundt", "alle", "noen", "mange",
+  // Procurement boilerplate. These appear in almost every notice, so falling
+  // back to one of them matches the whole register: a search for "kjøre
+  // oppdrag fra Oslo til Bergen" came back with accounting consultants and a
+  // police evaluation, because "oppdrag" was the longest word left.
+  "oppdrag", "anskaffelse", "anskaffelser", "kjøp", "innkjøp", "avtale",
+  "rammeavtale", "konkurranse", "konkurransen", "tjeneste", "tjenester",
+  "levering", "leveranse", "arbeid", "arbeider", "bistand", "prosjekt",
+  "utstyr", "diverse", "annet", "øvrige", "vedlikehold", "drift",
 ]);
 
 /** The distinctive words, longest first — the ones worth searching on. */
@@ -94,8 +102,18 @@ export async function sokAnbud(tekst: string, maks = 12): Promise<Anbud[]> {
     let treff = await spor(tekst);
     if (treff.length === 0) {
       for (const ord of noekkelord(tekst)) {
-        treff = await spor(ord);
-        if (treff.length > 0) break;
+        const kandidater = await spor(ord);
+        // Doffin's matching is loose, so a fallback word can drag in notices
+        // that have nothing to do with it. Showing an unrelated tender is
+        // worse than showing none: the seller spends an evening on a bid that
+        // was never theirs. Keep only the ones that actually say the word.
+        const relevante = kandidater.filter((h) =>
+          `${h.heading ?? ""} ${h.description ?? ""}`.toLowerCase().includes(ord)
+        );
+        if (relevante.length > 0) {
+          treff = relevante;
+          break;
+        }
       }
     }
     const naa = Date.now();
