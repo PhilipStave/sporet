@@ -20,7 +20,14 @@ function aapenI(dager: number) {
 }
 
 export default function AnbudPage() {
-  const { deals, createDeal, updateDeal, canWrite } = useStore();
+  const {
+    deals,
+    createDeal,
+    updateDeal,
+    canWrite,
+    anbud: fulgte,
+    leggTilBud,
+  } = useStore();
   const [tekst, setTekst] = useState("");
   const [anbud, setAnbud] = useState<Anbud[]>([]);
   const [laster, setLaster] = useState(false);
@@ -36,7 +43,14 @@ export default function AnbudPage() {
   /** Stamped when results arrive, so the countdown is stable while reading. */
   const [naa, setNaa] = useState(() => Date.now());
 
-  /** Buyers already in the pipeline, so nobody is added twice. */
+  /** Competitions already on the Mine bud list — the real duplicate check. */
+  const fulgtIder = useMemo(
+    () => new Set(fulgte.map((b) => b.doffin_id).filter(Boolean) as string[]),
+    [fulgte]
+  );
+
+  /** Buyers already in the pipeline. Shown as a badge, never as a block: the
+   *  same municipality runs many competitions, and the second one matters. */
   const finnesFra = useMemo(() => {
     const s = new Set<string>();
     deals.forEach((d) => {
@@ -93,8 +107,39 @@ export default function AnbudPage() {
    * idea why the municipality is on the list.
    */
   const leggTil = async (a: Anbud) => {
-    if (!canWrite || !a.kjoperOrgnr || lagtInn.has(a.kjoperOrgnr)) return;
-    setLagtInn((s) => new Set(s).add(a.kjoperOrgnr!));
+    if (!canWrite || lagtInn.has(a.id) || fulgtIder.has(a.id)) return;
+    setLagtInn((s) => new Set(s).add(a.id));
+
+    // The buyer may already be in the pipeline from an earlier competition.
+    // Then we hang this tender on the card they have, rather than making a
+    // second card for the same municipality.
+    const finnes = deals.find(
+      (d) =>
+        (a.kjoperOrgnr && d.org_nr === a.kjoperOrgnr) ||
+        d.company.trim().toLowerCase() === a.kjoperNavn.trim().toLowerCase()
+    );
+
+    const skrivBud = (dealId: string | null) =>
+      leggTilBud({
+        deal_id: dealId,
+        doffin_id: a.id,
+        lenke: a.lenke,
+        tittel: a.tittel,
+        beskrivelse: a.beskrivelse,
+        kjoper_navn: a.kjoperNavn,
+        kjoper_orgnr: a.kjoperOrgnr,
+        frist: a.frist,
+        publisert: a.publisert ? a.publisert.slice(0, 10) : null,
+        verdi: a.verdi,
+        over_terskel: a.overTerskel,
+        lopende: a.lopende,
+      });
+
+    if (finnes) {
+      await skrivBud(finnes.id);
+      return;
+    }
+
     const id = await createDeal({
       company: a.kjoperNavn,
       org_nr: a.kjoperOrgnr,
@@ -104,6 +149,7 @@ export default function AnbudPage() {
       tags: a.lopende ? ["Anbud", "Løpende ordning"] : ["Anbud"],
     });
     if (!id) return;
+    await skrivBud(id);
 
     // Contact details come from the same lookup the lead search uses.
     try {
@@ -399,22 +445,27 @@ export default function AnbudPage() {
                   ) : (
                     <span style={{ fontSize: 12, color: "var(--muted)" }}>Uten oppgitt frist</span>
                   )}
-                  {a.kjoperOrgnr && (
-                    <button
-                      type="button"
-                      className="btn"
-                      onClick={() => leggTil(a)}
-                      disabled={!canWrite || lagtInn.has(a.kjoperOrgnr) || alt}
-                      title={
-                        alt
-                          ? "Oppdragsgiveren ligger allerede i pipelinen"
-                          : `Legg ${a.kjoperNavn} i pipelinen`
-                      }
-                      style={{ padding: "6px 14px", fontSize: 13, whiteSpace: "nowrap" }}
-                    >
-                      {lagtInn.has(a.kjoperOrgnr) ? "✓ Lagt til" : "+ Legg i pipeline"}
-                    </button>
-                  )}
+                  {(() => {
+                    const fulgt = lagtInn.has(a.id) || fulgtIder.has(a.id);
+                    return (
+                      <button
+                        type="button"
+                        className="btn"
+                        onClick={() => leggTil(a)}
+                        disabled={!canWrite || fulgt}
+                        title={
+                          fulgt
+                            ? "Ligger under Mine bud"
+                            : alt
+                              ? `Legges på kortet du har for ${a.kjoperNavn}`
+                              : `Følg dette anbudet og legg ${a.kjoperNavn} i pipelinen`
+                        }
+                        style={{ padding: "6px 14px", fontSize: 13, whiteSpace: "nowrap" }}
+                      >
+                        {fulgt ? "✓ Følger" : "+ Følg anbudet"}
+                      </button>
+                    );
+                  })()}
                 </div>
               </div>
             </div>

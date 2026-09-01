@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
-import { DEFAULT_FEATURES, type FeatureKey } from "@/lib/constants";
+import { DEFAULT_FEATURES, FEATURE_ORDER, type FeatureKey } from "@/lib/constants";
 import { LEGAL_VERSION } from "@/lib/legal";
 
 export interface AuthState {
@@ -63,8 +63,12 @@ export async function setupCompany(
     return { error: "Fyll inn navn og e-post for administrator." };
   if (!termsAccepted(formData)) return { error: TERMS_ERROR };
 
+  // Only the features the form actually asks about. Looping over every key
+  // instead turned off whatever the form had not caught up with yet — which
+  // is how every new company ended up without Anbud and Finn kunder, with no
+  // switch anywhere to turn them back on.
   const features: Record<FeatureKey, boolean> = { ...DEFAULT_FEATURES };
-  (Object.keys(features) as FeatureKey[]).forEach((k) => {
+  FEATURE_ORDER.forEach((k) => {
     features[k] = featureRaw.includes(k);
   });
 

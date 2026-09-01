@@ -5,6 +5,7 @@ import type {
   ProfileRow,
   DepartmentRow,
   SalgsmaalRow,
+  AnbudRow,
 } from "./database";
 
 export * from "./database";
@@ -16,6 +17,12 @@ export type Organization = OrganizationRow;
 export type Profile = ProfileRow;
 export type Department = DepartmentRow;
 export type Salgsmaal = SalgsmaalRow;
+/**
+ * A followed tender. Named Bud, not Anbud, because lib/doffin.ts already
+ * exports Anbud for a notice as it comes off Doffin — that one is what is out
+ * there, this one is what we are doing about it.
+ */
+export type Bud = AnbudRow;
 
 /** Team member as shown in autocomplete / seller lists. */
 export interface Member {

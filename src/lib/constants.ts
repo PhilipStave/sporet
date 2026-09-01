@@ -132,6 +132,8 @@ export const FEATURE_ORDER: FeatureKey[] = [
   "avdelinger",
   "kunder",
   "aktivitet",
+  "finnkunder",
+  "anbud",
 ];
 
 /** Activity kinds beyond channels. */

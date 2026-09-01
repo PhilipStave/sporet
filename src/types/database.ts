@@ -67,6 +67,52 @@ export type SalgsmaalRow = {
   updated_at: string;
 }
 
+/**
+ * A tender the company is following or has bid on. One row per competition,
+ * not per buyer — the same municipality runs many over the years.
+ *
+ * deal_id is null when the buyer is not in the pipeline, and doffin_id is null
+ * when the bid was registered by hand rather than found through the search.
+ */
+export type AnbudRow = {
+  id: string;
+  org_id: string;
+  deal_id: string | null;
+  department_id: string | null;
+  owner_id: string | null;
+  owner_name: string;
+  /** Doffin notice id, and the key we look the outcome up by. */
+  doffin_id: string | null;
+  lenke: string | null;
+  tittel: string;
+  beskrivelse: string;
+  kjoper_navn: string;
+  kjoper_orgnr: string | null;
+  frist: string | null;
+  publisert: string | null;
+  /** The buyer own estimate. For a standing scheme it is the ceiling. */
+  verdi: number | null;
+  over_terskel: boolean;
+  lopende: boolean;
+  status: BudStatus;
+  levert_at: string | null;
+  /** What we actually bid, when the seller enters it. */
+  tilbudssum: number | null;
+  notat: string;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Where a tender stands with us. Never written without the user saying so. */
+export type BudStatus =
+  | "vurderer"
+  | "levert"
+  | "vunnet"
+  | "tapt"
+  | "avlyst"
+  | "droppet";
+
 export type ProfileRow = {
   id: string;
   org_id: string | null;
@@ -203,6 +249,7 @@ export type Database = {
       deal_documents: Table<DealDocumentRow>;
       inbound_emails: Table<InboundEmailRow>;
       salgsmaal: Table<SalgsmaalRow>;
+      anbud: Table<AnbudRow>;
     };
     Views: { [_ in never]: never };
     Functions: {

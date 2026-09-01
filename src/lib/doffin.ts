@@ -505,3 +505,71 @@ export async function sokAnbud(tekst: string, maks = 12, region?: string): Promi
     return [];
   }
 }
+
+/** What Doffin ended up saying about a competition we followed. */
+export type Utfall = {
+  /** True once a contract-award notice exists for the procurement. */
+  avgjort: boolean;
+  /** The suppliers that won. Empty until the award notice is published. */
+  vinnere: string[];
+  /** How many bids the buyer received, when stated. */
+  antallTilbud: number | null;
+  /** The award notice itself, so the user can read it. */
+  lenke: string | null;
+};
+
+/**
+ * Ask Doffin how a competition ended.
+ *
+ * A procurement is several notices: the competition, then — if the buyer
+ * publishes one — the award. They are linked through procurementTimeline, so
+ * we read the competition, look for a RESULT entry, and fetch that.
+ *
+ * Only about one in four competitions ever gets an award notice, so "not
+ * decided" is the normal answer and must never be shown as "you lost".
+ */
+export async function hentUtfall(doffinId: string): Promise<Utfall | null> {
+  const hent = async (id: string) => {
+    const res = await fetch(
+      `https://api.doffin.no/webclient/api/v2/notices-api/notices/${encodeURIComponent(id)}`,
+      // Six hours. The median wait from deadline to award is about three
+      // months, so there is nothing to gain from asking more often.
+      { next: { revalidate: 21_600 } }
+    );
+    return res.ok ? await res.json() : null;
+  };
+
+  try {
+    const notis = await hent(doffinId);
+    if (!notis) return null;
+
+    const tidslinje = (notis.procurementTimeline ?? []) as {
+      id?: string;
+      allType?: string[];
+    }[];
+    const resultat = tidslinje.find((e) => e.allType?.includes("RESULT"));
+    if (!resultat?.id)
+      return { avgjort: false, vinnere: [], antallTilbud: null, lenke: null };
+
+    const tildeling =
+      resultat.id === doffinId ? notis : await hent(resultat.id);
+    if (!tildeling)
+      return { avgjort: false, vinnere: [], antallTilbud: null, lenke: null };
+
+    const antall = (tildeling.allReceivedTenders ?? []).find(
+      (t: { type?: string }) => t?.type === "tenders"
+    )?.total;
+
+    return {
+      avgjort: true,
+      vinnere: ((tildeling.awardedNames ?? []) as unknown[])
+        .map((n) => String(n).trim())
+        .filter(Boolean),
+      antallTilbud: typeof antall === "number" && antall > 0 ? antall : null,
+      lenke: `https://www.doffin.no/notices/${encodeURIComponent(resultat.id)}`,
+    };
+  } catch {
+    // No outcome is a fine answer; a broken page is not.
+    return null;
+  }
+}

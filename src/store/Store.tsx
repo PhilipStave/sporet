@@ -32,6 +32,7 @@ import type {
   Member,
   ActivityRow,
   Salgsmaal,
+  Bud,
 } from "@/types";
 
 export type Scope =
@@ -68,6 +69,12 @@ interface StoreValue {
 
   /** Monthly sales targets: whole org, per department, per seller. */
   salgsmaal: Salgsmaal[];
+
+  /** Tenders this org is following or has bid on. */
+  anbud: Bud[];
+  leggTilBud: (rad: Partial<Bud>) => Promise<string | null>;
+  oppdaterBud: (id: string, patch: Partial<Bud>) => Promise<void>;
+  slettBud: (id: string) => Promise<void>;
   /** Upsert a target (0 or empty deletes it). Admin only — RLS enforces it. */
   settSalgsmaal: (
     holder: { department_id?: string; profile_id?: string },
@@ -130,6 +137,7 @@ export function StoreProvider({
   const supabase = useMemo(() => createClient(), []);
   const [deals, setDeals] = useState<Deal[]>([]);
   const [salgsmaal, setSalgsmaal] = useState<Salgsmaal[]>([]);
+  const [anbud, setAnbud] = useState<Bud[]>([]);
   const [loading, setLoading] = useState(true);
   const [scope, setScope] = useState<Scope>({ type: "all" });
   const [query, setQuery] = useState("");
@@ -225,18 +233,22 @@ export function StoreProvider({
   );
 
   const refresh = useCallback(async () => {
-    const [dealsRes, maalRes] = await Promise.all([
+    const [dealsRes, maalRes, anbudRes] = await Promise.all([
       supabase
         .from("deals")
         .select(DEAL_SELECT)
         .order("updated_at", { ascending: false }),
       supabase.from("salgsmaal").select("*"),
+      supabase.from("anbud").select("*").order("frist", { ascending: true }),
     ]);
     if (!dealsRes.error && dealsRes.data) {
       setDeals((dealsRes.data as unknown as Deal[]).map(sortActivities));
     }
     if (!maalRes.error && maalRes.data) {
       setSalgsmaal(maalRes.data as Salgsmaal[]);
+    }
+    if (!anbudRes.error && anbudRes.data) {
+      setAnbud(anbudRes.data as Bud[]);
     }
     setLoading(false);
   }, [supabase]);
@@ -283,6 +295,80 @@ export function StoreProvider({
     },
     [supabase, org.id, salgsmaal]
   );
+
+  // ---- tenders ----
+
+  /**
+   * Follow a tender. Written as an explicit object rather than spreading the
+   * argument, so a caller cannot quietly set org_id or a status nobody clicked.
+   */
+  const leggTilBud = useCallback(
+    async (rad: Partial<Bud>) => {
+      const now = new Date().toISOString();
+      const insert = {
+        org_id: org.id,
+        deal_id: rad.deal_id ?? null,
+        department_id:
+          rad.department_id ??
+          members.find((m) => m.id === profile.id)?.department_ids[0] ??
+          departments[0]?.id ??
+          null,
+        owner_id: rad.owner_id ?? profile.id,
+        owner_name: rad.owner_name ?? profile.full_name,
+        doffin_id: rad.doffin_id ?? null,
+        lenke: rad.lenke ?? null,
+        tittel: (rad.tittel ?? "").slice(0, 300),
+        beskrivelse: (rad.beskrivelse ?? "").slice(0, 600),
+        kjoper_navn: rad.kjoper_navn ?? "",
+        kjoper_orgnr: rad.kjoper_orgnr ?? null,
+        frist: rad.frist ?? null,
+        publisert: rad.publisert ?? null,
+        verdi: rad.verdi ?? null,
+        over_terskel: rad.over_terskel ?? false,
+        lopende: rad.lopende ?? false,
+        status: rad.status ?? "vurderer",
+        levert_at: rad.levert_at ?? null,
+        tilbudssum: rad.tilbudssum ?? null,
+        notat: rad.notat ?? "",
+        created_by: profile.id,
+        created_at: now,
+        updated_at: now,
+      };
+      const { data, error } = await supabase
+        .from("anbud")
+        .insert(insert)
+        .select("*")
+        .single();
+      if (error || !data) {
+        // The unique index means "already following this one", which is not
+        // worth an alert; anything else the user should hear about.
+        if (error?.code !== "23505") console.error("leggTilBud failed:", error);
+        return null;
+      }
+      const bud = data as Bud;
+      setAnbud((arr) => [bud, ...arr]);
+      return bud.id;
+    },
+    [supabase, org.id, profile.id, profile.full_name, departments, members]
+  );
+
+  const oppdaterBud = useCallback(
+    async (id: string, patch: Partial<Bud>) => {
+      const nytt = { ...patch, updated_at: new Date().toISOString() };
+      setAnbud((arr) => arr.map((b) => (b.id === id ? { ...b, ...nytt } : b)));
+      await supabase.from("anbud").update(nytt).eq("id", id);
+    },
+    [supabase]
+  );
+
+  const slettBud = useCallback(
+    async (id: string) => {
+      setAnbud((arr) => arr.filter((b) => b.id !== id));
+      await supabase.from("anbud").delete().eq("id", id);
+    },
+    [supabase]
+  );
+
 
   useEffect(() => {
     // Initial data load — async fetch that sets state after awaiting (external sync).
@@ -577,6 +663,10 @@ export function StoreProvider({
     sellerNames,
     salgsmaal,
     settSalgsmaal,
+    anbud,
+    leggTilBud,
+    oppdaterBud,
+    slettBud,
     stages,
     stageMaps,
     addStage,
