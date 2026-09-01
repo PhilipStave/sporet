@@ -126,25 +126,35 @@ export async function POST(req: Request) {
     }
   }
 
-  // Mark the hits that have an open public tender for this very search, and
-  // lift them to the top. A company that has published a competition is not a
-  // maybe — it is a buyer with a budget and a deadline, and that outranks
-  // every other signal we have.
+  // A company with an open public tender is not a maybe — it is a buyer with
+  // a budget and a deadline, and that outranks every other signal we have.
+  //
+  // So they are not merely marked, they are *added*: the register search ranks
+  // by size, and the municipality actually out shopping is usually a small one
+  // that would never reach the first page. Sirdal kommune buying a sweeper is
+  // the whole point of the search; being number 400 by headcount is not.
   const anbud = await sokAnbud(tekst, 40);
-  if (anbud.length > 0) {
-    const perOrgnr = new Map(
-      anbud.filter((a) => a.kjoperOrgnr).map((a) => [a.kjoperOrgnr!, a])
+  const perOrgnr = new Map(
+    anbud.filter((a) => a.kjoperOrgnr).map((a) => [a.kjoperOrgnr!, a])
+  );
+
+  if (perOrgnr.size > 0) {
+    const finnes = new Set(leads.map((l) => l.orgnr));
+    const mangler = [...perOrgnr.keys()].filter((o) => !finnes.has(o)).slice(0, 8);
+    const hentede = (await Promise.all(mangler.map((o) => fetchCompany(o)))).filter(
+      (d): d is NonNullable<typeof d> => Boolean(d)
     );
-    if (perOrgnr.size > 0) {
-      const merket = leads.map((l) => {
-        const a = perOrgnr.get(l.orgnr);
-        return a
-          ? { ...l, anbud: { tittel: a.tittel, frist: a.frist, lenke: a.lenke } }
-          : l;
-      });
-      merket.sort((a, b) => Number(Boolean(b.anbud)) - Number(Boolean(a.anbud)));
-      leads.splice(0, leads.length, ...merket);
-    }
+
+    const merk = (l: (typeof leads)[number]) => {
+      const a = perOrgnr.get(l.orgnr);
+      return a
+        ? { ...l, anbud: { tittel: a.tittel, frist: a.frist, lenke: a.lenke } }
+        : l;
+    };
+
+    const alle = [...hentede.map(merk), ...leads.map(merk)];
+    alle.sort((a, b) => Number(Boolean(b.anbud)) - Number(Boolean(a.anbud)));
+    leads.splice(0, leads.length, ...alle);
   }
 
   const svar = {
