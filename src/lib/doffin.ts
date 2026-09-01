@@ -37,6 +37,20 @@ export type Anbud = {
   publisert: string | null;
   /** Absolute link to the notice on doffin.no. */
   lenke: string;
+  /**
+   * A dynamic purchasing scheme. Roughly a third of everything open on Doffin
+   * is one of these, and they are the realistic way in for a small supplier:
+   * you qualify once, then get invited to mini-competitions for years. The
+   * stated value is the ceiling for the whole scheme over its lifetime, not
+   * the size of a job — the individual awards are often a few hundred
+   * thousand. Shown differently for that reason.
+   */
+  lopende: boolean;
+  /**
+   * The notice also went to TED, which means it is above the EEA threshold.
+   * A size signal for the half of all notices that state no value at all.
+   */
+  overTerskel: boolean;
 };
 
 type DoffinHit = {
@@ -50,6 +64,7 @@ type DoffinHit = {
   publicationDate?: string;
   type?: string;
   allTypes?: string[];
+  sentToTed?: boolean;
 };
 
 
@@ -479,6 +494,11 @@ export async function sokAnbud(tekst: string, maks = 12, region?: string): Promi
         frist: h.deadline ?? null,
         publisert: h.publicationDate ?? null,
         lenke: `https://www.doffin.no/notices/${encodeURIComponent(h.id!)}`,
+        lopende:
+          h.allTypes?.includes("DYNAMIC_PURCHASING_SCHEME") ||
+          h.type === "DYNAMIC_PURCHASING_SCHEME" ||
+          false,
+        overTerskel: h.sentToTed === true,
       }));
   } catch {
     // Doffin being down must never break the company search next to it.

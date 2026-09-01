@@ -13,6 +13,13 @@ import type { Lead } from "@/lib/brreg";
 
 type Sortering = "frist" | "verdi";
 
+/** How long a standing scheme stays open, in words a seller can act on. */
+function aapenI(dager: number) {
+  if (dager >= 400) return `${(dager / 365).toFixed(1).replace(".", ",")} år`;
+  if (dager >= 60) return `${Math.round(dager / 30)} md.`;
+  return `${dager} dager`;
+}
+
 export default function AnbudPage() {
   const { deals, createDeal, updateDeal, canWrite } = useStore();
   const [tekst, setTekst] = useState("");
@@ -24,6 +31,8 @@ export default function AnbudPage() {
   /** Empty means the whole country. Narrowing happens at Doffin, not here. */
   const [region, setRegion] = useState("");
   const [bareMedVerdi, setBareMedVerdi] = useState(false);
+  /** All, one-off competitions, or standing schemes you qualify into. */
+  const [type, setType] = useState<"alle" | "frist" | "lopende">("alle");
   const [lagtInn, setLagtInn] = useState<Set<string>>(new Set());
 
   /** Buyers already in the pipeline, so nobody is added twice. */
@@ -64,14 +73,15 @@ export default function AnbudPage() {
   };
 
   const synlige = useMemo(() => {
-    const liste = bareMedVerdi ? anbud.filter((a) => a.verdi != null) : [...anbud];
+    let liste = type === "alle" ? [...anbud] : anbud.filter((a) => a.lopende === (type === "lopende"));
+    if (bareMedVerdi) liste = liste.filter((a) => a.verdi != null);
     liste.sort((a, b) => {
       if (sortering === "verdi") return (b.verdi ?? -1) - (a.verdi ?? -1);
       // Soonest deadline first; notices without one (open schemes) go last.
       return (a.frist ?? "9999").localeCompare(b.frist ?? "9999");
     });
     return liste;
-  }, [anbud, sortering, bareMedVerdi]);
+  }, [anbud, sortering, bareMedVerdi, type]);
 
   /**
    * Put the buyer in the pipeline, and note which competition brought them
@@ -84,10 +94,10 @@ export default function AnbudPage() {
     const id = await createDeal({
       company: a.kjoperNavn,
       org_nr: a.kjoperOrgnr,
-      value: a.verdi ?? 0,
-      next_step: `Anbudsfrist: ${a.tittel}`.slice(0, 200),
+      value: a.lopende ? 0 : a.verdi ?? 0,
+      next_step: (a.lopende ? `Søk opptak: ${a.tittel}` : `Anbudsfrist: ${a.tittel}`).slice(0, 200),
       next_step_date: a.frist ? a.frist.slice(0, 10) : null,
-      tags: ["Anbud"],
+      tags: a.lopende ? ["Anbud", "Løpende ordning"] : ["Anbud"],
     } as Partial<Lead> as never);
     if (!id) return;
 
@@ -124,7 +134,9 @@ export default function AnbudPage() {
       <p style={{ fontSize: 14, color: "var(--muted)", margin: "0 0 18px", maxWidth: "72ch" }}>
         Offentlige konkurranser som er åpne akkurat nå, hentet fra Doffin. Skriv
         med dine egne ord hva du leverer — «måke snø» finner det kommunen kaller
-        «snøbrøyting». Søket er gratis og bruker ikke av AI-kvoten.
+        «snøbrøyting». Se særlig etter <strong>løpende opptak</strong>: der søker
+        du én gang og blir invitert til småoppdragene i årevis etterpå. Søket er
+        gratis og bruker ikke av AI-kvoten.
       </p>
 
       <div className="card" style={{ padding: 18, marginBottom: 18 }}>
@@ -180,6 +192,25 @@ export default function AnbudPage() {
               </button>
               <button data-active={sortering === "verdi"} onClick={() => setSortering("verdi")}>
                 Verdi
+              </button>
+            </div>
+            <div className="pillgroup">
+              <button data-active={type === "alle"} onClick={() => setType("alle")}>
+                Alle
+              </button>
+              <button
+                data-active={type === "frist"}
+                onClick={() => setType("frist")}
+                title="Enkeltkonkurranser med en frist du må rekke"
+              >
+                Med frist
+              </button>
+              <button
+                data-active={type === "lopende"}
+                onClick={() => setType("lopende")}
+                title="Ordninger du søker opptak i én gang, og så får oppdrag fra i årevis"
+              >
+                Løpende opptak
               </button>
             </div>
             <label
@@ -264,7 +295,22 @@ export default function AnbudPage() {
                   >
                     <Icon name="building" size={13} />
                     {a.kjoperNavn}
-                    {a.verdi != null && <>· est. {fmtKr(a.verdi)}</>}
+                    {a.verdi != null && (
+                      <span
+                        title={
+                          a.lopende
+                            ? "Taket for hele ordningen i hele perioden — hvert enkelt oppdrag er som regel en brøkdel"
+                            : "Oppdragsgivers eget anslag"
+                        }
+                      >
+                        · {a.lopende ? "ramme totalt" : "est."} {fmtKr(a.verdi)}
+                      </span>
+                    )}
+                    {a.verdi == null && a.overTerskel && (
+                      <span title="Kunngjort i EU-basen TED, som skjer først over EØS-terskelen">
+                        · verdi ikke oppgitt (over EØS-terskel)
+                      </span>
+                    )}
                     {alt && (
                       <span
                         style={{
@@ -287,6 +333,25 @@ export default function AnbudPage() {
                       {a.beskrivelse}
                     </p>
                   )}
+                  {a.lopende && (
+                    <p
+                      style={{
+                        fontSize: 12.5,
+                        margin: "10px 0 0",
+                        padding: "8px 11px",
+                        borderRadius: 8,
+                        background: "var(--primary-050)",
+                        color: "var(--primary)",
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      <strong>Du søker opptak én gang</strong> — så blir du invitert
+                      til de små konkurransene etter hvert som de kommer, i årevis.
+                      Det er her mindre leverandører kommer inn: selve oppdragene
+                      ligger gjerne på noen hundre tusen, selv når rammen over er
+                      stor.
+                    </p>
+                  )}
                 </div>
 
                 <div
@@ -298,7 +363,22 @@ export default function AnbudPage() {
                     flex: "none",
                   }}
                 >
-                  {dager != null ? (
+                  {a.lopende ? (
+                    <span
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 700,
+                        padding: "3px 10px",
+                        borderRadius: 999,
+                        whiteSpace: "nowrap",
+                        background: "var(--primary-050)",
+                        color: "var(--primary)",
+                      }}
+                    >
+                      Løpende opptak
+                      {dager != null && dager > 0 && ` · åpen ${aapenI(dager)}`}
+                    </span>
+                  ) : dager != null ? (
                     <span
                       style={{
                         fontSize: 12,
@@ -313,7 +393,7 @@ export default function AnbudPage() {
                       {dager <= 0 ? "Frist i dag" : dager === 1 ? "1 dag igjen" : `${dager} dager igjen`}
                     </span>
                   ) : (
-                    <span style={{ fontSize: 12, color: "var(--muted)" }}>Løpende ordning</span>
+                    <span style={{ fontSize: 12, color: "var(--muted)" }}>Uten oppgitt frist</span>
                   )}
                   {a.kjoperOrgnr && (
                     <button
