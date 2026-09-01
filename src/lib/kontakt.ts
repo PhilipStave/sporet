@@ -16,7 +16,13 @@ export type Kontakt = {
   sikkerhet: "bekreftet" | "usikker" | "ingen";
 };
 
-const TOM: Kontakt = { domene: null, epost: null, telefon: null, sikkerhet: "ingen" };
+export const TOM_KONTAKT: Kontakt = {
+  domene: null,
+  epost: null,
+  telefon: null,
+  sikkerhet: "ingen",
+};
+const TOM = TOM_KONTAKT;
 
 const SUFFIKS = new Set([
   "as", "asa", "ans", "da", "ba", "sa", "nuf", "ab", "oy", "aps", "gmbh",
@@ -136,16 +142,31 @@ async function hent(url: string, ms: number): Promise<string | null> {
 /**
  * Best-effort lookup. Returns nothing rather than a guess whenever the site
  * cannot be tied back to the company.
+ *
+ * `registrert` is the website the company itself reported to Brønnøysund.
+ * Roughly six in ten have one, and it needs no name matching to be trusted —
+ * guessing a domain from the company name is the fallback, not the plan.
  */
-export async function finnKontakt(navn: string, orgnr: string): Promise<Kontakt> {
+export async function finnKontakt(
+  navn: string,
+  orgnr: string,
+  registrert?: string | null
+): Promise<Kontakt> {
   const ord = reneOrd(navn).filter((w) => w.length >= 3);
 
-  for (const domene of domeneKandidater(navn)) {
+  // The registered site goes first, and the guessed ones only if it fails.
+  const fraRegisteret = (registrert ?? "").trim().toLowerCase() || null;
+  const kandidater = fraRegisteret
+    ? [fraRegisteret, ...domeneKandidater(navn).filter((d) => d !== fraRegisteret)]
+    : domeneKandidater(navn);
+
+  for (const domene of kandidater) {
+    const erRegistrert = domene === fraRegisteret;
     // The candidate built from the first word alone is the risky one: for a
     // multi-word name it can land on a generic domain that has nothing to do
     // with the company. Such a guess has to bring back the rest of the name
     // before it counts as the right site.
-    const gjettetPaaEttOrd = ord.length > 1 && domene === `${ord[0]}.no`;
+    const gjettetPaaEttOrd = !erRegistrert && ord.length > 1 && domene === `${ord[0]}.no`;
     const kreves = gjettetPaaEttOrd ? 2 : 1;
 
     const forside = await hent(`https://${domene}`, 6000);
@@ -167,10 +188,13 @@ export async function finnKontakt(navn: string, orgnr: string): Promise<Kontakt>
       telefon = telefon ?? finnTelefon(side);
     }
 
-    // The org number is proof; the title is only evidence.
-    const sikker = orgnrTreff || treff >= kreves;
+    // The register is proof in itself, as is the org number on the page; the
+    // title is only evidence.
+    const sikker = erRegistrert || orgnrTreff || treff >= kreves;
     if (gjettetPaaEttOrd && !sikker) continue;
-    if (!epost && !telefon) continue;
+    // A registered site with no contact details still tells the seller where
+    // the company lives — worth returning even when the mailbox hunt failed.
+    if (!epost && !telefon && !erRegistrert) continue;
 
     return {
       domene,

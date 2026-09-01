@@ -32,6 +32,8 @@ export type Lead = {
   mva: boolean;
   /** One line from the relevance pass on why this hit fits the query. */
   hvorfor?: string;
+  /** Set when this company has an open Doffin notice matching the search. */
+  anbud?: { tittel: string; frist: string | null; lenke: string };
 };
 
 type BrregEnhet = {
@@ -136,6 +138,23 @@ export async function searchCompanies(
   };
 }
 
+/**
+ * The register stores whatever the company typed: "www.mesta.no",
+ * "https://mesta.no/", sometimes an e-mail address or plain nonsense. Reduce
+ * it to a bare hostname, or null when it is not one.
+ */
+function reisDomene(raa: string | undefined): string | null {
+  const s = (raa ?? "").trim().toLowerCase();
+  if (!s || s.includes("@")) return null;
+  const vert = s
+    .replace(/^https?:\/\//, "")
+    .replace(/^www\./, "")
+    .split(/[/?#]/)[0]
+    .trim();
+  // A real hostname: at least one dot, no spaces, plausible TLD.
+  return /^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}$/.test(vert) ? vert : null;
+}
+
 export type LeadDetail = Lead & {
   stiftet: string | null;
   formaal: string;
@@ -143,12 +162,15 @@ export type LeadDetail = Lead & {
   postnummer: string;
   kommunenummer: string;
   konsern: boolean;
+  /** Website as the company itself reported it to Brønnøysund, if any. */
+  hjemmeside: string | null;
 };
 
 /**
  * Full record for one company, fetched when the user actually picks it. The
- * register holds no e-mail, phone or website — those fields stay empty rather
- * than being guessed at.
+ * register holds no e-mail or phone, but roughly six in ten companies do
+ * register their own website — that field is worth far more than a guess,
+ * because the company put it there itself.
  */
 export async function fetchCompany(orgnr: string): Promise<LeadDetail | null> {
   try {
@@ -162,6 +184,7 @@ export async function fetchCompany(orgnr: string): Promise<LeadDetail | null> {
       vedtektsfestetFormaal?: string[];
       aktivitet?: string[];
       erIKonsern?: boolean;
+      hjemmeside?: string;
     };
     return {
       ...toLead(e),
@@ -171,6 +194,7 @@ export async function fetchCompany(orgnr: string): Promise<LeadDetail | null> {
       postnummer: e.forretningsadresse?.postnummer ?? "",
       kommunenummer: e.forretningsadresse?.kommunenummer ?? "",
       konsern: e.erIKonsern === true,
+      hjemmeside: reisDomene(e.hjemmeside),
     };
   } catch {
     return null;

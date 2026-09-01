@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { interpret, matchLocally, aiEnabled, rangerTreff } from "@/lib/lead-query";
 import { searchCompanies, fetchCompany } from "@/lib/brreg";
+import { sokAnbud } from "@/lib/doffin";
 
 // Lead search: free text in, real companies from Enhetsregisteret out.
 // Signed-in users only — the register is public, but the endpoint is not a proxy
@@ -122,6 +123,27 @@ export async function POST(req: Request) {
         .map((l) => ({ ...l, hvorfor: rangering.get(l.orgnr) }));
       const resten = leads.filter((l) => !rangering.has(l.orgnr));
       leads.splice(0, leads.length, ...rangerte, ...resten);
+    }
+  }
+
+  // Mark the hits that have an open public tender for this very search, and
+  // lift them to the top. A company that has published a competition is not a
+  // maybe — it is a buyer with a budget and a deadline, and that outranks
+  // every other signal we have.
+  const anbud = await sokAnbud(tekst, 40);
+  if (anbud.length > 0) {
+    const perOrgnr = new Map(
+      anbud.filter((a) => a.kjoperOrgnr).map((a) => [a.kjoperOrgnr!, a])
+    );
+    if (perOrgnr.size > 0) {
+      const merket = leads.map((l) => {
+        const a = perOrgnr.get(l.orgnr);
+        return a
+          ? { ...l, anbud: { tittel: a.tittel, frist: a.frist, lenke: a.lenke } }
+          : l;
+      });
+      merket.sort((a, b) => Number(Boolean(b.anbud)) - Number(Boolean(a.anbud)));
+      leads.splice(0, leads.length, ...merket);
     }
   }
 

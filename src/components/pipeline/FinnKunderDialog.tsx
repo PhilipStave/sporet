@@ -238,21 +238,28 @@ export function FinnKunderDialog({ onClose }: { onClose: () => void }) {
 
     // Then the slow part — one website visit per company — fills in contact
     // details behind the scenes. The list is already usable while this runs.
-    try {
-      const res = await fetch("/api/kundesok/detalj", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ orgnr: kandidater.map((l) => l.orgnr) }),
-      });
-      if (!res.ok) return;
-      const detaljer: Detalj[] = (await res.json())?.detaljer ?? [];
-      for (const lead of kandidater) {
-        const id = opprettet.get(lead.orgnr);
-        const d = detaljer.find((x) => x.orgnr === lead.orgnr);
-        if (id && d) await updateDeal(id, fraDetalj(lead, d));
+    //
+    // In batches of eight: the endpoint caps each request, and one big call
+    // both dropped everyone past the cap and risked running out of time for
+    // the rest. Small batches finish, and each one lands as it arrives.
+    for (let i = 0; i < kandidater.length; i += 8) {
+      const gruppe = kandidater.slice(i, i + 8);
+      try {
+        const res = await fetch("/api/kundesok/detalj", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ orgnr: gruppe.map((l) => l.orgnr) }),
+        });
+        if (!res.ok) continue;
+        const detaljer: Detalj[] = (await res.json())?.detaljer ?? [];
+        for (const lead of gruppe) {
+          const id = opprettet.get(lead.orgnr);
+          const d = detaljer.find((x) => x.orgnr === lead.orgnr);
+          if (id && d) await updateDeal(id, fraDetalj(lead, d));
+        }
+      } catch {
+        // This batch missed out; the next one still gets its chance.
       }
-    } catch {
-      // The companies are in the pipeline; they just lack contact details.
     }
   };
 
@@ -588,10 +595,50 @@ export function FinnKunderDialog({ onClose }: { onClose: () => void }) {
                               Kunde
                             </span>
                           )}
+                          {l.anbud && (
+                            <span
+                              title={`Aktivt anbud: ${l.anbud.tittel}`}
+                              style={{
+                                fontSize: 10.5,
+                                fontWeight: 700,
+                                textTransform: "uppercase",
+                                letterSpacing: ".04em",
+                                padding: "2px 7px",
+                                borderRadius: 999,
+                                background: "var(--tint-success)",
+                                color: "#059669",
+                              }}
+                            >
+                              Anbud ute
+                            </span>
+                          )}
                         </div>
                         <div style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 1 }}>
                           {l.naering}
                         </div>
+                        {l.anbud && (
+                          <div style={{ fontSize: 12, color: "#059669", marginTop: 2 }}>
+                            <a
+                              href={l.anbud.lenke}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              style={{ color: "#059669", fontWeight: 600 }}
+                            >
+                              {l.anbud.tittel}
+                            </a>
+                            {l.anbud.frist && (
+                              <>
+                                {" "}
+                                · frist{" "}
+                                {new Date(l.anbud.frist).toLocaleDateString("nb-NO", {
+                                  day: "numeric",
+                                  month: "short",
+                                })}
+                              </>
+                            )}
+                          </div>
+                        )}
                         {l.hvorfor && (
                           <div
                             style={{
