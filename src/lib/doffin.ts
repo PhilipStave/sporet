@@ -1,5 +1,8 @@
 import KOMMUNEDATA from "@/data/kommuner.json";
+import CPVDATA from "@/data/cpv.json";
 import { modell } from "@/lib/lead-query";
+
+const CPV = (CPVDATA as { koder: { k: string; n: string }[] }).koder;
 // Active public tenders from Doffin — the buyers who are looking right now.
 //
 // The industry-code search finds companies that exist; Doffin shows demand:
@@ -197,6 +200,114 @@ async function aiSokeord(tekst: string): Promise<string[]> {
   }
 }
 
+/**
+ * Which CPV categories does this seller belong in?
+ *
+ * CPV is the EU procurement vocabulary, and every notice is tagged with codes
+ * by the buyer. Matching on codes sidesteps wording entirely: "måke snø",
+ * "snøbrøyting" and "vintervedlikehold" are all 90600000, so the seller's own
+ * phrasing stops mattering. The model picks only from the real list, and each
+ * answer is checked against it — it cannot invent a category.
+ */
+async function aiKoder(tekst: string): Promise<string[]> {
+  const key = process.env.ANTHROPIC_API_KEY?.trim();
+  if (!key) return [];
+
+  const liste = CPV.map((c) => `${c.k} ${c.n}`).join(String.fromCharCode(10));
+  const verktoy = {
+    name: "velg_cpv",
+    description: "Velg CPV-kategoriene som passer det brukeren leverer.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        koder: {
+          type: "array",
+          items: { type: "string" },
+          description:
+            "1–4 CPV-koder fra listen, mest treffende først. Velg heller en " +
+            "bred kategori enn en gal smal.",
+        },
+      },
+      required: ["koder"],
+    },
+  };
+
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-api-key": key,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: modell(),
+        max_tokens: 300,
+        system:
+          "Du plasserer en norsk leverandør i riktig CPV-kategori — EUs " +
+          "vokabular for offentlige anskaffelser. Brukeren skriver med egne " +
+          "ord hva de leverer; du velger kodene en kunngjøring om nettopp " +
+          "dette ville vært merket med. Velg kun fra listen. Er du i tvil " +
+          "mellom en bred og en smal kategori, ta den brede — kodene er " +
+          "hierarkiske, så en overordnet kode finner også alt under seg.",
+        tools: [verktoy],
+        tool_choice: { type: "tool", name: "velg_cpv" },
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: `CPV-KATEGORIER:${String.fromCharCode(10)}${liste}`,
+                cache_control: { type: "ephemeral" },
+              },
+              { type: "text", text: `Brukeren leverer: "${tekst}"` },
+            ],
+          },
+        ],
+      }),
+    });
+    if (!res.ok) return [];
+    const json = await res.json();
+    const bruk = (json?.content ?? []).find((c: { type?: string }) => c?.type === "tool_use");
+    const gyldige = new Set(CPV.map((c) => c.k));
+    return ((bruk?.input?.koder ?? []) as unknown[])
+      .map((k) => String(k).trim())
+      .filter((k) => gyldige.has(k))
+      .slice(0, 4);
+  } catch {
+    return [];
+  }
+}
+
+/** All open notices tagged with these CPV categories. */
+async function sporKoder(koder: string[]): Promise<DoffinHit[]> {
+  if (koder.length === 0) return [];
+  try {
+    const res = await fetch(
+      "https://api.doffin.no/webclient/api/v2/search-api/search",
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          searchString: "",
+          numHitsPerPage: 40,
+          page: 1,
+          facets: {
+            status: { checkedItems: ["ACTIVE"] },
+            cpvCodesId: { checkedItems: koder },
+          },
+        }),
+        next: { revalidate: 600 },
+      }
+    );
+    if (!res.ok) return [];
+    return ((await res.json()) as { hits?: DoffinHit[] }).hits ?? [];
+  } catch {
+    return [];
+  }
+}
+
 async function spor(searchString: string): Promise<DoffinHit[]> {
   const res = await fetch(
     "https://api.doffin.no/webclient/api/v2/search-api/search",
@@ -269,7 +380,11 @@ export async function sokAnbud(tekst: string, maks = 12): Promise<Anbud[]> {
     // meeting-room *furniture*, called it a day, and never asked about
     // catering. Below a handful of hits the model is worth the second.
     if (treff.length < 3) {
-      const forslag = await aiSokeord(tekst);
+      // Ask for categories and wording at once: the codes find everything in
+      // the trade regardless of phrasing, the words catch a notice filed under
+      // an odd category. Both run in parallel — neither waits for the other.
+      const [koder, forslag] = await Promise.all([aiKoder(tekst), aiSokeord(tekst)]);
+      const fraKoder = await sporKoder(koder);
       // In parallel: four suggestions run one after another added seconds to a
       // search that had already come up empty twice.
       const svar = await Promise.all(
@@ -284,7 +399,7 @@ export async function sokAnbud(tekst: string, maks = 12): Promise<Anbud[]> {
       // own words, which is the strongest signal there is. The model's are
       // added behind them.
       const sett = new Map<string, DoffinHit>();
-      for (const h of [...treff, ...svar.flat()]) {
+      for (const h of [...treff, ...fraKoder, ...svar.flat()]) {
         if (h.id && !sett.has(h.id)) sett.set(h.id, h);
       }
       treff = [...sett.values()];
