@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useStore } from "@/store/Store";
 import { Icon } from "@/components/Icon";
+import { Dropdown } from "@/components/Dropdown";
 import { fmtKr } from "@/lib/format";
 import { REGIONER, type Anbud } from "@/lib/doffin";
 
@@ -200,20 +201,21 @@ export default function AnbudPage() {
             placeholder="Hva leverer du? F.eks. «catering», «vikartjenester», «asfaltering»"
             style={{ flex: "1 1 280px", minWidth: 0 }}
           />
-          <select
-            className="field-input"
-            value={region}
-            onChange={(e) => setRegion(e.target.value)}
+          <div
             title="Rammeavtaler uten geografi vises uansett landsdel"
             style={{ flex: "0 1 190px" }}
           >
-            <option value="">Hele landet</option>
-            {REGIONER.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.navn}
-              </option>
-            ))}
-          </select>
+            <Dropdown
+              value={region}
+              onChange={setRegion}
+              minWidth={190}
+              stretch
+              options={[
+                { value: "", label: "Hele landet" },
+                ...REGIONER.map((r) => ({ value: r.id, label: r.navn })),
+              ]}
+            />
+          </div>
           <button
             type="button"
             className="btn btn-primary"

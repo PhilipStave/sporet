@@ -15,12 +15,15 @@ export function Dropdown({
   onChange,
   minWidth = 160,
   align = "left",
+  stretch = false,
 }: {
   value: string;
   options: DropdownOption[];
   onChange: (value: string) => void;
   minWidth?: number;
   align?: "left" | "right";
+  /** Fill the height of the row it sits in, so it lines up with a text field. */
+  stretch?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -35,7 +38,7 @@ export function Dropdown({
   const current = options.find((o) => o.value === value);
 
   return (
-    <div ref={ref} style={{ position: "relative" }}>
+    <div ref={ref} style={{ position: "relative", display: stretch ? "flex" : undefined }}>
       <button
         type="button"
         className="btn"
@@ -43,7 +46,13 @@ export function Dropdown({
           e.stopPropagation();
           setOpen((o) => !o);
         }}
-        style={{ minWidth, justifyContent: "space-between", gap: 8 }}
+        style={{
+          minWidth,
+          justifyContent: "space-between",
+          gap: 8,
+          height: stretch ? "100%" : undefined,
+          width: stretch ? "100%" : undefined,
+        }}
       >
         <span style={{ whiteSpace: "nowrap" }}>{current?.label ?? "Velg"}</span>
         <Icon name="chevron" size={15} style={{ color: "var(--muted)" }} />
