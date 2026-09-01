@@ -1,4 +1,5 @@
 import KOMMUNEDATA from "@/data/kommuner.json";
+import { modell } from "@/lib/lead-query";
 // Active public tenders from Doffin — the buyers who are looking right now.
 //
 // The industry-code search finds companies that exist; Doffin shows demand:
@@ -123,6 +124,79 @@ function naevner(h: DoffinHit, ord: string, kunTittel = false): boolean {
   return false;
 }
 
+/**
+ * Translate the seller's own words into the words a notice would use.
+ *
+ * This is the gap no amount of word filtering can close: a contractor writes
+ * "måke snø" and the municipality wrote "Vintervedlikehold"; someone writes
+ * "feing av gater" and the notice says "Gatefeiing". Same trade, different
+ * vocabulary. Only a model that knows Norwegian bridges that, and it does so
+ * for every industry rather than the ones we happened to test.
+ *
+ * Runs only when the plain search came back empty, so the common case stays
+ * instant and free, and the model is asked roughly once per fruitless search.
+ */
+async function aiSokeord(tekst: string): Promise<string[]> {
+  const key = process.env.ANTHROPIC_API_KEY?.trim();
+  if (!key) return [];
+
+  const verktoy = {
+    name: "foreslaa_sokeord",
+    description: "Foreslå ordene en norsk offentlig kunngjøring ville brukt.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        sokeord: {
+          type: "array",
+          items: { type: "string" },
+          description:
+            "2–4 enkeltord eller korte uttrykk, slik de ville stått i tittelen " +
+            "på en kunngjøring på Doffin. Mest sannsynlige først.",
+        },
+      },
+      required: ["sokeord"],
+    },
+  };
+
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-api-key": key,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: modell(),
+        max_tokens: 300,
+        system:
+          "Du oversetter dagligtale til fagspråket i norske offentlige " +
+          "anskaffelser. Brukeren skriver hva de leverer med egne ord; du " +
+          "svarer med ordene en kunngjøring på Doffin ville brukt i tittelen. " +
+          "Bruk substantiv, ikke verb: kunngjøringer heter «Snøbrøyting», " +
+          "ikke «måke snø». Eksempler fra ulike bransjer: «måke snø» → " +
+          "snøbrøyting, vintervedlikehold. «feing av gater» → gatefeiing, " +
+          "renhold av veier. «lage mat til møter» → catering, kantinedrift. " +
+          "«fikse pc-er» → IT-drift, brukerstøtte. «kjøre varer for andre» → " +
+          "transporttjenester, godstransport. «vaske klær» → tekstilvask, " +
+          "vaskeritjenester. Ikke finn på fagområder brukeren ikke nevnte.",
+        tools: [verktoy],
+        tool_choice: { type: "tool", name: "foreslaa_sokeord" },
+        messages: [{ role: "user", content: `Brukeren leverer: "${tekst}"` }],
+      }),
+    });
+    if (!res.ok) return [];
+    const json = await res.json();
+    const bruk = (json?.content ?? []).find((c: { type?: string }) => c?.type === "tool_use");
+    return ((bruk?.input?.sokeord ?? []) as unknown[])
+      .map((o) => String(o).toLowerCase().trim())
+      .filter((o) => o.length >= 4 && o.length <= 40)
+      .slice(0, 4);
+  } catch {
+    return [];
+  }
+}
+
 async function spor(searchString: string): Promise<DoffinHit[]> {
   const res = await fetch(
     "https://api.doffin.no/webclient/api/v2/search-api/search",
@@ -184,6 +258,22 @@ export async function sokAnbud(tekst: string, maks = 12): Promise<Anbud[]> {
           break;
         }
       }
+    }
+
+    // Last resort: let the model say what a notice would have called this.
+    // The seller's word and the buyer's word are often different words for
+    // the same trade, and nothing mechanical closes that gap.
+    if (treff.length === 0) {
+      const sett = new Map<string, DoffinHit>();
+      for (const forslag of await aiSokeord(tekst)) {
+        // A suggestion can be two words ("renhold av veier"); require the
+        // first, most specific one to appear in the title.
+        const kjerne = forslag.split(/\s+/)[0];
+        for (const h of await spor(forslag)) {
+          if (h.id && !sett.has(h.id) && naevner(h, kjerne, true)) sett.set(h.id, h);
+        }
+      }
+      treff = [...sett.values()];
     }
     const naa = Date.now();
 

@@ -120,9 +120,9 @@ export default function AnbudPage() {
     <div className="animate-fade">
       <h2 style={{ fontSize: 26, marginBottom: 6 }}>Anbud</h2>
       <p style={{ fontSize: 14, color: "var(--muted)", margin: "0 0 18px", maxWidth: "72ch" }}>
-        Offentlige konkurranser som er åpne akkurat nå, hentet fra Doffin. Søk på
-        det du leverer, slik en kunngjøring ville hett — ett ord treffer bredere
-        enn en hel setning. Gratis og uten AI-kvote.
+        Offentlige konkurranser som er åpne akkurat nå, hentet fra Doffin. Skriv
+        med dine egne ord hva du leverer — «måke snø» finner det kommunen kaller
+        «snøbrøyting». Søket er gratis og bruker ikke av AI-kvoten.
       </p>
 
       <div className="card" style={{ padding: 18, marginBottom: 18 }}>
@@ -203,11 +203,11 @@ export default function AnbudPage() {
         <div className="card" style={{ padding: 20 }}>
           <p style={{ fontSize: 14, margin: 0 }}>Ingen åpne konkurranser på dette nå.</p>
           <p style={{ fontSize: 13, color: "var(--muted)", margin: "8px 0 0", maxWidth: "68ch" }}>
-            Utgåtte og allerede tildelte kontrakter er luket bort, og vi viser
-            ingenting vi ikke kan stå for. Prøv ordet en kunngjøring ville brukt —
-            «snøbrøyting» framfor «måke snø», «transporttjenester» framfor «kjøre
-            for andre». Husk også at det offentlige bare kunngjør kjøp over
-            terskelverdiene; mindre oppdrag går direkte.
+            Vi har også prøvd fagordene en kunngjøring ville brukt, ikke bare dine
+            egne. Utgåtte og allerede tildelte kontrakter er luket bort, og vi
+            viser ingenting vi ikke kan stå for. Husk at det offentlige bare
+            kunngjør kjøp over terskelverdiene — mindre oppdrag går direkte, uten
+            konkurranse.
           </p>
         </div>
       )}

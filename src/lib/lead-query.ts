@@ -417,7 +417,7 @@ const REGLER = [
  * from a fixed list is a narrow task, and it is roughly three times cheaper
  * than Sonnet. Override with ANTHROPIC_MODEL to change it without a deploy.
  */
-function modell() {
+export function modell() {
   return process.env.ANTHROPIC_MODEL?.trim() || "claude-haiku-4-5-20251001";
 }
 
