@@ -127,6 +127,12 @@ export default function MineBudPage() {
     });
   };
 
+  /** Back to "considering". Clicking "delivered" by mistake must not stick. */
+  const angre = (b: Bud) => {
+    if (!canWrite) return;
+    oppdaterBud(b.id, { status: "vurderer", levert_at: null });
+  };
+
   const sett = (b: Bud, status: BudStatus) => {
     if (!canWrite) return;
     oppdaterBud(b.id, {
@@ -371,6 +377,7 @@ export default function MineBudPage() {
             {knapp("Vi vant", () => sett(b, "vunnet"), true)}
             {knapp("Vi tapte", () => sett(b, "tapt"))}
             {knapp("Avlyst", () => sett(b, "avlyst"))}
+            {b.status === "levert" && knapp("Angre levert", () => angre(b))}
           </>
         )
       )}
@@ -391,6 +398,7 @@ export default function MineBudPage() {
                   <span style={{ fontSize: 12.5, color: "var(--muted)", alignSelf: "center" }}>
                     {STATUSTEKST[b.status]}
                   </span>
+                  {knapp("Angre", () => angre(b))}
                   {knapp("Fjern", () => slettBud(b.id))}
                 </>
               )
