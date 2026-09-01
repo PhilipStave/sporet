@@ -67,13 +67,6 @@ export function FinnKunderDialog({ onClose }: { onClose: () => void }) {
   // Active Doffin notices matching the same phrase — buyers who are looking
   // right now. Loaded alongside the company search, never blocking it.
   const [anbud, setAnbud] = useState<Anbud[]>([]);
-  /**
-   * Two different questions share one dialog. "Bedrifter" asks who could buy
-   * what you sell; "Anbud" asks what is out for tender right now, deadline
-   * first. The tender view costs no AI quota — it is a plain register lookup.
-   */
-  const [fane, setFane] = useState<"bedrifter" | "anbud">("bedrifter");
-  const [anbudSokt, setAnbudSokt] = useState(false);
   const [feil, setFeil] = useState<string | null>(null);
   const [lagtInn, setLagtInn] = useState<Set<string>>(new Set());
   const [jobber, setJobber] = useState<string | null>(null);
@@ -155,44 +148,6 @@ export function FinnKunderDialog({ onClose }: { onClose: () => void }) {
     } catch {
       setFeil("Fikk ikke kontakt med søket. Prøv igjen.");
     } finally {
-      setLaster(false);
-    }
-  };
-
-  /**
-   * Tender-only search. Free — Doffin is a public register, so nothing here
-   * touches the AI quota — and sorted by deadline rather than publication
-   * date: what closes on Friday matters more than what was posted first.
-   */
-  const sokKunAnbud = async (q?: string) => {
-    const spørring = (q ?? tekst).trim();
-    if (spørring.length < 3) return;
-    if (q) setTekst(q);
-    setLaster(true);
-    setFeil(null);
-    setAnbud([]);
-    try {
-      const res = await fetch("/api/kundesok/anbud", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ tekst: spørring }),
-      });
-      const json = await res.json();
-      if (!res.ok) setFeil(json?.error ?? "Anbudssøket feilet");
-      else {
-        const liste: Anbud[] = json?.anbud ?? [];
-        // Soonest deadline first; notices without one go last.
-        liste.sort((a, b) => {
-          if (!a.frist) return 1;
-          if (!b.frist) return -1;
-          return a.frist.localeCompare(b.frist);
-        });
-        setAnbud(liste);
-      }
-    } catch {
-      setFeil("Fikk ikke kontakt med Doffin. Prøv igjen.");
-    } finally {
-      setAnbudSokt(true);
       setLaster(false);
     }
   };
@@ -390,9 +345,7 @@ export function FinnKunderDialog({ onClose }: { onClose: () => void }) {
               </span>
             </div>
             <span style={{ fontSize: 12.5, color: "var(--muted)" }}>
-              {fane === "anbud"
-                ? "Åpne konkurranser fra Doffin, med kortest frist først. Trykk + for å legge oppdragsgiveren i pipelinen."
-                : "Ekte bedrifter fra Enhetsregisteret. Trykk + for å legge dem i pipelinen."}
+              Ekte bedrifter fra Enhetsregisteret. Trykk + for å legge dem i pipelinen.
             </span>
           </div>
           <button
@@ -406,48 +359,6 @@ export function FinnKunderDialog({ onClose }: { onClose: () => void }) {
           </button>
         </div>
 
-        {/* Two questions, one dialog. */}
-        <div
-          style={{
-            display: "flex",
-            gap: 6,
-            padding: "12px 20px 0",
-            borderBottom: "1px solid var(--divider)",
-          }}
-        >
-          {(
-            [
-              ["bedrifter", "Bedrifter"],
-              ["anbud", "Anbud"],
-            ] as const
-          ).map(([id, navn]) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => setFane(id)}
-              style={{
-                padding: "8px 14px",
-                fontSize: 14,
-                fontWeight: fane === id ? 700 : 500,
-                background: "transparent",
-                border: "none",
-                borderBottom:
-                  fane === id ? "2px solid var(--primary)" : "2px solid transparent",
-                color: fane === id ? "var(--text)" : "var(--muted)",
-                cursor: "pointer",
-                marginBottom: -1,
-              }}
-            >
-              {navn}
-              {id === "anbud" && anbud.length > 0 && (
-                <span style={{ marginLeft: 6, color: "#059669", fontWeight: 700 }}>
-                  {anbud.length}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
-
         {/* Search */}
         <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--divider)" }}>
           <div style={{ display: "flex", gap: 9, flexWrap: "wrap" }}>
@@ -455,12 +366,8 @@ export function FinnKunderDialog({ onClose }: { onClose: () => void }) {
               autoFocus
               value={tekst}
               onChange={(e) => setTekst(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && (fane === "anbud" ? sokKunAnbud() : sok())}
-              placeholder={
-                fane === "anbud"
-                  ? "Hva leverer du? F.eks. «vikartjenester» eller «asfaltering»"
-                  : "Hva selger du, og til hvem?"
-              }
+              onKeyDown={(e) => e.key === "Enter" && sok()}
+              placeholder="Hva selger du, og til hvem?"
               style={{
                 flex: "1 1 280px",
                 minWidth: 0,
@@ -475,7 +382,7 @@ export function FinnKunderDialog({ onClose }: { onClose: () => void }) {
             <button
               type="button"
               className="btn btn-primary"
-              onClick={() => (fane === "anbud" ? sokKunAnbud() : sok())}
+              onClick={() => sok()}
               disabled={laster || tekst.trim().length < 3}
               style={{ padding: "10px 20px" }}
             >
@@ -483,30 +390,21 @@ export function FinnKunderDialog({ onClose }: { onClose: () => void }) {
             </button>
           </div>
           <div style={{ marginTop: 10, fontSize: 11.5, color: "var(--muted)", lineHeight: 1.7 }}>
-            {fane === "anbud" ? (
-              <>
-                Søk på det du leverer, slik en kunngjøring ville hett — ett ord treffer
-                bredere enn en hel setning. Anbudssøk bruker ikke av AI-kvoten.
-              </>
-            ) : (
-              <>
-                Skriv med egne ord hva du selger og hvem som kjøper det. Du kan også ta med:
-                <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginTop: 3 }}>
-                  {HINT.map((h) => (
-                    <span key={h.hva}>
-                      <strong style={{ fontWeight: 600, color: "var(--text)" }}>{h.hva}</strong>{" "}
-                      {h.som}
-                    </span>
-                  ))}
-                </div>
-              </>
-            )}
+            Skriv med egne ord hva du selger og hvem som kjøper det. Du kan også ta med:
+            <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginTop: 3 }}>
+              {HINT.map((h) => (
+                <span key={h.hva}>
+                  <strong style={{ fontWeight: 600, color: "var(--text)" }}>{h.hva}</strong>{" "}
+                  {h.som}
+                </span>
+              ))}
+            </div>
           </div>
 
           <div
             style={{
               marginTop: 10,
-              display: fane === "anbud" ? "none" : "flex",
+              display: "flex",
               gap: 7,
               alignItems: "center",
               flexWrap: "wrap",
@@ -527,135 +425,13 @@ export function FinnKunderDialog({ onClose }: { onClose: () => void }) {
         <div style={{ maxHeight: "56vh", overflowY: "auto", padding: "14px 20px 20px" }}>
           {feil && <p style={{ fontSize: 14, color: "var(--danger)" }}>{feil}</p>}
 
-          {fane === "anbud" && !feil && !laster && (
-            <>
-              {!anbudSokt && (
-                <p style={{ fontSize: 13.5, color: "var(--muted)", margin: 0 }}>
-                  Søk på det du leverer, så viser vi de offentlige konkurransene som er
-                  åpne akkurat nå — med kortest frist først.
-                </p>
-              )}
-              {anbudSokt && anbud.length === 0 && (
-                <p style={{ fontSize: 13.5, color: "var(--muted)", margin: 0 }}>
-                  Ingen åpne konkurranser på dette akkurat nå. Utgåtte og allerede
-                  tildelte kontrakter er luket bort — prøv et bredere ord.
-                </p>
-              )}
-              {anbud.length > 0 && (
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {anbud.map((a) => {
-                    const dagerIgjen = a.frist
-                      ? Math.ceil((new Date(a.frist).getTime() - Date.now()) / 86_400_000)
-                      : null;
-                    return (
-                      <div
-                        key={a.id}
-                        style={{
-                          border: "1px solid var(--border)",
-                          borderRadius: 12,
-                          padding: "12px 14px",
-                          display: "flex",
-                          gap: 12,
-                          alignItems: "flex-start",
-                        }}
-                      >
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <a
-                            href={a.lenke}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{
-                              fontSize: 14.5,
-                              fontWeight: 600,
-                              color: "var(--primary)",
-                              textDecoration: "none",
-                            }}
-                          >
-                            {a.tittel}
-                          </a>
-                          <div style={{ fontSize: 12.5, color: "var(--muted)", marginTop: 2 }}>
-                            {a.kjoperNavn}
-                            {a.verdi != null && <> · est. {kr(a.verdi)} kr</>}
-                          </div>
-                          {a.beskrivelse && (
-                            <div
-                              style={{ fontSize: 12, color: "var(--muted)", marginTop: 3 }}
-                            >
-                              {a.beskrivelse}
-                            </div>
-                          )}
-                        </div>
-                        <div
-                          style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            alignItems: "flex-end",
-                            gap: 6,
-                            flex: "none",
-                          }}
-                        >
-                          {dagerIgjen != null && (
-                            <span
-                              style={{
-                                fontSize: 11.5,
-                                fontWeight: 700,
-                                padding: "2px 8px",
-                                borderRadius: 999,
-                                whiteSpace: "nowrap",
-                                background:
-                                  dagerIgjen <= 7 ? "var(--tint-warn)" : "var(--tint-success)",
-                                color: dagerIgjen <= 7 ? "var(--tint-warn-text)" : "#059669",
-                              }}
-                            >
-                              {dagerIgjen <= 0
-                                ? "I dag"
-                                : dagerIgjen === 1
-                                  ? "1 dag igjen"
-                                  : `${dagerIgjen} dager igjen`}
-                            </span>
-                          )}
-                          {a.kjoperOrgnr && (
-                            <button
-                              type="button"
-                              className="btn"
-                              title={`Legg ${a.kjoperNavn} i pipelinen`}
-                              disabled={!canWrite || lagtInn.has(a.kjoperOrgnr)}
-                              onClick={() =>
-                                leggTil({
-                                  orgnr: a.kjoperOrgnr!,
-                                  navn: a.kjoperNavn,
-                                  form: "",
-                                  naeringskode: "",
-                                  naering: "",
-                                  ansatte: null,
-                                  poststed: "",
-                                  kommune: "",
-                                  adresse: "",
-                                  registrert: null,
-                                  mva: false,
-                                })
-                              }
-                              style={{ padding: "4px 12px", fontSize: 13 }}
-                            >
-                              {lagtInn.has(a.kjoperOrgnr) ? "✓ Lagt til" : "+ Legg til"}
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </>
-          )}
-
-          {fane === "bedrifter" && !svar && !feil && !laster && (
+          {!svar && !feil && !laster && (
             <p style={{ fontSize: 13.5, color: "var(--muted)", margin: 0 }}>
               Beskriv hva du selger, så finner vi bedriftene som kjøper det.
             </p>
           )}
 
-          {fane === "bedrifter" && svar && (
+          {svar && (
             <>
               <p style={{ fontSize: 12.5, color: "var(--muted)", margin: "0 0 12px" }}>
                 {svar.forklaring ? (

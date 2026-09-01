@@ -27,6 +27,7 @@ const TABS: Tab[] = [
   { id: "selgere", label: "Selgere", icon: "users", feature: "selgere" },
   { id: "avdelinger", label: "Avdelinger", icon: "org", feature: "avdelinger" },
   { id: "kunder", label: "Kunder", icon: "building", feature: "kunder" },
+  { id: "anbud", label: "Anbud", icon: "target", feature: "anbud" },
   { id: "aktivitet", label: "Aktivitet", icon: "activity", feature: "aktivitet" },
 ];
 

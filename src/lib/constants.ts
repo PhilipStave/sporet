@@ -21,7 +21,8 @@ export type FeatureKey =
   | "avdelinger"
   | "kunder"
   | "aktivitet"
-  | "finnkunder";
+  | "finnkunder"
+  | "anbud";
 
 /** Fixed stage order used across board and lists. */
 export const STAGE_ORDER: Stage[] = [
@@ -110,6 +111,7 @@ export const DEFAULT_FEATURES: Record<FeatureKey, boolean> = {
   kunder: true,
   aktivitet: true,
   finnkunder: true,
+  anbud: true,
 };
 
 export const FEATURE_LABELS: Record<FeatureKey, string> = {
@@ -120,6 +122,7 @@ export const FEATURE_LABELS: Record<FeatureKey, string> = {
   kunder: "Kunder",
   aktivitet: "Aktivitet",
   finnkunder: "Finn kunder",
+  anbud: "Anbud",
 };
 
 export const FEATURE_ORDER: FeatureKey[] = [

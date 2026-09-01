@@ -32,6 +32,7 @@ export default function SetupPage() {
     kunder: true,
     aktivitet: true,
     finnkunder: true,
+    anbud: true,
   });
   const [password, setPassword] = useState("");
   const [password2, setPassword2] = useState("");
