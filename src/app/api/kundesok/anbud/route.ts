@@ -30,5 +30,24 @@ export async function POST(req: Request) {
   }
   if (tekst.length < 3) return NextResponse.json({ anbud: [] });
 
-  return NextResponse.json({ anbud: await sokAnbud(tekst.slice(0, 200), 12, region) });
+  // The Doffin search is free, but the step that translates everyday words into
+  // procurement vocabulary is a model call — and this route used to make it
+  // without touching the quota. A signed-in account could sit in a loop and run
+  // up an Anthropic bill with nothing to stop it. Claim a search first, exactly
+  // as the company search does; running out only costs the translation.
+  let aiTillatt = false;
+  try {
+    const { data } = await supabase.rpc("ai_bruk_ett").single<{
+      tillatt: boolean;
+      brukt: number;
+      kvote: number;
+    }>();
+    aiTillatt = data?.tillatt === true;
+  } catch {
+    // No quota row, no model. The mechanical search still answers.
+  }
+
+  return NextResponse.json({
+    anbud: await sokAnbud(tekst.slice(0, 200), 12, region, aiTillatt),
+  });
 }

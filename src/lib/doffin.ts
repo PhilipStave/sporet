@@ -380,7 +380,17 @@ async function spor(searchString: string, region?: string): Promise<DoffinHit[]>
  * tried on its own, because the seller writes a sentence and the buyer wrote
  * a product name.
  */
-export async function sokAnbud(tekst: string, maks = 12, region?: string): Promise<Anbud[]> {
+/**
+ * @param aiTillatt Whether the caller has quota left. False falls back to the
+ *   mechanical search, which costs nothing and is still useful — the tender
+ *   page must not go dark just because the month is spent.
+ */
+export async function sokAnbud(
+  tekst: string,
+  maks = 12,
+  region?: string,
+  aiTillatt = true
+): Promise<Anbud[]> {
   try {
     // Doffin matches on ANY word in the phrase, so a sentence never comes back
     // empty — "kjøre oppdrag fra oslo til bergen" returned twelve notices about
@@ -421,7 +431,7 @@ export async function sokAnbud(tekst: string, maks = 12, region?: string): Promi
     // used to block this entirely. "Lage mat til møter" found a notice for
     // meeting-room *furniture*, called it a day, and never asked about
     // catering. Below a handful of hits the model is worth the second.
-    if (treff.length < 3) {
+    if (treff.length < 3 && aiTillatt) {
       // Ask for categories and wording at once: the codes find everything in
       // the trade regardless of phrasing, the words catch a notice filed under
       // an odd category. Both run in parallel — neither waits for the other.

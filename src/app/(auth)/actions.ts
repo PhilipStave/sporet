@@ -276,20 +276,32 @@ export interface JoinState {
   departments?: { id: string; name: string }[];
 }
 
-/** Search organisations by name (for the join flow). Returns id + name only. */
+/**
+ * Search organisations by name, for someone joining a company they belong to.
+ *
+ * This runs on the service key and cannot require a login — the person has no
+ * account yet. That makes it the one place where the customer list is readable
+ * from outside, and with a single letter it used to return ten companies and
+ * their internal ids. Walking the alphabet gave you the whole customer list.
+ *
+ * Three characters minimum and five results narrows it to something a person
+ * joining actually types, and makes walking it tedious. It does not make it
+ * impossible: the real fix is rate limiting, which the app does not have
+ * anywhere yet.
+ */
 export async function searchCompanies(
   query: string
 ): Promise<{ id: string; name: string }[]> {
   if (missingEnv()) return [];
   const q = query.trim();
-  if (!q) return [];
+  if (q.length < 3) return [];
   const admin = createAdminClient();
   const { data } = await admin
     .from("organizations")
     .select("id, name")
     .ilike("name", `%${q}%`)
     .order("name")
-    .limit(10);
+    .limit(5);
   return data || [];
 }
 
