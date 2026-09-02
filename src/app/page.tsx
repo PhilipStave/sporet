@@ -172,13 +172,13 @@ const plans = PLAN_DEFS.map((p) => {
 // still using clearly more of the screen than the original.
 const wrap: React.CSSProperties = { maxWidth: 1280, margin: "0 auto" };
 
+// Layout only. Colour and every interactive state live in .land-btn-ink,
+// because an inline background would win over the class and kill :hover.
 const inkBtn: React.CSSProperties = {
   display: "inline-flex",
   alignItems: "center",
   padding: "10px 20px",
   borderRadius: 999,
-  background: "var(--ink)",
-  color: "#f7f4ee",
   fontWeight: 700,
   fontSize: 15,
 };
@@ -188,9 +188,6 @@ const outlineBtn: React.CSSProperties = {
   alignItems: "center",
   padding: "14px 28px",
   borderRadius: 999,
-  border: "1px solid var(--divider)",
-  background: "var(--surface)",
-  color: "var(--text)",
   fontWeight: 600,
   fontSize: 17,
 };
@@ -260,7 +257,7 @@ export default function LandingPage() {
             <Link href="/login" className="land-navlink">
               Logg inn
             </Link>
-            <Link href="/setup" style={inkBtn}>
+            <Link href="/setup" className="land-btn land-btn-ink" style={inkBtn}>
               Prøv systemet
             </Link>
           </nav>
@@ -324,10 +321,14 @@ export default function LandingPage() {
             )}
           </p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 6, alignItems: "center" }}>
-            <Link href="/setup" style={{ ...inkBtn, padding: "14px 28px", fontSize: 17 }}>
+            <Link
+              href="/setup"
+              className="land-btn land-btn-ink"
+              style={{ ...inkBtn, padding: "14px 28px", fontSize: 17 }}
+            >
               Prøv gratis i 14 dager
             </Link>
-            <a href="#priser" style={outlineBtn}>
+            <a href="#priser" className="land-btn land-btn-ghost" style={outlineBtn}>
               Se priser
             </a>
           </div>
@@ -875,6 +876,7 @@ export default function LandingPage() {
             <div style={{ padding: "16px 26px 26px" }}>
               <Link
                 href="/setup"
+                className={`land-btn ${p.popular ? "land-btn-ink" : "land-btn-ghost"}`}
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
@@ -884,9 +886,6 @@ export default function LandingPage() {
                   borderRadius: 999,
                   fontWeight: 700,
                   fontSize: 15,
-                  ...(p.popular
-                    ? { background: "var(--ink)", color: "#f7f4ee" }
-                    : { background: "transparent", border: "1px solid var(--divider)", color: "var(--text)" }),
                 }}
               >
                 Kom i gang
@@ -991,13 +990,12 @@ export default function LandingPage() {
           </div>
           <Link
             href="/setup"
+            className="land-btn land-btn-cream"
             style={{
               display: "inline-flex",
               alignItems: "center",
               padding: "14px 28px",
               borderRadius: 999,
-              background: "#f4f1ea",
-              color: "var(--ink)",
               fontWeight: 700,
               fontSize: 17,
             }}
