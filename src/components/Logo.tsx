@@ -1,41 +1,47 @@
+/**
+ * The Altiv mark: an A drawn as a peak, with a rising arrow through it.
+ *
+ * The navy is a token rather than a literal because navy on a dark background
+ * is invisible — in dark mode the ink flips to near-white and only the teal
+ * stays put, which it can, since it reads on both. `tone="light"` forces the
+ * white version for placing the mark on a navy or coloured surface.
+ */
 export function Logo({
   size = 26,
   showText = true,
   textSize = 18,
+  tone,
 }: {
   size?: number;
   showText?: boolean;
   textSize?: number;
+  /** Force the ink colour when the surface is not the page background. */
+  tone?: "light" | "dark";
 }) {
+  const ink =
+    tone === "light" ? "#fff" : tone === "dark" ? "#1B2A52" : "var(--logo-ink)";
+
   return (
     <span style={{ display: "flex", alignItems: "center", gap: 9 }}>
-      <span
-        style={{
-          width: size,
-          height: size,
-          borderRadius: size * 0.31,
-          background: "var(--primary)",
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexShrink: 0,
-        }}
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 64 64"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        style={{ flexShrink: 0, display: "block" }}
         aria-hidden
       >
-        <svg
-          width={size * 0.62}
-          height={size * 0.62}
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="#fff"
-          strokeWidth={2.4}
+        <path d="M32 6 L58 57 L46.5 57 L32 26.5 L17.5 57 L6 57 Z" fill={ink} />
+        <path
+          d="M9.5 54.5 C 21 51.5, 32 43, 40 28.5"
+          stroke="var(--logo-accent)"
+          strokeWidth="8"
           strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M4 18 L10 11 L14 15 L20 6" />
-          <path d="M15 6 h5 v5" />
-        </svg>
-      </span>
+          fill="none"
+        />
+        <path d="M50.5 15.5 L46.5 34 L33.5 24.5 Z" fill="var(--logo-accent)" />
+      </svg>
       {showText && (
         <span
           style={{
@@ -43,7 +49,7 @@ export function Logo({
             fontWeight: 700,
             fontSize: textSize,
             letterSpacing: "-0.02em",
-            color: "var(--text)",
+            color: tone ? ink : "var(--text)",
           }}
         >
           Altiv

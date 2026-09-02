@@ -20,6 +20,16 @@ export default async function OpengraphImage() {
     shot = "";
   }
 
+  // The mark, as a data URI. Satori renders an <img> reliably; hand-written
+  // SVG paths in JSX it does not.
+  let merke = "";
+  try {
+    const buf = await readFile(join(process.cwd(), "src", "app", "icon.svg"));
+    merke = `data:image/svg+xml;base64,${buf.toString("base64")}`;
+  } catch {
+    merke = "";
+  }
+
   return new ImageResponse(
     (
       <div
@@ -48,7 +58,12 @@ export default async function OpengraphImage() {
         >
           <div style={{ display: "flex", flexDirection: "column" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 34 }}>
-              <div style={{ width: 26, height: 26, borderRadius: 999, background: "#a8402a" }} />
+              {merke ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={merke} alt="" width={30} height={30} />
+              ) : (
+                <div style={{ width: 26, height: 26, borderRadius: 7, background: "#1b2a52" }} />
+              )}
               <div style={{ fontSize: 36, letterSpacing: -0.5 }}>Altiv</div>
             </div>
             <div

@@ -16,6 +16,11 @@
   --danger: #c0392b;
   --row-hover: #fafbfc;
 
+  /* Logo. Its own colours, not the UI palette: the mark keeps its identity
+     wherever it goes, and only the ink has to flip so it stays visible. */
+  --logo-ink: #1b2a52;
+  --logo-accent: #79acab;
+
   /* Semantic tints (status banners, pills) */
   --tint-neutral: #eef0f4;
   --tint-neutral-text: #4b5566;
@@ -75,6 +80,7 @@ html[data-theme="dark"] {
   --primary-050: #23233f;
   --danger: #f07167;
   --row-hover: #1d212c;
+  --logo-ink: #e8eaf0;
 
   --tint-neutral: #232736;
   --tint-neutral-text: #c3c9d6;

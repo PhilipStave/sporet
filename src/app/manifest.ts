@@ -8,8 +8,9 @@ export default function manifest(): MetadataRoute.Manifest {
     description: SITE_DESCRIPTION,
     start_url: "/app",
     display: "standalone",
-    background_color: "#faf7f2",
-    theme_color: "#2f4739",
+    background_color: "#ffffff",
+    // The navy of the mark. Was still the old green from before the rebrand.
+    theme_color: "#1b2a52",
     lang: "nb",
     icons: [
       { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
