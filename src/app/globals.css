@@ -152,6 +152,11 @@ html[data-theme="dark"] .scrollbar-thin::-webkit-scrollbar-thumb {
   --divider: #e6dfd4;
   --accent: #a8402a;
   --accent-hover: #8b3222;
+  /* The landing palette never follows the dark theme, so the mark must not
+     either — inheriting --logo-ink from :root would turn it near-white on
+     cream the moment someone has dark mode on. */
+  --logo-ink: #1b2a52;
+  --logo-accent: #79acab;
   --accent-soft: #f4e7e2;
   --ink: #2f4739;
   --r-lg-land: 20px;

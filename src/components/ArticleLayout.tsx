@@ -1,3 +1,4 @@
+import { LogoMark } from "@/components/Logo";
 import Link from "next/link";
 import { SITE_URL } from "@/lib/site";
 import { COMPANY_LEGAL_NAME, COMPANY_ORG_NR } from "@/lib/legal";
@@ -114,7 +115,7 @@ export function ArticleLayout({
             href="/"
             style={{ display: "flex", alignItems: "center", gap: 10, fontFamily: "var(--font-display)", fontSize: 24, color: "var(--text)" }}
           >
-            <span style={{ width: 16, height: 16, borderRadius: 999, background: "var(--accent)" }} />
+            <LogoMark size={20} />
             Altiv
           </Link>
           <nav style={{ display: "flex", gap: 18, marginLeft: "auto", fontSize: 15, fontWeight: 600, flexWrap: "wrap" }}>

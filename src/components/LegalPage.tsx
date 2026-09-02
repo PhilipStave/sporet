@@ -1,3 +1,4 @@
+import { LogoMark } from "@/components/Logo";
 import Link from "next/link";
 import type { LegalSection } from "@/lib/legal";
 import { LEGAL_VERSION } from "@/lib/legal";
@@ -51,7 +52,7 @@ export function LegalPage({
               color: "var(--text)",
             }}
           >
-            <span style={{ width: 16, height: 16, borderRadius: 999, background: "var(--accent)" }} />
+            <LogoMark size={20} />
             Altiv
           </Link>
           <nav style={{ display: "flex", gap: 18, marginLeft: "auto", fontSize: 15, fontWeight: 600 }}>

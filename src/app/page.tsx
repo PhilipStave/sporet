@@ -1,3 +1,4 @@
+import { LogoMark } from "@/components/Logo";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { SITE_NAME, SITE_URL, SITE_DESCRIPTION, PRICING, FAQ } from "@/lib/site";
@@ -235,7 +236,7 @@ export default function LandingPage() {
               fontSize: 24,
             }}
           >
-            <span style={{ width: 16, height: 16, borderRadius: 999, background: "var(--accent)" }} />
+            <LogoMark size={20} />
             Altiv
           </span>
           <nav
@@ -1028,7 +1029,7 @@ export default function LandingPage() {
               fontSize: 20,
             }}
           >
-            <span style={{ width: 13, height: 13, borderRadius: 999, background: "var(--accent)" }} />
+            <LogoMark size={16} />
             Altiv
           </span>
           <nav style={{ display: "flex", flexWrap: "wrap", gap: 18, fontSize: 14 }}>
