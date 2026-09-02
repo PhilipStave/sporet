@@ -98,8 +98,7 @@ export function TopNav() {
         }}
       >
         <Link href="/app/oversikt" style={{ flexShrink: 0 }}>
-          {/* The bar is 62 tall, so 38 leaves 12 of air above and below. */}
-          <Logo size={38} textSize={22} />
+          <Logo textSize={20} />
         </Link>
 
         {/* Tabs */}

@@ -68,9 +68,9 @@ export default function HvorforAltivPage() {
         <div style={{ ...wrap, padding: "16px 24px", display: "flex", alignItems: "center", gap: 24 }}>
           <Link
             href="/"
-            style={{ display: "flex", alignItems: "center", gap: 10, fontFamily: "var(--font-display)", fontSize: 24, color: "var(--text)" }}
+            style={{ display: "flex", alignItems: "center", gap: 10, fontFamily: "var(--font-display)", fontSize: 29, color: "var(--text)" }}
           >
-            <LogoMark size={26} />
+            <LogoMark size={34} />
             Altiv
           </Link>
           <nav style={{ display: "flex", gap: 18, marginLeft: "auto", fontSize: 15, fontWeight: 600 }}>

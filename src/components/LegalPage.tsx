@@ -48,11 +48,11 @@ export function LegalPage({
               alignItems: "center",
               gap: 10,
               fontFamily: "var(--font-display)",
-              fontSize: 24,
+              fontSize: 29,
               color: "var(--text)",
             }}
           >
-            <LogoMark size={26} />
+            <LogoMark size={34} />
             Altiv
           </Link>
           <nav style={{ display: "flex", gap: 18, marginLeft: "auto", fontSize: 15, fontWeight: 600 }}>
