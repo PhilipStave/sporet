@@ -236,7 +236,7 @@ export default function LandingPage() {
               fontSize: 24,
             }}
           >
-            <LogoMark size={20} />
+            <LogoMark size={26} />
             Altiv
           </span>
           <nav
@@ -1029,7 +1029,7 @@ export default function LandingPage() {
               fontSize: 20,
             }}
           >
-            <LogoMark size={16} />
+            <LogoMark size={20} />
             Altiv
           </span>
           <nav style={{ display: "flex", flexWrap: "wrap", gap: 18, fontSize: 14 }}>

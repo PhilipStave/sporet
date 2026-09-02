@@ -115,7 +115,7 @@ export function ArticleLayout({
             href="/"
             style={{ display: "flex", alignItems: "center", gap: 10, fontFamily: "var(--font-display)", fontSize: 24, color: "var(--text)" }}
           >
-            <LogoMark size={20} />
+            <LogoMark size={26} />
             Altiv
           </Link>
           <nav style={{ display: "flex", gap: 18, marginLeft: "auto", fontSize: 15, fontWeight: 600, flexWrap: "wrap" }}>

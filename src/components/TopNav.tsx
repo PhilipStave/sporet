@@ -98,7 +98,7 @@ export function TopNav() {
         }}
       >
         <Link href="/app/oversikt" style={{ flexShrink: 0 }}>
-          <Logo textSize={17} />
+          <Logo textSize={20} />
         </Link>
 
         {/* Tabs */}

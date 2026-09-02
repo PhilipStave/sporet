@@ -3,7 +3,7 @@
  * landing page and the article pages draw "Altiv" in the display font at their
  * own size, and only need the symbol.
  */
-export function LogoMark({ size = 16, tone }: { size?: number; tone?: "light" | "dark" }) {
+export function LogoMark({ size = 20, tone }: { size?: number; tone?: "light" | "dark" }) {
   const ink =
     tone === "light" ? "#fff" : tone === "dark" ? "#1B2A52" : "var(--logo-ink)";
   return (
@@ -38,9 +38,9 @@ export function LogoMark({ size = 16, tone }: { size?: number; tone?: "light" | 
  * white version for placing the mark on a navy or coloured surface.
  */
 export function Logo({
-  size = 26,
+  size = 32,
   showText = true,
-  textSize = 18,
+  textSize = 21,
   tone,
 }: {
   size?: number;
