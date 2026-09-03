@@ -23,11 +23,10 @@ function aapenI(dager: number) {
 export default function AnbudPage() {
   const {
     deals,
-    createDeal,
     updateDeal,
     canWrite,
     anbud: fulgte,
-    leggTilBud,
+    foelgAnbud,
   } = useStore();
   const [tekst, setTekst] = useState("");
   const [anbud, setAnbud] = useState<Anbud[]>([]);
@@ -111,48 +110,11 @@ export default function AnbudPage() {
     if (!canWrite || lagtInn.has(a.id) || fulgtIder.has(a.id)) return;
     setLagtInn((s) => new Set(s).add(a.id));
 
-    // The buyer may already be in the pipeline from an earlier competition.
-    // Then we hang this tender on the card they have, rather than making a
-    // second card for the same municipality.
-    const finnes = deals.find(
-      (d) =>
-        (a.kjoperOrgnr && d.org_nr === a.kjoperOrgnr) ||
-        d.company.trim().toLowerCase() === a.kjoperNavn.trim().toLowerCase()
-    );
+    const { dealId, ny } = await foelgAnbud(a);
+    if (!dealId || !ny || !a.kjoperOrgnr) return;
 
-    const skrivBud = (dealId: string | null) =>
-      leggTilBud({
-        deal_id: dealId,
-        doffin_id: a.id,
-        lenke: a.lenke,
-        tittel: a.tittel,
-        beskrivelse: a.beskrivelse,
-        kjoper_navn: a.kjoperNavn,
-        kjoper_orgnr: a.kjoperOrgnr,
-        frist: a.frist,
-        publisert: a.publisert ? a.publisert.slice(0, 10) : null,
-        verdi: a.verdi,
-        over_terskel: a.overTerskel,
-        lopende: a.lopende,
-      });
-
-    if (finnes) {
-      await skrivBud(finnes.id);
-      return;
-    }
-
-    const id = await createDeal({
-      company: a.kjoperNavn,
-      org_nr: a.kjoperOrgnr,
-      value: a.lopende ? 0 : a.verdi ?? 0,
-      next_step_text: (a.lopende ? `Søk opptak: ${a.tittel}` : `Anbudsfrist: ${a.tittel}`).slice(0, 200),
-      next_step_date: a.frist ? a.frist.slice(0, 10) : null,
-      tags: a.lopende ? ["Anbud", "Løpende ordning"] : ["Anbud"],
-    });
-    if (!id) return;
-    await skrivBud(id);
-
-    // Contact details come from the same lookup the lead search uses.
+    // A brand-new card gets contact details from the same lookup the customer
+    // search uses. An existing card already has whatever the seller put there.
     try {
       const res = await fetch("/api/kundesok/detalj", {
         method: "POST",
@@ -162,7 +124,7 @@ export default function AnbudPage() {
       if (!res.ok) return;
       const d = (await res.json())?.detaljer?.[0];
       if (d)
-        await updateDeal(id, {
+        await updateDeal(dealId, {
           email: d.kontakt?.epost ?? "",
           phone: d.kontakt?.telefon ?? "",
           nettside: d.kontakt?.domene ?? null,

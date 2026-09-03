@@ -10,6 +10,7 @@ import {
   useRef,
 } from "react";
 import { createClient } from "@/lib/supabase/client";
+import type { Anbud } from "@/lib/doffin";
 import { computeAccess } from "@/lib/billing";
 import {
   CHANNELS,
@@ -75,6 +76,12 @@ interface StoreValue {
   leggTilBud: (rad: Partial<Bud>) => Promise<string | null>;
   oppdaterBud: (id: string, patch: Partial<Bud>) => Promise<void>;
   slettBud: (id: string) => Promise<void>;
+  /**
+   * Follow a tender: the buyer gets a pipeline card (or keeps the one they
+   * have), the deadline becomes the card's next step, and the tender lands
+   * under Mine bud. Returns the card, and whether it was made just now.
+   */
+  foelgAnbud: (a: Anbud) => Promise<{ dealId: string | null; ny: boolean }>;
   /** Upsert a target (0 or empty deletes it). Admin only — RLS enforces it. */
   settSalgsmaal: (
     holder: { department_id?: string; profile_id?: string },
@@ -641,6 +648,79 @@ export function StoreProvider({
 
   const canWrite = computeAccess(org).canWrite;
 
+  /**
+   * Two places used to follow a tender, and neither did the whole job. The
+   * customer search made a card and dropped the tender. The tender page kept
+   * the tender and, when the buyer already had a card, left that card exactly
+   * as it was — so from the pipeline it looked as if nothing had happened.
+   *
+   * Now: one card per buyer, the deadline as its next step (so it shows in the
+   * pipeline and the calendar), a line in its history, and a row under Mine
+   * bud. Same result from both doors.
+   */
+  const foelgAnbud = useCallback(
+    async (a: Anbud) => {
+      const navn = a.kjoperNavn.trim().toLowerCase();
+      const finnes = deals.find(
+        (d) =>
+          (a.kjoperOrgnr && d.org_nr === a.kjoperOrgnr) ||
+          d.company.trim().toLowerCase() === navn
+      );
+      const nesteSteg = (a.lopende ? `Søk opptak: ${a.tittel}` : `Anbudsfrist: ${a.tittel}`).slice(0, 200);
+      const frist = a.frist ? a.frist.slice(0, 10) : null;
+      const tags = a.lopende ? ["Anbud", "Løpende ordning"] : ["Anbud"];
+
+      let dealId: string | null;
+      let ny = false;
+      if (finnes) {
+        dealId = finnes.id;
+        // The seller's own next step wins over the tender's deadline — unless
+        // there is none, it has already passed, or the deadline comes first.
+        const idag = new Date().toISOString().slice(0, 10);
+        const eget = finnes.next_step_date;
+        const bruk = !eget || eget < idag || (frist != null && frist < eget);
+        await updateDeal(finnes.id, {
+          ...(bruk ? { next_step_text: nesteSteg, next_step_date: frist } : {}),
+          tags: [...new Set([...(finnes.tags ?? []), ...tags])],
+        });
+      } else {
+        dealId = await createDeal({
+          company: a.kjoperNavn,
+          org_nr: a.kjoperOrgnr,
+          value: a.lopende ? 0 : (a.verdi ?? 0),
+          next_step_text: nesteSteg,
+          next_step_date: frist,
+          tags,
+        });
+        ny = dealId != null;
+      }
+      if (!dealId) return { dealId: null, ny: false };
+
+      await insertActivity(dealId, {
+        icon: "target",
+        label: a.lopende ? "Følger innkjøpsordning" : "Følger anbud",
+        note: a.tittel,
+      });
+
+      await leggTilBud({
+        deal_id: dealId,
+        doffin_id: a.id,
+        lenke: a.lenke,
+        tittel: a.tittel,
+        beskrivelse: a.beskrivelse,
+        kjoper_navn: a.kjoperNavn,
+        kjoper_orgnr: a.kjoperOrgnr,
+        frist: a.frist,
+        publisert: a.publisert ? a.publisert.slice(0, 10) : null,
+        verdi: a.verdi,
+        over_terskel: a.overTerskel,
+        lopende: a.lopende,
+      });
+      return { dealId, ny };
+    },
+    [deals, createDeal, updateDeal, insertActivity, leggTilBud]
+  );
+
   const value: StoreValue = {
     org,
     profile,
@@ -667,6 +747,7 @@ export function StoreProvider({
     leggTilBud,
     oppdaterBud,
     slettBud,
+    foelgAnbud,
     stages,
     stageMaps,
     addStage,

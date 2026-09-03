@@ -1,3 +1,5 @@
+import type { Anbud } from "./doffin";
+
 // Lookup against Enhetsregisteret (Brønnøysundregistrene). Free, no API key.
 // Every company we ever show a user comes from here — never from a language model.
 
@@ -33,7 +35,12 @@ export type Lead = {
   /** One line from the relevance pass on why this hit fits the query. */
   hvorfor?: string;
   /** Set when this company has an open Doffin notice matching the search. */
-  anbud?: { tittel: string; frist: string | null; lenke: string };
+  /**
+   * The whole notice, not a summary. The card used to get only title, deadline
+   * and link — enough to show a badge, not enough to follow the tender when the
+   * plus was pressed, so the tender was lost the moment the company was added.
+   */
+  anbud?: Anbud;
 };
 
 type BrregEnhet = {

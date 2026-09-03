@@ -152,7 +152,7 @@ export async function POST(req: Request) {
     const merk = (l: (typeof leads)[number]) => {
       const a = perOrgnr.get(l.orgnr);
       return a
-        ? { ...l, anbud: { tittel: a.tittel, frist: a.frist, lenke: a.lenke } }
+        ? { ...l, anbud: a }
         : l;
     };
 

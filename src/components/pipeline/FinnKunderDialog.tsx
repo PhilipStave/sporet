@@ -60,7 +60,7 @@ function navnNokkel(navn: string) {
 }
 
 export function FinnKunderDialog({ onClose }: { onClose: () => void }) {
-  const { createDeal, updateDeal, canWrite, deals } = useStore();
+  const { createDeal, updateDeal, canWrite, deals, foelgAnbud } = useStore();
   const [tekst, setTekst] = useState("");
   const [laster, setLaster] = useState(false);
   const [svar, setSvar] = useState<Svar | null>(null);
@@ -274,9 +274,22 @@ export function FinnKunderDialog({ onClose }: { onClose: () => void }) {
   const leggTil = async (lead: Lead) => {
     if (!canWrite || lagtInn.has(lead.orgnr)) return;
 
-    const id = await createDeal(somKunde(lead, null));
-    if (!id) return;
-    setLagtInn((s) => new Set(s).add(lead.orgnr));
+    // A company with an open tender is followed as a tender: same card, plus
+    // the deadline as next step and a row under Mine bud. Adding it as a plain
+    // customer used to throw the tender away.
+    let id: string | null;
+    if (lead.anbud) {
+      const r = await foelgAnbud(lead.anbud);
+      id = r.dealId;
+      if (!id) return;
+      setLagtInn((s) => new Set(s).add(lead.orgnr));
+      if (!r.ny) return;
+      await updateDeal(id, somKunde(lead, null));
+    } else {
+      id = await createDeal(somKunde(lead, null));
+      if (!id) return;
+      setLagtInn((s) => new Set(s).add(lead.orgnr));
+    }
 
     setJobber(lead.orgnr);
     try {
@@ -516,6 +529,7 @@ export function FinnKunderDialog({ onClose }: { onClose: () => void }) {
                                 adresse: "",
                                 registrert: null,
                                 mva: false,
+                                anbud: a,
                               })
                             }
                             style={{ padding: "3px 10px", fontSize: 12, flex: "none" }}
