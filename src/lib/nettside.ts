@@ -139,8 +139,13 @@ export function vurderNettside(
 // én meta-refresh, SSRF-vern på hvert hopp.
 // ---------------------------------------------------------------
 
-function privatAdresse(ip: string) {
-  if (isIP(ip) === 6) return /^(::1$|::ffff:|fc|fd|fe80)/i.test(ip);
+function privatAdresse(ip: string): boolean {
+  if (isIP(ip) === 6) {
+    // ::ffff:1.2.3.4 is an IPv4 address in IPv6 clothing — judge the IPv4.
+    const mapped = ip.match(/^::ffff:(d+.d+.d+.d+)$/i);
+    if (mapped) return privatAdresse(mapped[1]);
+    return /^(::1$|fc|fd|fe80)/i.test(ip);
+  }
   const [a, b] = ip.split(".").map(Number);
   return (
     a === 10 || a === 127 || a === 0 ||

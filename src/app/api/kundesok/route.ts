@@ -14,6 +14,12 @@ export const maxDuration = 60;
 /** How long the website checks may take, all of them together. */
 const FRIST_NETTSIDE_MS = 20_000;
 const MAKS_SJEKKEDE = 60;
+/**
+ * Sixty fetches at once from one serverless function starved each other:
+ * most of them hit the six-second limit and came back "ukjent". Ten at a time
+ * finish in the same wall time and actually answer.
+ */
+const SAMTIDIGE = 10;
 
 /**
  * Where a verdict sorts when the user asked about websites: the ones that
@@ -43,12 +49,13 @@ async function vurderNettsider(leads: Lead[]): Promise<{ antall: number; ikkeRuk
   const slutt = Date.now() + FRIST_NETTSIDE_MS;
   const nye = new Map<string, Lagret>();
   let ikkeRukket = 0;
-  await Promise.all(
-    mangler.map(async (d) => {
+  const koe = [...mangler];
+  const arbeider = async () => {
+    for (let d = koe.shift(); d !== undefined; d = koe.shift()) {
       const igjen = slutt - Date.now();
       if (igjen <= 500) {
         ikkeRukket++;
-        return;
+        continue;
       }
       const v = await Promise.race<Lagret | null>([
         sjekkNettside(d, Math.min(6000, igjen)),
@@ -56,8 +63,9 @@ async function vurderNettsider(leads: Lead[]): Promise<{ antall: number; ikkeRuk
       ]);
       if (v) nye.set(d, v);
       else ikkeRukket++;
-    })
-  );
+    }
+  };
+  await Promise.all(Array.from({ length: SAMTIDIGE }, arbeider));
   // Fire and forget: the search must not wait for the database.
   void lagre([...nye].map(([domene, v]) => ({ domene, v })));
 
@@ -256,6 +264,19 @@ export async function POST(req: Request) {
     const alle = [...hentede.map(merk), ...leads.map(merk)];
     alle.sort((a, b) => Number(Boolean(b.anbud)) - Number(Boolean(a.anbud)));
     leads.splice(0, leads.length, ...alle);
+  }
+
+  // A website search is ordered by the measurement, full stop. The tender
+  // buyers merged in above were never looked at, so they are marked as such
+  // and sorted behind everything that was — not put on top because they
+  // happen to have a tender out.
+  if (sjekkerNettside) {
+    for (const l of leads)
+      if (!l.nettside) l.nettside = { dom: "ukjent", funn: ["Ikke sjekket"] };
+    leads.sort(
+      (a, b) =>
+        REKKEFOLGE[a.nettside?.dom ?? "ukjent"] - REKKEFOLGE[b.nettside?.dom ?? "ukjent"]
+    );
   }
 
   const svar = {
