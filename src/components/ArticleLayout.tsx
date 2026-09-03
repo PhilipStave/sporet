@@ -1,4 +1,5 @@
 import { LogoMark } from "@/components/Logo";
+import { BLOG_POSTS } from "@/lib/blog";
 import Link from "next/link";
 import { SITE_URL } from "@/lib/site";
 import { COMPANY_LEGAL_NAME, COMPANY_ORG_NR } from "@/lib/legal";
@@ -58,6 +59,18 @@ export function ArticleLayout({
   related?: { href: string; label: string }[];
 }) {
   const url = `${SITE_URL}/${meta.slug}`;
+
+  // Three onward reads, always. The author picks first; the newest posts that
+  // are not this one fill the rest.
+  const valgt = (related ?? []).map((r) => ({ ...r, sub: undefined as string | undefined }));
+  const nesteLesning = [
+    ...valgt,
+    ...BLOG_POSTS.filter(
+      (b) =>
+        `blogg/${b.slug}` !== meta.slug &&
+        !valgt.some((v) => v.href === `/blogg/${b.slug}`)
+    ).map((b) => ({ href: `/blogg/${b.slug}`, label: b.title, sub: b.description })),
+  ].slice(0, 3);
   const articleLd = {
     "@context": "https://schema.org",
     "@type": "Article",
@@ -231,16 +244,53 @@ export function ArticleLayout({
           </Link>
         </div>
 
-        {related && related.length > 0 && (
-          <p style={{ marginTop: 30, fontSize: 14, color: "var(--muted)" }}>
-            Les også:{" "}
-            {related.map((r, i) => (
-              <span key={r.href}>
-                <Link href={r.href} style={{ color: "var(--accent)", fontWeight: 600 }}>{r.label}</Link>
-                {i < related.length - 1 ? ", " : "."}
-              </span>
-            ))}
-          </p>
+        {/*
+          Every article ends with three real ways onward, not a grey line of
+          text after the sign-up box — and never an empty space, because these
+          were hand-written per article and most articles had none. Whatever
+          the author picked comes first; the rest is filled from the newest
+          posts that are not this one.
+        */}
+        {nesteLesning.length > 0 && (
+          <section style={{ marginTop: 44, borderTop: "1px solid var(--divider)", paddingTop: 26 }}>
+            <h2 style={{ fontSize: 19, margin: "0 0 14px" }}>Les videre</h2>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))",
+                gap: 14,
+              }}
+            >
+              {nesteLesning.map((r) => (
+                <Link
+                  key={r.href}
+                  href={r.href}
+                  className="land-card"
+                  style={{
+                    display: "block",
+                    background: "var(--surface)",
+                    border: "1px solid var(--divider)",
+                    borderRadius: 14,
+                    padding: 18,
+                    textDecoration: "none",
+                    color: "var(--text)",
+                  }}
+                >
+                  <div style={{ fontSize: 15.5, fontWeight: 700, lineHeight: 1.32 }}>
+                    {r.label}
+                  </div>
+                  {r.sub && (
+                    <div style={{ fontSize: 13.5, color: "var(--muted)", marginTop: 7, lineHeight: 1.5 }}>
+                      {r.sub}
+                    </div>
+                  )}
+                  <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--accent)", marginTop: 11 }}>
+                    Les →
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
         )}
       </main>
 

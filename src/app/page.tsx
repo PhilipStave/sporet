@@ -335,10 +335,20 @@ export default function LandingPage() {
             >
               Prøv gratis i 14 dager
             </Link>
-            <a href="#priser" className="land-btn land-btn-ghost" style={outlineBtn}>
-              Se priser
-            </a>
+            {/* The second button used to be "Se priser", which jumped down the
+                same page. Nobody who was not ready to fill in a form had
+                anywhere to go. This one leads to a page that answers the
+                question they actually have first: is this for a company like
+                mine? Price stays one line below, and in the menu. */}
+            <Link href="/hvorfor-altiv" className="land-btn land-btn-ghost" style={outlineBtn}>
+              Se hvordan det fungerer
+            </Link>
           </div>
+          <p style={{ margin: "-2px 0 0", fontSize: 14.5 }}>
+            <a href="#priser" className="land-navlink">
+              Eller se prisene — fra 790 kr/mnd →
+            </a>
+          </p>
           <ul
             style={{
               listStyle: "none",
