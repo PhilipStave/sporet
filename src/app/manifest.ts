@@ -6,7 +6,9 @@ export default function manifest(): MetadataRoute.Manifest {
     name: `${SITE_NAME} — ${SITE_TAGLINE}`,
     short_name: SITE_NAME,
     description: SITE_DESCRIPTION,
-    start_url: "/app",
+    // Added to the home screen, Altiv opens straight into the phone view —
+    // not the desktop app scaled down.
+    start_url: "/app/mobil",
     display: "standalone",
     background_color: "#ffffff",
     // The navy of the mark. Was still the old green from before the rebrand.

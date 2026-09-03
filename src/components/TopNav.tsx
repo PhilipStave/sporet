@@ -75,6 +75,10 @@ export function TopNav() {
     return () => document.removeEventListener("click", close);
   }, [menuOpen]);
 
+  // The phone view carries its own bottom bar. A desktop header above it would
+  // eat a fifth of the screen and offer nothing you can reach with a thumb.
+  if (pathname.startsWith("/app/mobil")) return null;
+
   return (
     <header
       style={{

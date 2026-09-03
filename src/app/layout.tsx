@@ -99,6 +99,9 @@ export const viewport: Viewport = {
   themeColor: "#faf7f2",
   width: "device-width",
   initialScale: 1,
+  // The phone view has a fixed bottom bar; without this it sits under the home
+  // indicator on an iPhone.
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
