@@ -17,8 +17,25 @@ const KODER = NAERINGSKODER as Kode[];
 const KOMMUNER = (KOMMUNEDATA as { kommuner: { k: string; n: string; f: string }[] }).kommuner;
 const FYLKE = (KOMMUNEDATA as { fylke: Record<string, string> }).fylke;
 
+/**
+ * A requirement that has to be checked per company, not looked up in the
+ * register. Closed list: the code knows how each one is measured, and the
+ * model only says that the user asked for it. A requirement outside this list
+ * goes in kanIkkeSjekkes, never silently into an industry code.
+ */
+export type Kriterium = "nettside_daarlig" | "nettside_mangler";
+export const KRITERIER = new Set<Kriterium>(["nettside_daarlig", "nettside_mangler"]);
+
 export type Interpretation = {
   filter: LeadFilter;
+  /** Per-company checks we can actually run. Empty for ordinary searches. */
+  kriterier: Kriterium[];
+  /**
+   * Requirements the user made that nothing here can measure yet. Shown to
+   * them, so a search that quietly ignored "uses an old accounting system"
+   * says so instead of pretending.
+   */
+  kanIkkeSjekkes: string[];
   /** Human-readable account of what we searched for, shown above the results. */
   forklaring: string;
   /** Which path produced this — surfaced in the UI so it is never a mystery. */
@@ -67,6 +84,11 @@ const STOPPORD = new Set([
   // Customer types, not industries. Left to KJOPERE below, which maps them to
   // the right code — scoring them as words hits "kommunikasjonsutstyr".
   "kommune", "kommuner", "kommunen", "kommunene", "fylke", "fylker",
+  // Words about the company itself rather than its trade. Scored as words,
+  // "uten" alone was enough to land "bedrifter uten nettbutikk" on waste
+  // incineration.
+  "nettside", "nettsider", "hjemmeside", "hjemmesider", "dårlig", "dårlige",
+  "uten", "gammel", "gamle", "utdatert", "ny", "nye",
 ]);
 
 function normaliser(s: string) {
@@ -385,6 +407,8 @@ export function matchLocally(tekst: string): Interpretation | null {
     },
     forklaring: deler.join(" · "),
     kilde: "lokal",
+    kriterier: [],
+    kanIkkeSjekkes: [],
   };
 }
 
@@ -407,8 +431,11 @@ const REGLER = [
   "Velg heller tre presise bransjekoder enn fire brede. Treffsikkerhet betyr mer enn antall.",
   "Nevner brukeren ikke sted, la kommunelisten stå tom. Ikke gjett geografi.",
   "Spør deg alltid om kjøperen faktisk har behovet. En kommune har ingen salgsavdeling, så verktøy for salg, markedsføring og kundeoppfølging hører ikke hjemme der — sett offentlig=false for slikt, selv om brukeren ikke sier noe om det.",
-  "Sier brukeren noe om størrelse — «små», «mellomstore», «store», «kjeder», «enmannsforetak» — sett fraAntallAnsatte og tilAntallAnsatte deretter. Treffene sorteres etter størrelse, så uten et tak ser brukeren bare landets aller største selskaper.",
+  "Sier brukeren noe om størrelse — «små», «mellomstore», «store», «kjeder», «enmannsforetak» — sett fraAntallAnsatte og tilAntallAnsatte deretter. Ikke gjett størrelse når brukeren ikke sier noe.",
   "Nevner brukeren et sted «i X-området» eller «rundt X», ta med X og nabokommunene — ikke hele fylket.",
+  "Skill mellom hvem kunden er (bransje, sted, størrelse — det søker registeret på) og hva som må være sant om hver enkelt bedrift (nettside, systemer, utstyr — det sjekker vi etterpå). Det siste hører hjemme i kriterier når det står i listen, ellers i kanIkkeSjekkes.",
+  "Er kravet noe ved bedriften selv og ikke en bransje, la naeringskoder stå tom. Tving aldri inn en bransje for å ha noe å søke på — «bedrifter med dårlig nettside» finnes i alle bransjer.",
+  "Selger brukeren nettsider, design, SEO eller markedsføring og beskriver kunden som en med dårlig, gammel eller manglende nettside, er det kriteriet nettside_daarlig eller nettside_mangler — ikke en bransje.",
   "Begrunnelsen skal være én kort setning på norsk, uten markedsføringsspråk.",
 ];
 
@@ -471,7 +498,9 @@ async function interpretWithAi(tekst: string): Promise<Interpretation | null> {
   const verktoy = {
     name: "sett_sokefilter",
     description:
-      "Sett opp søket i Enhetsregisteret som finner bedriftene brukeren kan selge til.",
+      "Sett opp søket i Enhetsregisteret som finner bedriftene brukeren kan selge til. " +
+      "Registeret kan filtrere på bransje, sted, størrelse og organisasjonsform. Alt annet " +
+      "brukeren krever av den enkelte bedrift, hører hjemme i kriterier eller kanIkkeSjekkes.",
     input_schema: {
       type: "object" as const,
       properties: {
@@ -479,7 +508,28 @@ async function interpretWithAi(tekst: string): Promise<Interpretation | null> {
           type: "array",
           items: { type: "string" },
           description:
-            "1–4 bransjekoder for hvem som KJØPER dette, valgt kun fra kodelisten.",
+            "0–4 bransjekoder for hvem som KJØPER dette, kun fra kodelisten. Tom liste når " +
+            "kunden kan være i hvilken som helst bransje — for eksempel når det eneste kravet " +
+            "er noe ved bedriften selv (nettside, alder, størrelse).",
+        },
+        kriterier: {
+          type: "array",
+          items: { type: "string", enum: ["nettside_daarlig", "nettside_mangler"] },
+          description:
+            "Krav brukeren stiller til hver enkelt bedrift, som vi sjekker maskinelt etter søket. " +
+            "nettside_daarlig: brukeren vil ha bedrifter med dårlig, gammel, utdatert eller " +
+            "ubrukelig nettside (typisk en som selger nettsider, design eller SEO). " +
+            "nettside_mangler: brukeren vil ha bedrifter som ikke har nettside. " +
+            "Tom liste for vanlige søk.",
+        },
+        kanIkkeSjekkes: {
+          type: "array",
+          items: { type: "string" },
+          description:
+            "Krav brukeren stilte til den enkelte bedrift som IKKE finnes i kriterier-listen og " +
+            "ikke er bransje, sted eller størrelse — f.eks. «bruker gammelt regnskapssystem», " +
+            "«har ikke nettbutikk». Gjengi kravet kort med brukerens ord. Aldri oversett et slikt " +
+            "krav stille.",
         },
         kommunenummer: {
           type: "array",
@@ -522,7 +572,7 @@ async function interpretWithAi(tekst: string): Promise<Interpretation | null> {
           description: "Én kort setning på norsk om hvem du søkte etter og hvorfor.",
         },
       },
-      required: ["naeringskoder", "begrunnelse"],
+      required: ["naeringskoder", "kriterier", "kanIkkeSjekkes", "begrunnelse"],
     },
   };
 
@@ -593,16 +643,33 @@ async function interpretWithAi(tekst: string): Promise<Interpretation | null> {
       .map(String)
       .filter((k: string) => gyldigeKoder.has(k))
       .slice(0, 4);
-    if (koder.length === 0) {
-      aiGavOpp("ingen gyldige bransjekoder", bruk.input.naeringskoder);
-      return null;
-    }
+
+    const kriterier: Kriterium[] = [...new Set<string>((bruk.input.kriterier ?? []).map(String))]
+      .filter((k): k is Kriterium => KRITERIER.has(k as Kriterium));
+    const kanIkkeSjekkes: string[] = (bruk.input.kanIkkeSjekkes ?? [])
+      .map((k: unknown) => String(k).trim().slice(0, 80))
+      .filter(Boolean)
+      .slice(0, 3);
 
     const gyldigeKommuner = new Set(KOMMUNER.map((k) => k.k));
     const kommuner: string[] = (bruk.input.kommunenummer ?? [])
       .map(String)
       .filter((k: string) => gyldigeKommuner.has(k))
       .slice(0, 40);
+
+    const fra = Number(bruk.input.fraAntallAnsatte) || undefined;
+    const til = Number(bruk.input.tilAntallAnsatte) || undefined;
+
+    // No industry is allowed only for a criteria search that is narrowed some
+    // other way. tool_choice forces an answer, so an empty call with nothing
+    // else set would otherwise become a search of the whole country.
+    if (koder.length === 0) {
+      const avgrenset = kommuner.length > 0 || fra != null || til != null;
+      if (kriterier.length === 0 || !avgrenset) {
+        aiGavOpp("ingen bransje og ingen avgrensning", bruk.input);
+        return null;
+      }
+    }
 
     const antall = Number(bruk.input.antall);
 
@@ -611,7 +678,7 @@ async function interpretWithAi(tekst: string): Promise<Interpretation | null> {
     // straight back in.
     const baPrivat = bruk.input.offentlig === false;
     const brukteKoder = baPrivat ? koder.filter((k) => !k.startsWith("84.")) : koder;
-    if (brukteKoder.length === 0) {
+    if (koder.length > 0 && brukteKoder.length === 0) {
       aiGavOpp("bare offentlige koder igjen etter privat-filter", koder);
       return null;
     }
@@ -634,18 +701,31 @@ async function interpretWithAi(tekst: string): Promise<Interpretation | null> {
       );
     }
     if (Number.isFinite(antall) && antall > 0) deler.push(`inntil ${Math.min(antall, 100)}`);
+    if (kriterier.length) deler.push("sjekker: nettside");
+    if (kanIkkeSjekkes.length) deler.push(`kan ikke sjekke: ${kanIkkeSjekkes.join(", ")}`);
+
+    // "Bad website" needs a registered site to look at, and the oldest
+    // companies are where the old sites are. "No website" cannot be filtered
+    // for in the register (it only filters on having one), so the newest are
+    // taken — the ones most likely not to have got round to it.
+    const nettsideDaarlig = kriterier.includes("nettside_daarlig");
+    const nettsideMangler = kriterier.includes("nettside_mangler");
 
     return {
       filter: {
         naeringskoder: brukteKoder,
         kommunenummer: kommuner.length ? kommuner : undefined,
-        fraAntallAnsatte: Number(bruk.input.fraAntallAnsatte) || undefined,
-        tilAntallAnsatte: Number(bruk.input.tilAntallAnsatte) || undefined,
+        fraAntallAnsatte: fra,
+        tilAntallAnsatte: til,
         organisasjonsformer: former,
+        harHjemmeside: nettsideDaarlig && !nettsideMangler ? true : undefined,
+        sortering: nettsideDaarlig ? "eldst" : nettsideMangler ? "nyest" : undefined,
       },
       antall: Number.isFinite(antall) && antall > 0 ? Math.min(antall, 100) : undefined,
       forklaring: deler.join(" · "),
       kilde: "ai",
+      kriterier,
+      kanIkkeSjekkes,
     };
   } catch (e) {
     aiGavOpp("kallet kastet", (e as Error).message);
@@ -665,6 +745,8 @@ export type RangeringsKandidat = {
   aktivitet: string;
   ansatte: number | null;
   registrert: string | null;
+  /** Measured by code, when the search asked about websites. */
+  nettside?: { dom: string; funn: string[] };
 };
 
 /**
@@ -679,17 +761,24 @@ export type RangeringsKandidat = {
  */
 export async function rangerTreff(
   tekst: string,
-  kandidater: RangeringsKandidat[]
+  kandidater: RangeringsKandidat[],
+  kriterier: Kriterium[] = []
 ): Promise<Map<string, string> | null> {
   const key = process.env.ANTHROPIC_API_KEY?.trim();
   if (!key || kandidater.length < 3) return null;
 
+  const sjekkerNettside = kriterier.length > 0;
   const linjer = kandidater
     .map((k) => {
       const alder = k.registrert ? `reg. ${k.registrert.slice(0, 4)}` : "";
       const str = k.ansatte != null ? `${k.ansatte} ansatte` : "";
       const om = k.aktivitet ? ` — «${k.aktivitet.slice(0, 220)}»` : "";
-      return `${k.orgnr} | ${k.navn} | ${k.naering} | ${[str, alder].filter(Boolean).join(", ")}${om}`;
+      // The website column is a measurement, and it goes in as one: the model
+      // never sees the page, only the verdict and what it was based on.
+      const nett = sjekkerNettside
+        ? ` | nettside: ${k.nettside ? `${k.nettside.dom}${k.nettside.funn.length ? " — " + k.nettside.funn.join("; ") : ""}` : "ikke sjekket"}`
+        : "";
+      return `${k.orgnr} | ${k.navn} | ${k.naering} | ${[str, alder].filter(Boolean).join(", ")}${om}${nett}`;
     })
     .join(String.fromCharCode(10));
 
@@ -709,10 +798,11 @@ export async function rangerTreff(
                 type: "string",
                 description:
                   "Maks tolv ord på norsk om hvorfor dette er et godt prospekt. " +
-                  "Bygg på aktivitetsteksten når den finnes.",
+                  "Bygg BARE på aktivitetsteksten og nettside-kolonnen. Utelat " +
+                  "feltet når du ikke har noe konkret å bygge på.",
               },
             },
-            required: ["orgnr", "hvorfor"],
+            required: ["orgnr"],
           },
           description:
             "Bedriftene som faktisk passer, beste først. Utelat dem som ikke " +
@@ -739,7 +829,15 @@ export async function rangerTreff(
           "faktisk driver med, og sett dem som mest sannsynlig KJØPER det " +
           "selgeren tilbyr først. Bedrifter i vekst og nyere bedrifter er ofte " +
           "bedre prospekter enn store etablerte med faste leverandører. Vær " +
-          "streng: en bedrift som åpenbart ikke passer, skal utelates.",
+          "streng: en bedrift som åpenbart ikke passer, skal utelates." +
+          (sjekkerNettside
+            ? " Nettside-kolonnen er målt maskinelt. Brukeren har bedt om noe ved " +
+              "nettsiden, og kolonnen er fasit: bedrifter merket «mangler» eller " +
+              "«daarlig» passer, «svak» er kanskje, «ok» passer ikke, og " +
+              "«ukjent», «ingen_registrert» eller «ikke sjekket» kan du ikke uttale " +
+              "deg om — utelat dem. Finn aldri på noe om en nettside du ikke har " +
+              "fått målt."
+            : ""),
         tools: [verktoy],
         tool_choice: { type: "tool", name: "ranger_treff" },
         messages: [
@@ -766,7 +864,7 @@ export async function rangerTreff(
     const ut = new Map<string, string>();
     for (const r of rader) {
       const o = String(r.orgnr ?? "");
-      if (gyldige.has(o) && !ut.has(o)) ut.set(o, String(r.hvorfor ?? "").slice(0, 140));
+      if (gyldige.has(o) && !ut.has(o)) ut.set(o, String(r.hvorfor ?? "").trim().slice(0, 140));
     }
     return ut.size > 0 ? ut : null;
   } catch (e) {

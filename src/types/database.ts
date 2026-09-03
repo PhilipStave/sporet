@@ -113,6 +113,18 @@ export type BudStatus =
   | "avlyst"
   | "droppet";
 
+/** A cached website verdict, one per domain (migration 0018). Service role only. */
+export type NettstedRow = {
+  domene: string;
+  status: string;
+  dom: string;
+  poeng: number;
+  funn: string[];
+  via: string | null;
+  hentet_url: string | null;
+  sjekket: string;
+}
+
 export type ProfileRow = {
   id: string;
   org_id: string | null;
@@ -250,6 +262,7 @@ export type Database = {
       inbound_emails: Table<InboundEmailRow>;
       salgsmaal: Table<SalgsmaalRow>;
       anbud: Table<AnbudRow>;
+      nettsted: Table<NettstedRow>;
     };
     Views: { [_ in never]: never };
     Functions: {

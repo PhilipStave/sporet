@@ -54,7 +54,10 @@ export async function POST(req: Request) {
     detaljer.map(async (d) => {
       const [kontakt, regnskap] = await Promise.all([
         medFrist(
-          finnKontakt(d!.navn, d!.orgnr, d!.hjemmeside),
+          finnKontakt(d!.navn, d!.orgnr, d!.hjemmeside, {
+            epost: d!.epost,
+            telefon: d!.telefon,
+          }),
           slutt - Date.now()
         ),
         fetchRegnskap(d!.orgnr),

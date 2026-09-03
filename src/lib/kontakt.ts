@@ -9,6 +9,8 @@
 //      2bygg.no, reached from "2 BYGG AS", takes two coincidences to be wrong.
 //   3. A name match in the page title raises confidence to "bekreftet".
 
+import { hentHtml } from "./nettside";
+
 export type Kontakt = {
   domene: string | null;
   epost: string | null;
@@ -136,30 +138,22 @@ function finnTelefon(html: string): string | null {
   return null;
 }
 
+/**
+ * Same fetch as the website check, and for the same reason: it refuses
+ * redirects to private addresses. A company can register any site it likes
+ * with Brønnøysund, including one that bounces to 127.0.0.1 — this used to
+ * follow it.
+ */
 async function hent(url: string, ms: number): Promise<string | null> {
-  try {
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), ms);
-    const res = await fetch(url, {
-      signal: ctrl.signal,
-      redirect: "follow",
-      headers: { "user-agent": "AltivKundesok/1.0 (+https://altiv.no)" },
-      next: { revalidate: 604800 },
-    });
-    // The timeout has to survive until the body is read: a server that sends
-    // headers fast and then trickles the page would otherwise hang here with
-    // nothing left to abort it, and the whole batch waits on that one site.
-    try {
-      if (!res.ok) return null;
-      if (!(res.headers.get("content-type") ?? "").includes("text/html")) return null;
-      // Contact details live near the top and in the footer; 400 kB is plenty.
-      return (await res.text()).slice(0, 400_000);
-    } finally {
-      clearTimeout(t);
-    }
-  } catch {
-    return null;
-  }
+  return hentHtml(url, ms);
+}
+
+/** The part before @, lower-cased, when it is a role mailbox and not a person. */
+function generellEpost(epost: string | null | undefined): string | null {
+  const e = (epost ?? "").trim().toLowerCase();
+  const m = e.match(/^([a-z0-9._-]+)@([a-z0-9.-]+\.[a-z]{2,})$/);
+  if (!m) return null;
+  return GENERELLE.has(m[1]) ? e : null;
 }
 
 /**
@@ -173,8 +167,24 @@ async function hent(url: string, ms: number): Promise<string | null> {
 export async function finnKontakt(
   navn: string,
   orgnr: string,
-  registrert?: string | null
+  registrert?: string | null,
+  fraRegister?: { epost?: string | null; telefon?: string | null }
 ): Promise<Kontakt> {
+  // Roughly three in ten companies gave the register a mailbox or a number
+  // themselves. That is the answer, and it costs nothing — no site to visit,
+  // no title to match. A personal address (ola@gmail.com) is still dropped:
+  // the register does not make it any less personal.
+  const regEpost = generellEpost(fraRegister?.epost);
+  const regTelefon = (fraRegister?.telefon ?? "").trim() || null;
+  if (regEpost || regTelefon) {
+    const domene =
+      (registrert ?? "").trim().toLowerCase() ||
+      (regEpost && !/@(gmail|hotmail|outlook|live|yahoo|icloud|online|me)\./.test(regEpost)
+        ? regEpost.split("@")[1]
+        : null);
+    return { domene, epost: regEpost, telefon: regTelefon, sikkerhet: "bekreftet" };
+  }
+
   // Two word lists, and they must agree. domeneKandidater builds the
   // first-word guess from the *unfiltered* words, so filtering here made
   // "Hansen & Co AS" look like a one-word name: the guard below went quiet,

@@ -1,8 +1,78 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { interpret, matchLocally, aiEnabled, rangerTreff } from "@/lib/lead-query";
-import { searchCompanies, fetchCompany } from "@/lib/brreg";
+import { searchCompanies, fetchCompany, type Lead } from "@/lib/brreg";
 import { sokAnbud } from "@/lib/doffin";
+import { sjekkNettside, type NettsideDom } from "@/lib/nettside";
+import { hentLagrede, lagre, type Lagret } from "@/lib/nettsted-cache";
+
+// A criteria search fetches up to sixty front pages. Measured at 1.5–6 s of
+// wall time for 47 of them, worst single site 12 s — well inside this, but
+// the platform default is not.
+export const maxDuration = 60;
+
+/** How long the website checks may take, all of them together. */
+const FRIST_NETTSIDE_MS = 20_000;
+const MAKS_SJEKKEDE = 60;
+
+/**
+ * Where a verdict sorts when the user asked about websites: the ones that
+ * answer the question first, then the ones that might, then the ones nobody
+ * can say anything about, and last the ones that plainly do not fit.
+ */
+const REKKEFOLGE: Record<NettsideDom, number> = {
+  mangler: 0,
+  daarlig: 0,
+  svak: 1,
+  ukjent: 2,
+  ingen_registrert: 3,
+  ok: 4,
+};
+
+/**
+ * Measure every company's website — from the cache where the verdict is
+ * fresh, otherwise by fetching the front page — within one shared deadline.
+ * A site that does not answer in time is "ukjent", never "daarlig".
+ */
+async function vurderNettsider(leads: Lead[]): Promise<{ antall: number; ikkeRukket: number }> {
+  const medDomene = leads.filter((l) => l.hjemmeside).slice(0, MAKS_SJEKKEDE);
+  const domener = [...new Set(medDomene.map((l) => l.hjemmeside!))];
+  const lagrede = await hentLagrede(domener);
+  const mangler = domener.filter((d) => !lagrede.has(d));
+
+  const slutt = Date.now() + FRIST_NETTSIDE_MS;
+  const nye = new Map<string, Lagret>();
+  let ikkeRukket = 0;
+  await Promise.all(
+    mangler.map(async (d) => {
+      const igjen = slutt - Date.now();
+      if (igjen <= 500) {
+        ikkeRukket++;
+        return;
+      }
+      const v = await Promise.race<Lagret | null>([
+        sjekkNettside(d, Math.min(6000, igjen)),
+        new Promise<null>((r) => setTimeout(() => r(null), igjen)),
+      ]);
+      if (v) nye.set(d, v);
+      else ikkeRukket++;
+    })
+  );
+  // Fire and forget: the search must not wait for the database.
+  void lagre([...nye].map(([domene, v]) => ({ domene, v })));
+
+  for (const l of leads) {
+    if (!l.hjemmeside) {
+      l.nettside = { dom: "ingen_registrert", funn: ["Har ikke oppgitt nettside til Brønnøysund"] };
+      continue;
+    }
+    const v = lagrede.get(l.hjemmeside) ?? nye.get(l.hjemmeside);
+    l.nettside = v
+      ? { dom: v.dom, funn: v.funn }
+      : { dom: "ukjent", funn: ["Ikke rukket å sjekke"] };
+  }
+  return { antall: domener.length - ikkeRukket, ikkeRukket };
+}
 
 // Lead search: free text in, real companies from Enhetsregisteret out.
 // Signed-in users only — the register is public, but the endpoint is not a proxy
@@ -96,33 +166,58 @@ export async function POST(req: Request) {
   }
 
   // The model may have picked up a number from the query ("finn 13 kunder").
-  const grense = Math.min(Math.max(tolkning.antall ?? 40, 1), 100);
+  // A criteria search takes a wider net: most of it will be sorted away once
+  // the websites have been looked at.
+  const sjekkerNettside = tolkning.kriterier.length > 0;
+  const grense = Math.min(Math.max(tolkning.antall ?? (sjekkerNettside ? 100 : 40), 1), 100);
   const { leads, total } = await searchCompanies(tolkning.filter, grense);
+
+  // The part the owner asked for: when the search is about websites, go and
+  // look at them. Then the ones that answer the question come first, on the
+  // measurement alone — before any model has had a say.
+  let sjekket: { antall: number; ikkeRukket: number } | null = null;
+  if (sjekkerNettside && leads.length > 0) {
+    sjekket = await vurderNettsider(leads);
+    leads.sort(
+      (a, b) =>
+        REKKEFOLGE[a.nettside?.dom ?? "ukjent"] - REKKEFOLGE[b.nettside?.dom ?? "ukjent"]
+    );
+  }
 
   // Relevance pass, AI searches only: read what the top hits say they actually
   // do (the register's free-text activity field) and put the best prospects
-  // first, each with a one-line why. Reorder and annotate — never drop.
+  // first, each with a one-line why. Reorder and annotate — never drop. For a
+  // website search the model may only reorder within what the measurement
+  // already decided.
   if (tolkning.kilde === "ai" && leads.length >= 3) {
     const topp = leads.slice(0, 25);
-    const detaljer = await Promise.all(topp.map((l) => fetchCompany(l.orgnr)));
     const rangering = await rangerTreff(
       tekst,
-      topp.map((l, i) => ({
+      topp.map((l) => ({
         orgnr: l.orgnr,
         navn: l.navn,
         naering: l.naering,
-        aktivitet: (detaljer[i]?.aktivitet || detaljer[i]?.formaal || "").slice(0, 300),
+        aktivitet: (l.aktivitet ?? "").slice(0, 300),
         ansatte: l.ansatte,
         registrert: l.registrert,
-      }))
+        nettside: l.nettside,
+      })),
+      tolkning.kriterier
     );
     if (rangering) {
       const rangerte = [...rangering.keys()]
         .map((o) => leads.find((l) => l.orgnr === o))
         .filter((l): l is NonNullable<typeof l> => Boolean(l))
-        .map((l) => ({ ...l, hvorfor: rangering.get(l.orgnr) }));
+        .map((l) => ({ ...l, hvorfor: rangering.get(l.orgnr) || undefined }));
       const resten = leads.filter((l) => !rangering.has(l.orgnr));
       leads.splice(0, leads.length, ...rangerte, ...resten);
+      // The measurement outranks the model's opinion. Stable sort keeps the
+      // model's order within each group.
+      if (sjekkerNettside)
+        leads.sort(
+          (a, b) =>
+            REKKEFOLGE[a.nettside?.dom ?? "ukjent"] - REKKEFOLGE[b.nettside?.dom ?? "ukjent"]
+        );
     }
   }
 
@@ -133,7 +228,9 @@ export async function POST(req: Request) {
   // by size, and the municipality actually out shopping is usually a small one
   // that would never reach the first page. Sirdal kommune buying a sweeper is
   // the whole point of the search; being number 400 by headcount is not.
-  const anbud = await sokAnbud(tekst, 40);
+  // The quota was claimed once above; it has to cover the tender search too,
+  // or one search is four model calls and the quota counts one.
+  const anbud = await sokAnbud(tekst, 40, undefined, brukAi);
   // sokAnbud returns newest first, and Map keeps the *last* write per key —
   // so building it straight from the list would show a buyer's oldest open
   // notice. The seller wants the one that just came out.
@@ -166,6 +263,15 @@ export async function POST(req: Request) {
     total,
     forklaring: tolkning.forklaring,
     kilde: tolkning.kilde,
+    kriterier: tolkning.kriterier,
+    kanIkkeSjekkes: tolkning.kanIkkeSjekkes,
+    sjekket: sjekket
+      ? {
+          ...sjekket,
+          ingenRegistrert: leads.filter((l) => l.nettside?.dom === "ingen_registrert").length,
+          ukjent: leads.filter((l) => l.nettside?.dom === "ukjent").length,
+        }
+      : null,
     kvoteBrukt,
     kvote,
     // Only say something when the quota changed what the user got.

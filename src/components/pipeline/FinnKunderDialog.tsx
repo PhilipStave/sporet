@@ -17,6 +17,11 @@ type Svar = {
   total: number;
   forklaring: string | null;
   kilde: "lokal" | "ai";
+  /** Per-company checks the search ran — "nettside_daarlig" and the like. */
+  kriterier?: string[];
+  /** Requirements the user made that the search could not measure. */
+  kanIkkeSjekkes?: string[];
+  sjekket?: { antall: number; ikkeRukket: number; ingenRegistrert: number; ukjent: number } | null;
   melding: string | null;
   /** Null when the AI path is off — then nothing is metered. */
   kvoteBrukt: number | null;
@@ -43,13 +48,26 @@ function kr(n: number) {
   return n.toLocaleString("nb-NO");
 }
 
-type Utvalg = "alle" | "nye" | "kunder";
+type Utvalg = "alle" | "nye" | "kunder" | "bekreftede";
 
 const UTVALG: { id: Utvalg; label: string }[] = [
   { id: "alle", label: "Alle" },
   { id: "nye", label: "Bare nye" },
   { id: "kunder", label: "Bare kunder" },
+  // Only offered when the search measured websites: the ones where the
+  // measurement actually answered the question, not the maybes.
+  { id: "bekreftede", label: "Bare bekreftede" },
 ];
+
+/** How a website verdict reads on the card. No score — a number would look like a measurement. */
+const NETTSIDE_MERKE: Record<string, { tekst: string; farge: string; bakgrunn: string }> = {
+  mangler: { tekst: "Nettside finnes ikke", farge: "var(--tint-warn-text)", bakgrunn: "var(--tint-warn)" },
+  daarlig: { tekst: "Trenger ny nettside", farge: "var(--tint-warn-text)", bakgrunn: "var(--tint-warn)" },
+  svak: { tekst: "Svak nettside", farge: "#92400e", bakgrunn: "#fef3c7" },
+  ok: { tekst: "Nettside OK", farge: "var(--muted)", bakgrunn: "var(--tint-neutral)" },
+  ukjent: { tekst: "Ikke vurdert", farge: "var(--muted)", bakgrunn: "var(--tint-neutral)" },
+  ingen_registrert: { tekst: "Ingen oppgitt nettside", farge: "var(--muted)", bakgrunn: "var(--tint-neutral)" },
+};
 
 /** Company names differ in punctuation and casing far more than in substance. */
 function navnNokkel(navn: string) {
@@ -95,10 +113,15 @@ export function FinnKunderDialog({ onClose }: { onClose: () => void }) {
     return () => window.removeEventListener("keydown", esc);
   }, [onClose]);
 
+  const sjekkerNettside = (svar?.kriterier?.length ?? 0) > 0;
+  const utvalg = sjekkerNettside ? UTVALG : UTVALG.filter((u) => u.id !== "bekreftede");
+
   const synlige = useMemo(() => {
     const alle = svar?.leads ?? [];
     if (vis === "nye") return alle.filter((l) => !erKunde(l));
     if (vis === "kunder") return alle.filter((l) => erKunde(l));
+    if (vis === "bekreftede")
+      return alle.filter((l) => l.nettside?.dom === "mangler" || l.nettside?.dom === "daarlig");
     return alle;
     // erKunde reads eksisterende, which is itself memoised on deals.
   }, [svar, vis, eksisterende]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -425,7 +448,7 @@ export function FinnKunderDialog({ onClose }: { onClose: () => void }) {
           >
             <span style={{ fontSize: 11.5, color: "var(--muted)" }}>Vis:</span>
             <div className="pillgroup">
-              {UTVALG.map((u) => (
+              {utvalg.map((u) => (
                 <button key={u.id} data-active={vis === u.id} onClick={() => setVis(u.id)}>
                   {u.label}
                 </button>
@@ -453,11 +476,45 @@ export function FinnKunderDialog({ onClose }: { onClose: () => void }) {
                     {svar.total > svar.leads.length && (
                       <> — viser {svar.leads.length} av {svar.total}</>
                     )}
+                    <span style={{ marginLeft: 8, fontSize: 11 }}>
+                      {svar.kilde === "ai" ? "· med AI" : "· uten AI"}
+                    </span>
                   </>
                 ) : (
                   svar.melding
                 )}
               </p>
+              {/* What the search actually did to each company's website — and
+                  what it could not do. Silence here is what made "bad websites"
+                  return good ones and look confident about it. */}
+              {svar.sjekket && (
+                <p style={{ fontSize: 12.5, color: "var(--muted)", margin: "-6px 0 12px" }}>
+                  Nettside sjekket for {svar.sjekket.antall} bedrift
+                  {svar.sjekket.antall === 1 ? "" : "er"}
+                  {svar.sjekket.ingenRegistrert > 0 && (
+                    <> — {svar.sjekket.ingenRegistrert} har ikke oppgitt nettside</>
+                  )}
+                  {svar.sjekket.ukjent + svar.sjekket.ikkeRukket > 0 && (
+                    <>, {svar.sjekket.ukjent + svar.sjekket.ikkeRukket} kunne ikke vurderes</>
+                  )}
+                  .
+                </p>
+              )}
+              {(svar.kanIkkeSjekkes?.length ?? 0) > 0 && (
+                <p
+                  style={{
+                    fontSize: 12.5,
+                    margin: "0 0 12px",
+                    padding: "8px 11px",
+                    borderRadius: 8,
+                    background: "var(--tint-warn)",
+                    color: "var(--tint-warn-text)",
+                  }}
+                >
+                  Vi kan ikke sjekke «{svar.kanIkkeSjekkes!.join("», «")}» ennå. Treffene under
+                  er ikke filtrert på det.
+                </p>
+              )}
 
               {(svar.kvote != null || (svar.melding && svar.forklaring)) && (
                 <p style={{ fontSize: 11.5, color: "var(--muted)", margin: "-6px 0 12px" }}>
@@ -660,6 +717,33 @@ export function FinnKunderDialog({ onClose }: { onClose: () => void }) {
                                 })}
                               </>
                             )}
+                          </div>
+                        )}
+                        {l.nettside && NETTSIDE_MERKE[l.nettside.dom] && (
+                          <div
+                            title={l.nettside.funn.join(" · ")}
+                            style={{ marginTop: 4, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}
+                          >
+                            <span
+                              style={{
+                                fontSize: 10.5,
+                                fontWeight: 700,
+                                textTransform: "uppercase",
+                                letterSpacing: ".04em",
+                                padding: "2px 7px",
+                                borderRadius: 999,
+                                background: NETTSIDE_MERKE[l.nettside.dom].bakgrunn,
+                                color: NETTSIDE_MERKE[l.nettside.dom].farge,
+                              }}
+                            >
+                              {NETTSIDE_MERKE[l.nettside.dom].tekst}
+                            </span>
+                            {(l.nettside.dom === "daarlig" || l.nettside.dom === "svak") &&
+                              l.nettside.funn.length > 0 && (
+                                <span style={{ fontSize: 11.5, color: "var(--muted)" }}>
+                                  {l.nettside.funn.slice(0, 2).join(" · ")}
+                                </span>
+                              )}
                           </div>
                         )}
                         {l.hvorfor && (
