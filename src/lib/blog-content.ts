@@ -102,7 +102,7 @@ export const CONTENT_POSTS: ContentPost[] = [
     title: "Beste CRM for små bedrifter i Norge — en ærlig gjennomgang",
     description:
       "SuperOffice, HubSpot, Pipedrive eller noe enklere? Vi går gjennom hva som passer for norske bedrifter med 2–50 ansatte — inkludert når du bør velge noen andre enn oss.",
-    datePublished: "2026-09-10",
+    datePublished: "2026-08-25",
     readMinutes: 7,
     kicker: "Blogg · Valg av system",
     lead: "Vi lager selv et CRM, så du skal lese dette med et snev av skepsis. Derfor har vi forsøkt å skrive den gjennomgangen vi selv ville lest: hva hvert system er godt til, og hvem det ikke passer for.",
@@ -171,7 +171,7 @@ export const CONTENT_POSTS: ContentPost[] = [
     title: "CRM for entreprenører og maskinforhandlere: hva som faktisk trengs",
     description:
       "Salg i bygg, anlegg og maskin har lange løp, befaringer og anbud. Her er hvordan en salgsprosess i den bransjen bør settes opp — og hvilke tall ledelsen bør følge.",
-    datePublished: "2026-09-20",
+    datePublished: "2026-08-28",
     readMinutes: 6,
     kicker: "Blogg · Bransje",
     image: "/blog/crm-entreprenor-maskin.jpg",
@@ -237,7 +237,7 @@ export const CONTENT_POSTS: ContentPost[] = [
     title: "Hvordan få selgerne til å faktisk bruke CRM-systemet",
     description:
       "De fleste CRM-prosjekter feiler ikke på teknikken, men på at ingen bruker systemet. Her er hvorfor det skjer, og de fem grepene som faktisk endrer vanen.",
-    datePublished: "2026-09-30",
+    datePublished: "2026-08-31",
     readMinutes: 6,
     kicker: "Blogg · Innføring",
     lead: "Et CRM ingen logger inn i, er en kostnad uten inntekt. Og det er ikke fordi selgerne er vrange — det er nesten alltid fordi systemet ble innført for ledelsens skyld, ikke for deres.",
@@ -302,7 +302,7 @@ export const CONTENT_POSTS: ContentPost[] = [
     title: "Margin per selger: tallet som avslører hvem som faktisk tjener penger",
     description:
       "Den som selger mest er ikke alltid den som tjener mest for bedriften. Slik måler du margin per selger og avdeling — og hva du gjør med tallene.",
-    datePublished: "2026-10-10",
+    datePublished: "2026-09-02",
     readMinutes: 5,
     kicker: "Blogg · Tall og oppfølging",
     lead: "De fleste bedrifter måler selgerne på omsetning. Det er en av de vanligste grunnene til at et godt salgsår gir et middelmådig resultat.",
@@ -363,7 +363,7 @@ export const CONTENT_POSTS: ContentPost[] = [
     title: "Tilbudet er sendt — og så blir det stille. Slik følger du opp",
     description:
       "De fleste tapte salg dør i stillheten etter at tilbudet er sendt. Her er en enkel oppfølgingsrytme som ikke oppleves som mas, og hva du gjør når kunden ikke svarer.",
-    datePublished: "2026-10-20",
+    datePublished: "2026-09-03",
     readMinutes: 5,
     kicker: "Blogg · Oppfølging",
     lead: "Du har brukt tre uker på å lage tilbudet. Kunden sa det så bra ut. Så hører du ingenting. To måneder senere står det fortsatt «tilbud sendt» — og du vet egentlig ikke om avtalen er død eller bare glemt.",

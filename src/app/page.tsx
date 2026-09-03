@@ -1,4 +1,5 @@
 import { LogoMark } from "@/components/Logo";
+import { BLOG_POSTS } from "@/lib/blog";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { SITE_NAME, SITE_URL, SITE_DESCRIPTION, PRICING, FAQ } from "@/lib/site";
@@ -251,6 +252,12 @@ export default function LandingPage() {
             <a href="#priser" className="land-navlink">
               Priser
             </a>
+            {/* Nine articles and two guides sat behind a single footer link.
+                Google already shows those pages — they just had almost no
+                internal links pointing at them, and no visitor ever saw them. */}
+            <Link href="/blogg" className="land-navlink">
+              Guider
+            </Link>
             <Link href="/bli-med" className="land-navlink">
               Bli med
             </Link>
@@ -954,6 +961,76 @@ export default function LandingPage() {
               </p>
             </details>
           ))}
+        </div>
+      </section>
+
+      {/*
+        Somewhere to go that is not "sign up".
+        Every visitor who was not ready to register had exactly one thing to
+        click, and left. The guides already existed and Google already shows
+        them — they were reachable from a single footer link.
+      */}
+      <section style={{ ...wrap, padding: "0 24px 56px" }} id="guider">
+        <h2 style={{ fontSize: 30, letterSpacing: -0.6, margin: "0 0 6px" }}>
+          Ikke klar til å prøve ennå?
+        </h2>
+        <p style={{ color: "var(--muted)", margin: "0 0 22px", maxWidth: "62ch" }}>
+          Vi har skrevet ned det vi selv har lært om salgsoppfølging i norske
+          småbedrifter. Ingen registrering, ingen e-postadresse.
+        </p>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(270px, 1fr))",
+            gap: 16,
+          }}
+        >
+          {BLOG_POSTS.slice(0, 3).map((b) => (
+            <Link
+              key={b.slug}
+              href={`/blogg/${b.slug}`}
+              className="land-card"
+              style={{
+                display: "block",
+                background: "var(--surface)",
+                border: "1px solid var(--divider)",
+                borderRadius: "var(--r-lg-land)",
+                padding: 22,
+                textDecoration: "none",
+                color: "var(--text)",
+              }}
+            >
+              <div style={{ fontSize: 17, fontWeight: 700, lineHeight: 1.3, marginBottom: 8 }}>
+                {b.title}
+              </div>
+              <div style={{ fontSize: 14.5, color: "var(--muted)", lineHeight: 1.55 }}>
+                {b.description}
+              </div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "var(--accent)", marginTop: 12 }}>
+                Les — {b.readMinutes} min →
+              </div>
+            </Link>
+          ))}
+        </div>
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 18,
+            marginTop: 20,
+            fontSize: 15,
+            fontWeight: 600,
+          }}
+        >
+          <Link href="/blogg" className="land-navlink">
+            Alle guider →
+          </Link>
+          <Link href="/salgsoppfolging" className="land-navlink">
+            Om salgsoppfølging →
+          </Link>
+          <Link href="/salgsverktoy" className="land-navlink">
+            Om salgsverktøy →
+          </Link>
         </div>
       </section>
 
