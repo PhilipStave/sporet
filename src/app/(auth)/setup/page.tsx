@@ -4,6 +4,7 @@ import { useActionState, useMemo, useState } from "react";
 import Link from "next/link";
 import { setupCompany, type AuthState } from "../actions";
 import { Logo } from "@/components/Logo";
+import { SjekkEpost } from "@/components/SjekkEpost";
 import { Icon } from "@/components/Icon";
 import { TermsCheckbox } from "@/components/TermsCheckbox";
 import { FEATURE_ORDER, FEATURE_LABELS, type FeatureKey } from "@/lib/constants";
@@ -62,6 +63,9 @@ export default function SetupPage() {
     setAdminDepts((a) =>
       a.includes(name) ? a.filter((x) => x !== name) : [...a, name]
     );
+
+  // The account is made, but nobody gets in before the address is proven.
+  if (state.sjekkEpost) return <SjekkEpost epost={state.sjekkEpost} />;
 
   return (
     <div style={cardStyle} className="animate-fade">

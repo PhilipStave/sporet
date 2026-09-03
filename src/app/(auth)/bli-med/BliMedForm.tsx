@@ -4,6 +4,7 @@ import { useActionState, useRef, useState } from "react";
 import Link from "next/link";
 import { joinAction, searchCompanies, type JoinState } from "../actions";
 import { Logo } from "@/components/Logo";
+import { SjekkEpost } from "@/components/SjekkEpost";
 import { Icon } from "@/components/Icon";
 import { TermsCheckbox } from "@/components/TermsCheckbox";
 
@@ -48,7 +49,9 @@ export function BliMedForm({ initial }: { initial: JoinState }) {
   // ---- Step 3: register ------------------------------------------
   if (state.stage === "register") {
     const canSubmit = !!name.trim() && password.length >= 4 && accepted;
-    return (
+    if (state.sjekkEpost) return <SjekkEpost epost={state.sjekkEpost} />;
+
+  return (
       <div style={cardStyle} className="animate-fade">
         <div style={{ marginBottom: 18 }}>
           <Logo />

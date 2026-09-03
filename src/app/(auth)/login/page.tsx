@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import Link from "next/link";
 import { login, type AuthState } from "../actions";
 import { Logo } from "@/components/Logo";
+import { SjekkEpostLenke } from "@/components/SjekkEpost";
 
 const cardStyle: React.CSSProperties = {
   background: "var(--surface)",
@@ -72,6 +73,9 @@ export default function LoginPage() {
             {state.error}
           </p>
         )}
+        {/* Registrerte seg for noen dager siden og har glemt at e-posten
+            finnes. Uten denne veien ut er kontoen laast for godt. */}
+        {state.sjekkEpost && <SjekkEpostLenke epost={state.sjekkEpost} />}
 
         <button
           type="submit"

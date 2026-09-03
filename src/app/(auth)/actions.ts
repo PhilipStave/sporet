@@ -4,9 +4,51 @@ import { redirect } from "next/navigation";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { DEFAULT_FEATURES, FEATURE_ORDER, type FeatureKey } from "@/lib/constants";
 import { LEGAL_VERSION } from "@/lib/legal";
+import { SITE_URL } from "@/lib/site";
+import { sendBekreftelse } from "@/lib/utsending";
 
 export interface AuthState {
   error?: string;
+  /** Set when the account exists but the address has to be confirmed first. */
+  sjekkEpost?: string;
+}
+
+/**
+ * Create the login account WITHOUT confirming the address, and hand back the
+ * confirmation link.
+ *
+ * Every signup path used to pass email_confirm: true — "pre-confirmed for a
+ * smooth first run". Smooth, but it meant anyone could register under an
+ * address they did not own: a competitors, a customers, or one that does not
+ * exist at all. generateLink creates the same user and returns the link
+ * instead, so the address has to be proven before anyone gets in.
+ *
+ * Invitations are deliberately left as they were: the token was e-mailed to
+ * that address, so whoever clicks it has already proven the mailbox.
+ */
+async function opprettUbekreftet(
+  admin: ReturnType<typeof createAdminClient>,
+  epost: string,
+  passord: string,
+  navn: string
+): Promise<{ userId?: string; lenke?: string; error?: string }> {
+  const { data, error } = await admin.auth.admin.generateLink({
+    type: "signup",
+    email: epost,
+    password: passord,
+    options: {
+      data: { full_name: navn },
+      redirectTo: `${SITE_URL}/bekreftet`,
+    },
+  });
+  if (error || !data?.user) {
+    if (String(error?.message || "").toLowerCase().includes("already"))
+      return { error: "En bruker med denne e-posten finnes allerede." };
+    return { error: error?.message || "Kunne ikke opprette bruker." };
+  }
+  const lenke = data.properties?.action_link;
+  if (!lenke) return { error: "Kunne ikke lage bekreftelseslenke." };
+  return { userId: data.user.id, lenke };
 }
 
 /** Terms/privacy must be explicitly accepted on every signup path. */
@@ -74,19 +116,10 @@ export async function setupCompany(
 
   const admin = createAdminClient();
 
-  // 1. Create the auth user (email pre-confirmed for a smooth first run).
-  const { data: created, error: userErr } = await admin.auth.admin.createUser({
-    email: adminEmail,
-    password,
-    email_confirm: true,
-    user_metadata: { full_name: adminName },
-  });
-  if (userErr || !created.user) {
-    if (String(userErr?.message || "").toLowerCase().includes("already"))
-      return { error: "En bruker med denne e-posten finnes allerede." };
-    return { error: userErr?.message || "Kunne ikke opprette bruker." };
-  }
-  const userId = created.user.id;
+  // 1. Create the login account, unconfirmed, and keep the confirmation link.
+  const konto = await opprettUbekreftet(admin, adminEmail, password, adminName);
+  if (konto.error || !konto.userId || !konto.lenke) return { error: konto.error };
+  const userId = konto.userId;
 
   const cleanup = async () => {
     await admin.auth.admin.deleteUser(userId).catch(() => {});
@@ -138,15 +171,19 @@ export async function setupCompany(
     .map((d) => ({ profile_id: userId, department_id: d.id }));
   if (links.length) await admin.from("profile_departments").insert(links);
 
-  // 6. Sign in (sets the session cookie)
-  const supabase = await createClient();
-  const { error: signErr } = await supabase.auth.signInWithPassword({
-    email: adminEmail,
-    password,
-  });
-  if (signErr) return { error: signErr.message };
-
-  redirect("/app/oversikt");
+  // 6. Nobody gets in before the address is proven. If the mail cannot be sent
+  //    the account is useless, so it is removed rather than left stranded.
+  const sendt = await sendBekreftelse(adminEmail, konto.lenke);
+  if (!sendt) {
+    await cleanup();
+    return {
+      error:
+        "Vi fikk ikke sendt bekreftelsen til " +
+        adminEmail +
+        ". Sjekk at adressen er riktig, og prøv igjen.",
+    };
+  }
+  return { sjekkEpost: adminEmail };
 }
 
 // ------------------------------------------------------------
@@ -172,6 +209,13 @@ export async function login(
   const { data: signIn, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
     const msg = error.message.toLowerCase();
+    // Supabase answers "Email not confirmed" in English. The person on the
+    // other end registered days ago and has forgotten the mail exists.
+    if (msg.includes("not confirmed") || msg.includes("email_not_confirmed"))
+      return {
+        error: "E-postadressen er ikke bekreftet ennå. Se etter e-posten fra Altiv.",
+        sjekkEpost: email,
+      };
     if (msg.includes("invalid")) return { error: "Feil e-post eller passord." };
     return { error: error.message };
   }
@@ -269,6 +313,8 @@ export async function acceptInvite(
 // ------------------------------------------------------------
 export interface JoinState {
   stage: "search" | "code" | "register";
+  /** Set when the account exists but the address has to be confirmed first. */
+  sjekkEpost?: string;
   error?: string;
   orgId?: string;
   orgName?: string;
@@ -406,18 +452,9 @@ export async function joinAction(
   if (password.length < 4) return reload("Passordet må ha minst 4 tegn.");
   if (!termsAccepted(formData)) return reload(TERMS_ERROR);
 
-  const { data: created, error: userErr } = await admin.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true,
-    user_metadata: { full_name: name },
-  });
-  if (userErr || !created.user) {
-    if (String(userErr?.message || "").toLowerCase().includes("already"))
-      return reload("En bruker med denne e-posten finnes allerede.");
-    return reload(userErr?.message || "Kunne ikke opprette bruker.");
-  }
-  const userId = created.user.id;
+  const konto = await opprettUbekreftet(admin, email, password, name);
+  if (konto.error || !konto.userId || !konto.lenke) return reload(konto.error!);
+  const userId = konto.userId;
 
   const { error: profErr } = await admin.from("profiles").insert({
     id: userId,
@@ -439,14 +476,52 @@ export async function joinAction(
       .from("profile_departments")
       .insert(deptIds.map((id) => ({ profile_id: userId, department_id: id })));
 
-  const supabase = await createClient();
-  const { error: signErr } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
-  if (signErr) return reload(signErr.message);
+  // Two gates from here: the address has to be confirmed, and an admin has to
+  // approve the member (status is "pending" above). The mail comes first.
+  const sendt = await sendBekreftelse(email, konto.lenke);
+  if (!sendt) {
+    await admin.auth.admin.deleteUser(userId).catch(() => {});
+    return reload(
+      `Vi fikk ikke sendt bekreftelsen til ${email}. Sjekk at adressen er riktig, og prøv igjen.`
+    );
+  }
+  return { stage: "register", sjekkEpost: email };
+}
 
-  redirect("/app/oversikt");
+/**
+ * Send the confirmation again.
+ *
+ * Always answers the same way, whether or not the address exists. Telling an
+ * unknown caller "no such user" turns this into a way to check which addresses
+ * are registered with Altiv.
+ */
+export async function sendBekreftelsePaaNytt(
+  _prev: AuthState,
+  formData: FormData
+): Promise<AuthState> {
+  const svar = {
+    sjekkEpost: String(formData.get("email") || "").trim().toLowerCase(),
+  };
+  if (missingEnv() || !svar.sjekkEpost) return svar;
+
+  try {
+    const admin = createAdminClient();
+    // A magic link, not another signup link. Re-running signup would take a
+    // password argument and could overwrite the one the person already chose —
+    // a resend button must never be able to lock someone out. Clicking a magic
+    // link proves the mailbox just as well, and Supabase marks the address
+    // confirmed when it is used.
+    const { data } = await admin.auth.admin.generateLink({
+      type: "magiclink",
+      email: svar.sjekkEpost,
+      options: { redirectTo: `${SITE_URL}/bekreftet` },
+    });
+    const lenke = data?.properties?.action_link;
+    if (lenke) await sendBekreftelse(svar.sjekkEpost, lenke);
+  } catch {
+    // Same answer either way.
+  }
+  return svar;
 }
 
 // ------------------------------------------------------------
