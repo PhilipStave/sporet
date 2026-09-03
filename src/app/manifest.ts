@@ -12,7 +12,7 @@ export default function manifest(): MetadataRoute.Manifest {
     display: "standalone",
     background_color: "#ffffff",
     // The navy of the mark. Was still the old green from before the rebrand.
-    theme_color: "#1b2a52",
+    theme_color: "#faf7f2",
     lang: "nb",
     icons: [
       { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },

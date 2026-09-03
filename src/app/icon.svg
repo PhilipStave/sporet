@@ -1,9 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <!-- The tab icon keeps its own navy tile. A bare mark would disappear against
-       a dark tab bar, and this is the one place we cannot know the background. -->
-  <rect width="64" height="64" rx="14" fill="#1b2a52"/>
-  <g transform="translate(32 33) scale(0.68) translate(-32 -32)">
-    <path d="M32 6 L58 57 L46.5 57 L32 26.5 L17.5 57 L6 57 Z" fill="#ffffff"/>
+  <!-- The mark on the brand's own cream, not on a navy tile. This file is the
+       source for everything Google shows: the favicon beside a search result,
+       and — through /icons/icon-512.png, which is generated from it — the
+       Organization logo in the knowledge panel. -->
+  <rect width="64" height="64" rx="12" fill="#faf7f2"/>
+  <g transform="translate(32 33) scale(0.8) translate(-32 -32)">
+    <path d="M32 6 L58 57 L46.5 57 L32 26.5 L17.5 57 L6 57 Z" fill="#1b2a52"/>
     <path d="M9.5 54.5 C 21 51.5, 32 43, 40 28.5" stroke="#79acab" stroke-width="8"
           stroke-linecap="round" fill="none"/>
     <path d="M50.5 15.5 L46.5 34 L33.5 24.5 Z" fill="#79acab"/>
