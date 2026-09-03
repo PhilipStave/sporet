@@ -658,17 +658,22 @@ async function interpretWithAi(tekst: string): Promise<Interpretation | null> {
       .slice(0, 40);
 
     const fra = Number(bruk.input.fraAntallAnsatte) || undefined;
-    const til = Number(bruk.input.tilAntallAnsatte) || undefined;
+    let til = Number(bruk.input.tilAntallAnsatte) || undefined;
 
-    // No industry is allowed only for a criteria search that is narrowed some
-    // other way. tool_choice forces an answer, so an empty call with nothing
-    // else set would otherwise become a search of the whole country.
-    if (koder.length === 0) {
-      const avgrenset = kommuner.length > 0 || fra != null || til != null;
-      if (kriterier.length === 0 || !avgrenset) {
-        aiGavOpp("ingen bransje og ingen avgrensning", bruk.input);
-        return null;
-      }
+    // No industry and no criteria is an empty call — tool_choice forces an
+    // answer, and this would otherwise become a search of the whole country.
+    if (koder.length === 0 && kriterier.length === 0) {
+      aiGavOpp("ingen bransje og ingen kriterier", bruk.input);
+      return null;
+    }
+    // A criteria search with no industry, place or size still needs a
+    // population to look through. Small companies, nationwide, is the honest
+    // default — that is who has the old sites — and the explanation says so,
+    // so the user knows to add a place or a trade to narrow it.
+    let standardUtvalg = false;
+    if (koder.length === 0 && kommuner.length === 0 && fra == null && til == null) {
+      til = 20;
+      standardUtvalg = true;
     }
 
     const antall = Number(bruk.input.antall);
@@ -701,6 +706,7 @@ async function interpretWithAi(tekst: string): Promise<Interpretation | null> {
       );
     }
     if (Number.isFinite(antall) && antall > 0) deler.push(`inntil ${Math.min(antall, 100)}`);
+    if (standardUtvalg) deler.push("små bedrifter i hele landet — legg til sted eller bransje for å spisse");
     if (kriterier.length) deler.push("sjekker: nettside");
     if (kanIkkeSjekkes.length) deler.push(`kan ikke sjekke: ${kanIkkeSjekkes.join(", ")}`);
 
