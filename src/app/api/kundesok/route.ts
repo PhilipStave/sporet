@@ -176,8 +176,13 @@ export async function POST(req: Request) {
   // The model may have picked up a number from the query ("finn 13 kunder").
   // A criteria search takes a wider net: most of it will be sorted away once
   // the websites have been looked at.
+  // Every hit in a website search gets looked at, so the list is capped at
+  // what can be checked — a tail of "not checked" rows helps nobody.
   const sjekkerNettside = tolkning.kriterier.length > 0;
-  const grense = Math.min(Math.max(tolkning.antall ?? (sjekkerNettside ? 100 : 40), 1), 100);
+  const grense = Math.min(
+    Math.max(tolkning.antall ?? (sjekkerNettside ? MAKS_SJEKKEDE : 40), 1),
+    sjekkerNettside ? MAKS_SJEKKEDE : 100
+  );
   const { leads, total } = await searchCompanies(tolkning.filter, grense);
 
   // The part the owner asked for: when the search is about websites, go and
@@ -290,7 +295,14 @@ export async function POST(req: Request) {
       ? {
           ...sjekket,
           ingenRegistrert: leads.filter((l) => l.nettside?.dom === "ingen_registrert").length,
-          ukjent: leads.filter((l) => l.nettside?.dom === "ukjent").length,
+          // Only the ones that were actually fetched and still could not be
+          // judged — bot walls, timeouts, pages built in the browser.
+          ukjent: leads.filter(
+            (l) => l.nettside?.dom === "ukjent" && !/^Ikke (rukket|sjekket)/.test(l.nettside.funn[0] ?? "")
+          ).length,
+          ikkeSjekket: leads.filter(
+            (l) => l.nettside?.dom === "ukjent" && /^Ikke (rukket|sjekket)/.test(l.nettside.funn[0] ?? "")
+          ).length,
         }
       : null,
     kvoteBrukt,

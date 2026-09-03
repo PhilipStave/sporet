@@ -21,7 +21,7 @@ type Svar = {
   kriterier?: string[];
   /** Requirements the user made that the search could not measure. */
   kanIkkeSjekkes?: string[];
-  sjekket?: { antall: number; ikkeRukket: number; ingenRegistrert: number; ukjent: number } | null;
+  sjekket?: { antall: number; ikkeRukket: number; ingenRegistrert: number; ukjent: number; ikkeSjekket: number } | null;
   melding: string | null;
   /** Null when the AI path is off — then nothing is metered. */
   kvoteBrukt: number | null;
@@ -494,8 +494,9 @@ export function FinnKunderDialog({ onClose }: { onClose: () => void }) {
                   {svar.sjekket.ingenRegistrert > 0 && (
                     <> — {svar.sjekket.ingenRegistrert} har ikke oppgitt nettside</>
                   )}
-                  {svar.sjekket.ukjent + svar.sjekket.ikkeRukket > 0 && (
-                    <>, {svar.sjekket.ukjent + svar.sjekket.ikkeRukket} kunne ikke vurderes</>
+                  {svar.sjekket.ukjent > 0 && <>, {svar.sjekket.ukjent} kunne ikke vurderes</>}
+                  {svar.sjekket.ikkeSjekket > 0 && (
+                    <>, {svar.sjekket.ikkeSjekket} ble ikke sjekket (anbudskjøpere)</>
                   )}
                   .
                 </p>
