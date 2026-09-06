@@ -35,6 +35,30 @@ const csp = [
 ].join("; ");
 
 const nextConfig: NextConfig = {
+  /**
+   * www til apex.
+   *
+   * www.altiv.no pekte allerede på Vercel i DNS, men vertsnavnet var ikke lagt
+   * inn i prosjektet. Da fantes det ikke sertifikat for det, og alle som skrev
+   * www fikk en sikkerhetsadvarsel fra nettleseren i stedet for siden. Nå er
+   * domenet lagt inn, og her bestemmes retningen: apex er den ekte adressen,
+   * og alle canonical-tagger peker dit.
+   *
+   * Retningen står i koden med vilje. Vercels dialog for å legge til et
+   * www-domene foreslår som standard motsatt vei, og et feilklikk der ville
+   * sendt hver eneste canonical-adresse gjennom en videresending.
+   */
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.altiv.no" }],
+        destination: "https://altiv.no/:path*",
+        permanent: true,
+      },
+    ];
+  },
+
   async headers() {
     return [
       {
