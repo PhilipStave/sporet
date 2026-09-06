@@ -6,6 +6,10 @@ import { BLOG_POSTS } from "@/lib/blog";
 export const revalidate = 3600;
 
 // Only real, indexable pages (no in-page anchors — search engines ignore/flag them).
+// Innloggingsflyten hører ikke hjemme her: /login og /bli-med er tomme skjemaer
+// på under 40 ord, og /setup er et administratorskjema med passordfelt. Alle tre
+// er noindex fra (auth)/layout.tsx, og en noindex-side i sitemapen ber bare
+// Google hente noe den samtidig får beskjed om å droppe.
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
   return [
@@ -20,9 +24,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly" as const,
       priority: 0.7,
     })),
-    { url: `${SITE_URL}/setup`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
-    { url: `${SITE_URL}/bli-med`, lastModified: now, changeFrequency: "monthly", priority: 0.5 },
-    { url: `${SITE_URL}/login`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
     { url: `${SITE_URL}/vilkar`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
     { url: `${SITE_URL}/personvern`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
   ];
