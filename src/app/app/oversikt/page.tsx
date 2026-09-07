@@ -54,6 +54,14 @@ export default function OversiktPage() {
     [o.won, soldPeriod]
   );
   const soldValue = soldDeals.reduce((a, d) => a + (d.value || 0), 0);
+  /**
+   * How much of the period total is a monthly amount. Without this the card
+   * adds 790 a month to 50 000 once and shows one number, which is true of
+   * nothing.
+   */
+  const soldFast = soldDeals
+    .filter((d) => d.verdi_type === "maanedlig")
+    .reduce((a, d) => a + (d.value || 0), 0);
 
   /**
    * Sales per department for the chosen period — the leader's answer to
@@ -197,6 +205,15 @@ export default function OversiktPage() {
         rows: list.map(drow),
       };
     }
+    if (detail === "fast") {
+      const list = [...o.faste].sort((a, b) => (b.value || 0) - (a.value || 0));
+      return {
+        title: "Faste inntekter",
+        subtitle: `${list.length} kunder med månedlig avtale`,
+        banner: `${fmtKr(o.fastPerMaaned)} per måned · ${fmtKr(o.fastPerMaaned * 12)} i året`,
+        rows: list.map(drow),
+      };
+    }
     return null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [detail, o, soldDeals, soldValue, spSub, stageMaps]);
@@ -213,11 +230,27 @@ export default function OversiktPage() {
     {
       kicker: "Solgt for",
       value: fmtKr(soldValue),
-      sub: `${soldDeals.length} vunnet ${spSub}`,
+      sub:
+        soldFast > 0
+          ? `${soldDeals.length} vunnet ${spSub} · ${fmtKr(soldFast)} av det er per måned`
+          : `${soldDeals.length} vunnet ${spSub}`,
       icon: "trending",
       color: "#059669",
       onClick: () => setDetail("solgt"),
       periods: true,
+    },
+    {
+      // The number a company plans on: what comes in again next month without
+      // anyone selling anything new.
+      kicker: "Fast per måned",
+      value: fmtKr(o.fastPerMaaned),
+      sub:
+        o.faste.length === 0
+          ? "ingen månedlige avtaler ennå"
+          : `${o.faste.length} månedlig${o.faste.length === 1 ? " avtale" : "e avtaler"} · ${fmtKr(o.fastPerMaaned * 12)} i året`,
+      icon: "banknote",
+      color: "#0d9488",
+      onClick: () => setDetail("fast"),
     },
     {
       kicker: "Margin",

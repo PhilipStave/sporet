@@ -143,6 +143,7 @@ function DrawerInner({ deal }: { deal: Deal }) {
     });
   };
 
+  const maanedlig = deal.verdi_type === "maanedlig";
   const marginKr = Math.round((deal.value * (deal.margin_pct || 0)) / 100);
 
   const inputStyle: React.CSSProperties = { marginTop: 5 };
@@ -274,7 +275,7 @@ function DrawerInner({ deal }: { deal: Deal }) {
         {/* Value + margin */}
         <div style={{ display: "flex", gap: 8, alignItems: "flex-end", marginTop: 10 }}>
           <label className="field-label" style={{ flex: 1 }}>
-            Verdi (kr)
+            {maanedlig ? "Verdi (kr per måned)" : "Verdi (kr)"}
             <input
               className="field-input"
               value={f.value}
@@ -286,6 +287,28 @@ function DrawerInner({ deal }: { deal: Deal }) {
               }
               style={inputStyle}
             />
+            {/* Which of the two numbers this is has to be decided here, next to
+                the amount. Asked for later, in a dialog when the deal is won,
+                it would be a question nobody answers for the deals already in
+                the pipeline. */}
+            <span className="pillgroup" style={{ display: "flex", marginTop: 6 }}>
+              {(
+                [
+                  { v: "engangs", t: "Engangs" },
+                  { v: "maanedlig", t: "Per måned" },
+                ] as const
+              ).map((o) => (
+                <button
+                  key={o.v}
+                  type="button"
+                  data-active={(deal.verdi_type ?? "engangs") === o.v}
+                  onClick={() => updateDeal(deal.id, { verdi_type: o.v })}
+                  style={{ flex: 1, fontSize: 12 }}
+                >
+                  {o.t}
+                </button>
+              ))}
+            </span>
           </label>
           <label className="field-label" style={{ flex: 1 }}>
             Margin (%)

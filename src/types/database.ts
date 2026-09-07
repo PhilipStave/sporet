@@ -188,6 +188,11 @@ export type DealRow = {
   phone: string;
   product: string;
   value: number;
+  /**
+   * Whether value is paid once or every month. A subscription and a machine
+   * are not the same number, and the totals used to add them together.
+   */
+  verdi_type: VerdiType;
   margin_pct: number;
   stage: Stage;
   channel: Channel;
@@ -204,6 +209,9 @@ export type DealRow = {
   won_at: string | null;
   lost_at: string | null;
 }
+
+/** How a deal's value is paid. */
+export type VerdiType = "engangs" | "maanedlig";
 
 export type ActivityRow = {
   id: string;

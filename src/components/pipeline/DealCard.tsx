@@ -93,7 +93,7 @@ export function DealCard({
             fontSize: 14,
           }}
         >
-          {fmtShort(deal.value)} kr
+          {fmtShort(deal.value)} kr{deal.verdi_type === "maanedlig" ? "/mnd" : ""}
         </span>
       )}
 

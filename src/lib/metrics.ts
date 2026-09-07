@@ -31,6 +31,11 @@ export interface Overview {
   avgDeal: number;
   avgBase: Deal[];
   dueList: Deal[];
+  /** Won deals billed every month, and what they add up to per month. */
+  faste: Deal[];
+  fastPerMaaned: number;
+  /** Won deals paid once — the part of "solgt for" that does not come back. */
+  engangsSum: number;
 }
 
 /**
@@ -75,6 +80,15 @@ export function computeOverview(
     (d) => d.next_step_date && diffDays(d.next_step_date) <= 0
   );
 
+  // What comes back next month, and what does not. Summed apart because a
+  // subscription at 790 and a machine at 50 000 are different numbers, and one
+  // total hid that completely.
+  const faste = won.filter((d) => d.verdi_type === "maanedlig");
+  const fastPerMaaned = faste.reduce((a, d) => a + (d.value || 0), 0);
+  const engangsSum = won
+    .filter((d) => d.verdi_type !== "maanedlig")
+    .reduce((a, d) => a + (d.value || 0), 0);
+
   return {
     openDeals,
     pipelineValue,
@@ -88,6 +102,9 @@ export function computeOverview(
     avgDeal,
     avgBase,
     dueList,
+    faste,
+    fastPerMaaned,
+    engangsSum,
   };
 }
 

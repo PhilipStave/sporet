@@ -103,7 +103,16 @@ export function Table({ deals }: { deals: Deal[] }) {
                 <span className="hide-sm">{CHANNELS[d.channel].label}</span>
               </span>
               <span style={{ fontWeight: 500 }}>
-                {d.value ? fmtKr(d.value) : "—"}
+                {d.value ? (
+                  <>
+                    {fmtKr(d.value)}
+                    {d.verdi_type === "maanedlig" && (
+                      <span style={{ color: "var(--muted)", fontWeight: 400 }}>/mnd</span>
+                    )}
+                  </>
+                ) : (
+                  "—"
+                )}
               </span>
               <span style={{ minWidth: 0, fontSize: 13 }}>
                 {d.next_step_text ? (

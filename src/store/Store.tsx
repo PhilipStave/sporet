@@ -539,6 +539,7 @@ export function StoreProvider({
         phone: partial?.phone ?? "",
         product: partial?.product ?? "",
         value: partial?.value ?? 0,
+        verdi_type: partial?.verdi_type ?? "engangs",
         margin_pct: partial?.margin_pct ?? 0,
         stage: (partial?.stage as Stage) ?? stageMaps.firstKey,
         channel: (partial?.channel as Channel) ?? "epost",
