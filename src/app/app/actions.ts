@@ -66,6 +66,32 @@ export async function removeMember(profileId: string): Promise<ProfileResult> {
   }
 }
 
+/**
+ * The name is copied onto every row that person owns, and all the sales
+ * figures group by that copy — not by the profile. Renaming somebody in
+ * Settings therefore left their sales, and their sales target, sitting under
+ * the old name while the target editor showed the new one.
+ *
+ * Best-effort on purpose: the rename itself has already succeeded, and a
+ * failure here must not report it as failed. The rows keep the old name until
+ * the next rename, which is bad but not wrong.
+ */
+async function skrivNavnPaaRader(
+  admin: ReturnType<typeof createAdminClient>,
+  profileId: string,
+  navn: string
+) {
+  const nytt = navn.trim();
+  if (!nytt) return;
+  await Promise.all([
+    admin.from("deals").update({ owner_name: nytt }).eq("owner_id", profileId),
+    admin.from("anbud").update({ owner_name: nytt }).eq("owner_id", profileId),
+    // The activity log says who did something. That is still this person, so
+    // the entries follow the name rather than freezing the old one.
+    admin.from("activities").update({ actor_name: nytt }).eq("actor_id", profileId),
+  ]).catch(() => {});
+}
+
 /** Admin edits another member's details. */
 export async function updateMember(
   profileId: string,
@@ -87,6 +113,9 @@ export async function updateMember(
         ...(fields.role !== undefined ? { role: fields.role } : {}),
       })
       .eq("id", profileId);
+
+    if (fields.full_name !== undefined)
+      await skrivNavnPaaRader(admin, profileId, fields.full_name);
 
     if (email)
       await admin.auth.admin.updateUserById(profileId, { email, email_confirm: true });
@@ -215,6 +244,9 @@ export async function updateMyProfile(fields: {
         phone: fields.phone.trim(),
       })
       .eq("id", me.id);
+
+    await skrivNavnPaaRader(admin, me.id, fields.full_name);
+
     if (email)
       await admin.auth.admin.updateUserById(me.id, { email, email_confirm: true });
     return { ok: true };

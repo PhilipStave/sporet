@@ -239,6 +239,31 @@ export function StoreProvider({
     [supabase, stages]
   );
 
+  /**
+   * The owner name lives twice: on the profile, and copied onto every deal.
+   * All the sales figures group by the copy, so a rename used to split one
+   * person into two — the old name with the sales, the new one with the
+   * target. New renames rewrite the rows (see updateMember), but rows written
+   * before that fix are still stale, and so are any written by an older
+   * client. Resolving through the profile on load makes both cases invisible.
+   */
+  const medFerskeNavn = useCallback(
+    (liste: Deal[]) => {
+      const navn = new Map(members.map((m) => [m.id, m.full_name]));
+      if (navn.size === 0) return liste;
+      return liste.map((d) => {
+        const eier = d.owner_id ? navn.get(d.owner_id) : undefined;
+        const akt = d.activities.map((a) => {
+          const n = a.actor_id ? navn.get(a.actor_id) : undefined;
+          return n && n !== a.actor_name ? { ...a, actor_name: n } : a;
+        });
+        const endret = (eier && eier !== d.owner_name) || akt.some((a, i) => a !== d.activities[i]);
+        return endret ? { ...d, owner_name: eier ?? d.owner_name, activities: akt } : d;
+      });
+    },
+    [members]
+  );
+
   const refresh = useCallback(async () => {
     const [dealsRes, maalRes, anbudRes] = await Promise.all([
       supabase
@@ -249,7 +274,7 @@ export function StoreProvider({
       supabase.from("anbud").select("*").order("frist", { ascending: true }),
     ]);
     if (!dealsRes.error && dealsRes.data) {
-      setDeals((dealsRes.data as unknown as Deal[]).map(sortActivities));
+      setDeals(medFerskeNavn((dealsRes.data as unknown as Deal[]).map(sortActivities)));
     }
     if (!maalRes.error && maalRes.data) {
       setSalgsmaal(maalRes.data as Salgsmaal[]);
@@ -258,7 +283,7 @@ export function StoreProvider({
       setAnbud(anbudRes.data as Bud[]);
     }
     setLoading(false);
-  }, [supabase]);
+  }, [supabase, medFerskeNavn]);
 
   /**
    * Upsert one target; 0 (or less) means "no target" and deletes the row, so
