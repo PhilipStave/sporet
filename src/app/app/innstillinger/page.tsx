@@ -12,7 +12,10 @@ import { Icon } from "@/components/Icon";
 import {
   FEATURE_ORDER,
   FEATURE_LABELS,
+  OVERSIKT_ORDER,
+  OVERSIKT_LABELS,
   type FeatureKey,
+  type OversiktKey,
 } from "@/lib/constants";
 import { initials } from "@/lib/format";
 import type { Member } from "@/types";
@@ -40,6 +43,15 @@ export default function InnstillingerPage() {
       if (f[k] === undefined) f[k] = true;
     });
     return f;
+  });
+  // Same convention as features: a key that is not there yet counts as on,
+  // so a panel added in a later version is visible until somebody says no.
+  const [oversikt, setOversikt] = useState<Record<string, boolean>>(() => {
+    const o = { ...(org.oversikt ?? {}) } as Record<string, boolean>;
+    OVERSIKT_ORDER.forEach((k) => {
+      if (o[k] === undefined) o[k] = true;
+    });
+    return o;
   });
   const [newDept, setNewDept] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
@@ -127,6 +139,8 @@ export default function InnstillingerPage() {
   );
 
   const navnEndret = companyName.trim() !== org.name;
+  const oversiktEndret =
+    JSON.stringify(oversikt) !== JSON.stringify(org.oversikt ?? {});
   const funksjonerEndret = FEATURE_ORDER.some(
     (k) => features[k] !== (org.features[k] !== false)
   );
@@ -147,6 +161,9 @@ export default function InnstillingerPage() {
     }
     if (funksjonerEndret) {
       await supabase.from("organizations").update({ features }).eq("id", org.id);
+    }
+    if (oversiktEndret) {
+      await supabase.from("organizations").update({ oversikt }).eq("id", org.id);
     }
     for (const d of departments) {
       const nytt = deptNavn[d.id]?.trim();
@@ -431,6 +448,26 @@ export default function InnstillingerPage() {
                 >
                   {features[k] && <Icon name="check" size={13} />}
                   {FEATURE_LABELS[k]}
+                </button>
+              ))}
+            </div>
+          </Section>
+
+          {/* What the overview shows */}
+          <Section title="Oversikt">
+            <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 10px" }}>
+              Velg hva som skal vises på oversiktssiden. Gjelder hele bedriften.
+            </p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+              {OVERSIKT_ORDER.map((k: OversiktKey) => (
+                <button
+                  key={k}
+                  className="chip"
+                  data-active={oversikt[k]}
+                  onClick={() => setOversikt((o) => ({ ...o, [k]: !o[k] }))}
+                >
+                  {oversikt[k] && <Icon name="check" size={13} />}
+                  {OVERSIKT_LABELS[k]}
                 </button>
               ))}
             </div>

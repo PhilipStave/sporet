@@ -8,6 +8,8 @@ import { DetailModal, type DetailData, type DetailRow } from "@/components/Detai
 import {
   pillStyle,
   WON_KEY,
+  visesPaaOversikt,
+  type OversiktKey,
 } from "@/lib/constants";
 import { fmtKr, fmtShort, diffDays, fmtDateShort } from "@/lib/format";
 import { stageLabel, stageColor } from "@/lib/stages";
@@ -31,6 +33,7 @@ export default function OversiktPage() {
     scope,
     profile,
     salgsmaal,
+    org,
   } = useStore();
   const router = useRouter();
   const [soldPeriod, setSoldPeriod] = useState<SoldPeriod>("uke");
@@ -218,8 +221,12 @@ export default function OversiktPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [detail, o, soldDeals, soldValue, spSub, stageMaps]);
 
+  /** Panels the company has switched off in Innstillinger stay off. */
+  const vis = (k: OversiktKey) => visesPaaOversikt(org.oversikt, k);
+
   const cards = [
     {
+      key: "pipeline" as const,
       kicker: "Pipeline-verdi",
       value: fmtKr(o.pipelineValue),
       sub: `${o.openDeals.length} åpne deals`,
@@ -228,6 +235,7 @@ export default function OversiktPage() {
       onClick: () => setDetail("pipeline"),
     },
     {
+      key: "solgt" as const,
       kicker: "Solgt for",
       value: fmtKr(soldValue),
       sub:
@@ -242,6 +250,7 @@ export default function OversiktPage() {
     {
       // The number a company plans on: what comes in again next month without
       // anyone selling anything new.
+      key: "fast" as const,
       kicker: "Fast per måned",
       value: fmtKr(o.fastPerMaaned),
       sub:
@@ -253,6 +262,7 @@ export default function OversiktPage() {
       onClick: () => setDetail("fast"),
     },
     {
+      key: "margin" as const,
       kicker: "Margin",
       value: `${o.avgMarginPct} %`,
       sub: `${fmtKr(o.marginTotal)} i margin`,
@@ -261,6 +271,7 @@ export default function OversiktPage() {
       onClick: () => setDetail("margin"),
     },
     {
+      key: "vinnrate" as const,
       kicker: "Vinnrate",
       value: `${o.winRate} %`,
       sub: `${o.won.length} vunnet / ${o.lost.length} tapt`,
@@ -269,6 +280,7 @@ export default function OversiktPage() {
       onClick: () => setDetail("winrate"),
     },
     {
+      key: "snitt" as const,
       kicker: "Snittverdi",
       value: fmtKr(o.avgDeal),
       sub: lateLabel,
@@ -277,6 +289,7 @@ export default function OversiktPage() {
       onClick: () => setDetail("snitt"),
     },
     {
+      key: "oppfolginger" as const,
       kicker: "Oppfølginger",
       value: `${o.dueList.length}`,
       sub: "krever handling i dag",
@@ -284,7 +297,7 @@ export default function OversiktPage() {
       color: "#ef4444",
       onClick: () => router.push("/app/kalender"),
     },
-  ];
+  ].filter((c) => vis(c.key));
 
   // Pipeline pr. steg
   const stageBars = stageMaps.list.map((st) => {
@@ -457,7 +470,7 @@ export default function OversiktPage() {
 
       {/* Sales per department: who delivers the company number, and are they
           on their own target. Hidden when the org has no departments. */}
-      {avdSalg.length > 0 && (
+      {vis("avdelinger") && avdSalg.length > 0 && (
         <div className="card stat-card" style={{ padding: 20, marginBottom: 26 }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 16 }}>
             <h4 style={{ fontSize: 16, margin: 0 }}>Salg per avdeling</h4>
@@ -579,15 +592,18 @@ export default function OversiktPage() {
         </div>
       )}
 
-      {/* Panels */}
+      {/* Panels. Each can be switched off in Innstillinger; when only one is
+          left it gets the full width instead of sitting in a lopsided grid. */}
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "1.3fr 1fr",
+          gridTemplateColumns:
+            vis("steg") && vis("oppfolgingsliste") ? "1.3fr 1fr" : "1fr",
           gap: 16,
         }}
         className="oversikt-panels"
       >
+        {vis("steg") && (
         <div
           className="card stat-card"
           role="button"
@@ -650,7 +666,9 @@ export default function OversiktPage() {
             </div>
           ))}
         </div>
+        )}
 
+        {vis("oppfolgingsliste") && (
         <div className="card" style={{ padding: 20 }}>
           <h4
             style={{
@@ -715,6 +733,7 @@ export default function OversiktPage() {
             </div>
           )}
         </div>
+        )}
       </div>
 
       {detailData && (

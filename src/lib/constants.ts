@@ -125,6 +125,59 @@ export const FEATURE_LABELS: Record<FeatureKey, string> = {
   anbud: "Anbud",
 };
 
+/**
+ * The panels on Oversikt, in the order they appear on the page.
+ *
+ * A key missing from organizations.oversikt counts as on, so a panel added
+ * later shows up for everybody until somebody turns it off. The alternative —
+ * defaulting new panels to off — means building something nobody ever sees.
+ */
+export type OversiktKey =
+  | "pipeline"
+  | "solgt"
+  | "fast"
+  | "margin"
+  | "vinnrate"
+  | "snitt"
+  | "oppfolginger"
+  | "avdelinger"
+  | "steg"
+  | "oppfolgingsliste";
+
+export const OVERSIKT_ORDER: OversiktKey[] = [
+  "pipeline",
+  "solgt",
+  "fast",
+  "margin",
+  "vinnrate",
+  "snitt",
+  "oppfolginger",
+  "avdelinger",
+  "steg",
+  "oppfolgingsliste",
+];
+
+export const OVERSIKT_LABELS: Record<OversiktKey, string> = {
+  pipeline: "Pipeline-verdi",
+  solgt: "Solgt for",
+  fast: "Fast per måned",
+  margin: "Margin",
+  vinnrate: "Vinnrate",
+  snitt: "Snittverdi",
+  oppfolginger: "Oppfølginger (tall)",
+  avdelinger: "Salg per avdeling",
+  steg: "Pipeline pr. steg",
+  oppfolgingsliste: "Oppfølginger (liste)",
+};
+
+/** Missing means on. Only an explicit false hides a panel. */
+export function visesPaaOversikt(
+  oversikt: Record<string, boolean> | null | undefined,
+  key: OversiktKey
+): boolean {
+  return oversikt?.[key] !== false;
+}
+
 export const FEATURE_ORDER: FeatureKey[] = [
   "kalender",
   "statistikk",

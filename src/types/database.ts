@@ -17,6 +17,8 @@ export type OrganizationRow = {
   id: string;
   name: string;
   features: Features;
+  /** Which panels show on Oversikt. Missing key = visible (see constants.ts). */
+  oversikt: Record<string, boolean>;
   join_code: string;
   join_code_rotate: boolean;
   join_code_rotated_at: string;
