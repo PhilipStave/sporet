@@ -225,18 +225,25 @@ export default function LandingPage() {
         }}
       >
         <div style={{ ...wrap, padding: "16px 24px", display: "flex", alignItems: "center", gap: 24 }}>
-          <span
+          {/* "#top" needs no element: browsers scroll a fragment named top to
+              the start of the page. A Link to "/" does nothing here, since
+              this already is "/". */}
+          <a
+            href="#top"
+            aria-label="Altiv, til toppen"
             style={{
               display: "flex",
               alignItems: "center",
               gap: 10,
               fontFamily: "var(--font-display)",
               fontSize: 32,
+              color: "inherit",
+              textDecoration: "none",
             }}
           >
             <LogoMark size={38} />
             Altiv
-          </span>
+          </a>
           <nav
             style={{ display: "flex", alignItems: "center", gap: 20, marginLeft: "auto" }}
           >
@@ -1105,18 +1112,22 @@ export default function LandingPage() {
             justifyContent: "space-between",
           }}
         >
-          <span
+          <a
+            href="#top"
+            aria-label="Altiv, til toppen"
             style={{
               display: "flex",
               alignItems: "center",
               gap: 10,
               fontFamily: "var(--font-display)",
               fontSize: 26,
+              color: "inherit",
+              textDecoration: "none",
             }}
           >
             <LogoMark size={28} />
             Altiv
-          </span>
+          </a>
           <nav style={{ display: "flex", flexWrap: "wrap", gap: 18, fontSize: 14 }}>
             <a href="#produkt" style={{ color: "var(--muted)" }}>Produkt</a>
             <a href="#slik" style={{ color: "var(--muted)" }}>Slik funker det</a>

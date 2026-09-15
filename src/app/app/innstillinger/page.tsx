@@ -139,8 +139,11 @@ export default function InnstillingerPage() {
   );
 
   const navnEndret = companyName.trim() !== org.name;
-  const oversiktEndret =
-    JSON.stringify(oversikt) !== JSON.stringify(org.oversikt ?? {});
+  // Compared key by key, like features: the saved object may be empty while
+  // the draft spells every panel out as true, and that is not a change.
+  const oversiktEndret = OVERSIKT_ORDER.some(
+    (k) => oversikt[k] !== ((org.oversikt ?? {})[k] !== false)
+  );
   const funksjonerEndret = FEATURE_ORDER.some(
     (k) => features[k] !== (org.features[k] !== false)
   );
@@ -148,7 +151,11 @@ export default function InnstillingerPage() {
     (d) => deptNavn[d.id] !== undefined && deptNavn[d.id].trim() !== d.name
   );
   const harEndringer =
-    navnEndret || funksjonerEndret || avdelingerEndret || endredeMaal.length > 0;
+    navnEndret ||
+    funksjonerEndret ||
+    oversiktEndret ||
+    avdelingerEndret ||
+    endredeMaal.length > 0;
 
   /** One save for everything on the page that is a field rather than an action. */
   const lagreAlt = async () => {
